@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Qge — Questionnaire gestionnaire</title>
+  <style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f9fb}textarea{width:100%;height:60vh;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}button{background:#0b566b;color:#fff;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}header{margin-bottom:12px}</style>
+</head>
+<body>
+  <header>
+    <h2>Questionnaire gestionnaire (Qge)</h2>
+    <p>Éditez la structure JSON de <strong>Qge</strong>. Sauvegarde automatique dans les cookies via la classe Data.</p>
+  </header>
+  <div>
+    <textarea id="editor"></textarea>
+  </div>
+  <p style="margin-top:8px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+
+  <script src="../shared/Data.js"></script>
+  <script>
+    const db = new Data('sobrieau',365,false);
+    const editor = document.getElementById('editor');
+    const snap = db.snapshot();
+    editor.value = JSON.stringify(snap.Qge||{}, null, 2);
+
+    document.getElementById('save').addEventListener('click', ()=>{
+      try{
+        const parsed = JSON.parse(editor.value || '{}');
+        db.data.Qge = parsed;
+        alert('Qge sauvegardé.');
+      }catch(e){alert('JSON invalide: '+e.message)}
+    });
+
+    document.getElementById('back').addEventListener('click', ()=> location.href = '../home.html');
+  </script>
+</body>
+</html>

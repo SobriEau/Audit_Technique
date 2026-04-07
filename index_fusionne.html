@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SobriEau — Site Fusionné</title>
+<!-- HEAD: site\home.html -->
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>SobriEau — Audit Technique</title>
+	
+<!-- HEAD: site\qge\index.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Qge — Questionnaire gestionnaire</title>
+  
+<!-- HEAD: site\qte\appareils_nettoyage_lavage.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Appareils de nettoyage / lavage</title>
+  
+<!-- HEAD: site\qte\douches_baignoires.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Douches / Baignoires</title>
+  
+<!-- HEAD: site\qte\espace_vert_exterieur.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Espace vert / Extérieur</title>
+  
+<!-- HEAD: site\qte\index.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Qte — Audit Technique</title>
+  
+<!-- HEAD: site\qte\potentiel_optimisation.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Potentiel d'optimisation</title>
+  
+<!-- HEAD: site\qte\reducteurs_de_pression.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Réducteurs de pression</title>
+  
+<!-- HEAD: site\qte\releve_compteur_general.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Relevé compteur général</title>
+  
+<!-- HEAD: site\qte\reseaux_eau_chaude_sanitaire.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Réseaux d'Eau Chaude Sanitaire</title>
+  
+<!-- HEAD: site\qte\robinet.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Éditeur Robinet</title>
+  
+<!-- HEAD: site\qte\robinets.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Robinets</title>
+  
+<!-- HEAD: site\qte\sous_compteurs.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sous-compteurs</title>
+  
+<!-- HEAD: site\qte\ventilation_batiment.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ventilation du bâtiment</title>
+  
+<!-- HEAD: site\qte\wc.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WC</title>
+  
+<!-- HEAD: site\qus\index.html -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Qus — Questionnaire usager</title>
+  
+
+<script>
+// Classe Data globale
+/**
+ * Data.js — Classe de gestion d'état persistant
+ *
+ * Fonctionnalités :
+ *  1. Chargement depuis cookie au démarrage
+ *  2. Sauvegarde automatique dans le cookie à chaque modification
+ *  3. Accès libre aux données via Proxy (lecture/écriture/suppression)
+ *  4. Détection automatique des modifications (Proxy récursif)
+ *  5. Export des données en fichier JSON téléchargeable
+ *  6. Import des données depuis un fichier JSON
+ *
+ * Usage :
+ *   const db = new Data("mon_app");
+ *   db.data.utilisateur = { nom: "Alice", age: 30 };
+ *   db.data.panier = [{ id: 1, produit: "Stylo", qte: 2 }];
+ *   db.data.panier.push({ id: 2, produit: "Cahier", qte: 1 });
+ */
+
+class Data {
+
+  /**
+   * @param {string} nom        - Nom du cookie (et du fichier JSON à l'export)
+   * @param {number} expireDans - Durée de vie du cookie en jours (défaut : 30)
+   * @param {boolean} debug     - Affiche les opérations dans la console
+   */
+  constructor(nom = "appdata", expireDans = 30, debug = false) {
+    this._nom        = nom;
+    this._expireDans = expireDans;
+    this._debug      = debug;
+    this._callbacks  = [];   // écouteurs de modifications
+
+    // Charge depuis localStorage si disponible, sinon depuis cookie
+    let brut = this._lireStorage();
+    if (!brut || Object.keys(brut).length === 0) {
+      brut = this._lireCookie();
+      // si on a trouvé des données dans le cookie, on migre vers localStorage
+      if (brut && Object.keys(brut).length) {
+        this._log('Migration cookie → localStorage', brut);
+        try { localStorage.setItem(this._nom, JSON.stringify(brut)); } catch (e) { /* ignore */ }
+      }
+    }
+    this._log("Chargement initial :", brut);
+
+    // Expose les données via un Proxy qui détecte toute modification
+    this.data = this._proxifier(brut);
+  }
+
+  // ── 1. Chargement depuis cookie ──────────────────────────────────────────
+
+  _lireCookie() {
+    const match = document.cookie.match(
+      new RegExp("(?:^|;\\s*)" + encodeURIComponent(this._nom) + "=([^;]*)")
+    );
+    if (!match) return {};
+    try {
+      return JSON.parse(decodeURIComponent(match[1]));
+    } catch (e) {
+      console.warn(`[Data] Cookie "${this._nom}" illisible, réinitialisé.`, e);
+      return {};
+    }
+  }
+
+  // Lecture depuis localStorage (si possible)
+  _lireStorage() {
+    try {
+      const raw = localStorage.getItem(this._nom);
+      if (!raw) return {};
+      return JSON.parse(raw);
+    } catch (e) {
+      this._log('localStorage indisponible ou données invalides', e);
+      return {};
+    }
+  }
+
+  // ── 2. Sauvegarde dans le cookie ─────────────────────────────────────────
+
+  _sauvegarder() {
+    // Sérialise les données brutes (sans le Proxy)
+    const brut     = this._deproxifier(this.data);
+    const serialise = encodeURIComponent(JSON.stringify(brut));
+
+    // Avertissement si on approche la limite des 4 Ko
+    if (serialise.length > 3800) {
+      console.warn(`[Data] Cookie "${this._nom}" : ${serialise.length} octets — proche de la limite 4 Ko.`);
+    }
+
+    // On préfère stocker dans localStorage (plus d'espace, stable sur file://)
+    try {
+      localStorage.setItem(this._nom, JSON.stringify(brut));
+      this._log("localStorage sauvegardé :", brut);
+    } catch (e) {
+      this._log('localStorage non utilisable :', e);
+    }
+
+    // Et on conserve aussi le cookie pour compatibilité avec d'anciennes pages
+    try {
+      const expiration = new Date();
+      expiration.setDate(expiration.getDate() + this._expireDans);
+      document.cookie =
+        encodeURIComponent(this._nom) + "=" + serialise +
+        "; expires=" + expiration.toUTCString() +
+        "; path=/; SameSite=Lax";
+      this._log("Cookie sauvegardé :", brut);
+    } catch (e) {
+      this._log('Impossible d\'écrire le cookie :', e);
+    }
+
+    // Notifie les écouteurs enregistrés
+    this._callbacks.forEach(fn => fn(brut));
+
+    // Émet un événement DOM global (pour les autres pages du fichier fusionné)
+    document.dispatchEvent(new CustomEvent("data:change", {
+      detail: { nom: this._nom, data: brut }
+    }));
+  }
+
+  // ── 3 & 4. Proxy récursif — accès libre + détection des modifications ────
+
+  /**
+   * Enveloppe un objet (ou tableau) dans un Proxy.
+   * Toute affectation, suppression ou modification imbriquée
+   * déclenche automatiquement _sauvegarder().
+   */
+  _proxifier(cible) {
+    if (typeof cible !== "object" || cible === null) return cible;
+
+    // Proxifie récursivement les enfants existants
+    for (const cle of Object.keys(cible)) {
+      if (typeof cible[cle] === "object" && cible[cle] !== null) {
+        cible[cle] = this._proxifier(cible[cle]);
+      }
+    }
+
+    return new Proxy(cible, {
+
+      // Lecture : transparente
+      get: (obj, prop) => {
+        return obj[prop];
+      },
+
+      // Écriture : proxifie la valeur si objet, puis sauvegarde
+      set: (obj, prop, valeur) => {
+        // Évite les propriétés internes de tableau (length, etc.)
+        if (typeof prop === "symbol") {
+          obj[prop] = valeur;
+          return true;
+        }
+        if (typeof valeur === "object" && valeur !== null) {
+          valeur = this._proxifier(valeur);
+        }
+        obj[prop] = valeur;
+        this._log(`set [${String(prop)}] =`, valeur);
+        this._sauvegarder();
+        return true;
+      },
+
+      // Suppression : sauvegarde après delete
+      deleteProperty: (obj, prop) => {
+        if (prop in obj) {
+          delete obj[prop];
+          this._log(`delete [${String(prop)}]`);
+          this._sauvegarder();
+        }
+        return true;
+      }
+    });
+  }
+
+  /**
+   * Retire les couches Proxy pour obtenir un objet JSON sérialisable.
+   * (JSON.stringify ignore silencieusement les handlers Proxy,
+   *  mais cette méthode force une copie propre.)
+   */
+  _deproxifier(cible) {
+    return JSON.parse(JSON.stringify(cible));
+  }
+
+  // ── 5. Export JSON (téléchargement fichier) ──────────────────────────────
+
+  /**
+   * Déclenche le téléchargement des données sous forme de fichier .json
+   * @param {string} nomFichier - Nom du fichier (défaut : nom du cookie)
+   */
+  exporterJSON(nomFichier = null) {
+    const brut    = this._deproxifier(this.data);
+    const contenu = JSON.stringify(brut, null, 2);
+    const blob    = new Blob([contenu], { type: "application/json" });
+    const url     = URL.createObjectURL(blob);
+
+    const lien = document.createElement("a");
+    lien.href     = url;
+    lien.download = (nomFichier || this._nom) + ".json";
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+    URL.revokeObjectURL(url);
+
+    this._log("Export JSON :", brut);
+  }
+
+  // ── 6. Import JSON (depuis fichier) ─────────────────────────────────────
+
+  /**
+   * Ouvre un sélecteur de fichier et charge le JSON sélectionné.
+   * Les données remplacent entièrement l'état actuel et sont sauvegardées.
+   * @param {Function} callback - Appelé avec les nouvelles données une fois chargées
+   */
+  importerJSON(callback = null) {
+    const input    = document.createElement("input");
+    input.type     = "file";
+    input.accept   = ".json,application/json";
+
+    input.addEventListener("change", (e) => {
+      const fichier = e.target.files[0];
+      if (!fichier) return;
+
+      const lecteur = new FileReader();
+      lecteur.onload = (ev) => {
+        try {
+          const nouvelles = JSON.parse(ev.target.result);
+
+          // Remplace toutes les clés existantes
+          const actuel = this._deproxifier(this.data);
+          for (const cle of Object.keys(actuel)) {
+            delete this.data[cle];
+          }
+          for (const [cle, val] of Object.entries(nouvelles)) {
+            this.data[cle] = val;
+          }
+
+          this._log("Import JSON :", nouvelles);
+          if (typeof callback === "function") callback(nouvelles);
+
+        } catch (err) {
+          console.error("[Data] Fichier JSON invalide :", err);
+          alert("Fichier JSON invalide : " + err.message);
+        }
+      };
+      lecteur.readAsText(fichier);
+    });
+
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
+  }
+
+  // ── Utilitaires publics ───────────────────────────────────────────────────
+
+  /**
+   * Réinitialise toutes les données et efface le cookie.
+   */
+  reinitialiser() {
+    const brut = this._deproxifier(this.data);
+    for (const cle of Object.keys(brut)) {
+      delete this.data[cle];
+    }
+    // Expire immédiatement le cookie
+    document.cookie =
+      encodeURIComponent(this._nom) + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    this._log("Réinitialisé.");
+  }
+
+  /**
+   * Enregistre un écouteur appelé à chaque sauvegarde.
+   * @param {Function} fn - Reçoit une copie brute des données
+   */
+  onChange(fn) {
+    if (typeof fn === "function") this._callbacks.push(fn);
+  }
+
+  /**
+   * Retourne une copie brute des données (sans Proxy), utile pour débogage.
+   */
+  snapshot() {
+    return this._deproxifier(this.data);
+  }
+
+  // ── Interne ───────────────────────────────────────────────────────────────
+
+  _log(...args) {
+    if (this._debug) console.log(`[Data:${this._nom}]`, ...args);
+  }
+}
+
+
+// Navigation simple
+function showPage(id) {
+  document.querySelectorAll('.page-section').forEach(s => s.style.display = 'none');
+  const target = document.getElementById(id);
+  if (target) {
+    target.style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+}
+
+// Démarrage : afficher la première page
+window.addEventListener('DOMContentLoaded', () => {
+  const first = document.querySelector('.page-section');
+  if (first) first.style.display = 'block';
+});
+</script>
+
+</head>
+<body>
+
+<section id="page-site-home-html" class="page-section" style="display:block">
+<!-- PAGE: site\home.html -->
+<style>
+#page-site-home-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;background:#f6f9fb;color:#222}#page-site-home-html h1{margin:0 0 18px;color:#0b566b}#page-site-home-html .card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 6px 18px rgba(11,86,107,0.06)}#page-site-home-html label{display:block;margin-top:12px;font-weight:600;color:#0b566b}#page-site-home-html .editable{min-height:90px;border:1px solid #d6e6ea;border-radius:6px;padding:10px;background:linear-gradient(180deg,#ffffff,#fbfeff);outline:none}#page-site-home-html .editable:empty:before{content:"(cliquez pour éditer du HTML libre...)";color:#9aaeb4}#page-site-home-html /* toolbar styled as header of the editable area (single-line) */
+		.toolbar{display:flex;flex-wrap:nowrap;gap:8px;margin:0;padding:8px 10px;background:linear-gradient(180deg,#eef9fb,#e6f4f7);border:1px solid #d6e6ea;border-bottom:0;border-top-left-radius:8px;border-top-right-radius:8px;align-items:center;overflow-x:auto}#page-site-home-html .toolbar::-webkit-scrollbar{height:8px}#page-site-home-html .toolbar::-webkit-scrollbar-thumb{background:rgba(11,86,107,0.12);border-radius:8px}#page-site-home-html .toolbar button{background:transparent;border:1px solid transparent;padding:6px 10px;border-radius:6px;cursor:pointer;font-weight:700;color:#074e58;white-space:nowrap}#page-site-home-html .toolbar button:hover{background:rgba(7,78,88,0.06);border-color:rgba(7,78,88,0.08)}#page-site-home-html .toolbar input[type="color"]{width:34px;height:26px;padding:0;border:0;background:transparent}#page-site-home-html .toolbar label{white-space:nowrap;display:inline-flex;align-items:center;gap:6px}#page-site-home-html .toolbar select{padding:6px;border-radius:6px;border:1px solid #d6e6ea;background:#fff;min-width:74px}#page-site-home-html /* Make the editable area look attached to the toolbar */
+		.editable{min-height:90px;border:1px solid #d6e6ea;border-top:0;border-bottom-left-radius:8px;border-bottom-right-radius:8px;padding:12px;background:#fff}#page-site-home-html .editable:empty:before{content:"(cliquez pour éditer du HTML libre...)";color:#9aaeb4}#page-site-home-html input[type="date"], #page-site-home-html input[type="text"]{padding:8px;border:1px solid #d6e6ea;border-radius:6px;width:100%;box-sizing:border-box}#page-site-home-html .buttons{margin-top:18px;display:flex;flex-direction:column;gap:12px;width:100%}#page-site-home-html button{background:#0b566b;color:#fff;border:none;padding:12px 14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;box-shadow:0 6px 18px rgba(11,86,107,0.12);transition:transform .12s ease,box-shadow .12s ease;width:100%}#page-site-home-html button:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none}#page-site-home-html button:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(11,86,107,0.16)}#page-site-home-html button.secondary{background:#2b7f8b}#page-site-home-html #btnQge{background:linear-gradient(180deg,#1b7a8b,#0b566b)}#page-site-home-html #btnQus{background:linear-gradient(180deg,#2b8f6f,#167a59)}#page-site-home-html #btnQte{background:linear-gradient(180deg,#8a6ab8,#5b3fa5)}#page-site-home-html .actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-start}#page-site-home-html footer{margin-top:14px;font-size:13px;color:#657b81}#page-site-home-html .small{font-size:13px;color:#53686d;margin-top:6px}
+	
+</style>
+
+	<h1>SobriEau — Audit Technique</h1>
+	<div class="card">
+		<div>
+			<label>Adresse</label>
+			<div class="toolbar" data-target="adresse">
+				<button type="button" data-cmd="bold"><b>B</b></button>
+				<button type="button" data-cmd="italic"><i>I</i></button>
+				<button type="button" data-cmd="underline"><u>U</u></button>
+				<button type="button" data-cmd="insertUnorderedList">• Liste</button>
+				<label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Couleur<input type="color" data-cmd="foreColor" style="vertical-align:middle"/></label>
+				<label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Taille
+					<select data-cmd="fontSize">
+						<option value="2">Petit</option>
+						<option value="3" selected>Normal</option>
+						<option value="5">Grand</option>
+					</select>
+				</label>
+			</div>
+			<div id="adresse" class="editable" contenteditable="true"></div>
+		</div>
+
+		<div>
+			<label>Info</label>
+			<div class="toolbar" data-target="info">
+				<button type="button" data-cmd="bold"><b>B</b></button>
+				<button type="button" data-cmd="italic"><i>I</i></button>
+				<button type="button" data-cmd="underline"><u>U</u></button>
+				<button type="button" data-cmd="insertUnorderedList">• Liste</button>
+				<label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Couleur<input type="color" data-cmd="foreColor" style="vertical-align:middle"/></label>
+				<label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Taille
+					<select data-cmd="fontSize">
+						<option value="2">Petit</option>
+						<option value="3" selected>Normal</option>
+						<option value="5">Grand</option>
+					</select>
+				</label>
+			</div>
+			<div id="info" class="editable" contenteditable="true"></div>
+		</div>
+
+		<div>
+			<label>Date</label>
+			<input id="date" type="date" />
+		</div>
+
+		<div>
+			<label>Auditeur</label>
+			<input id="auditeur" type="text" placeholder="Nom de l'auditeur" />
+			<div class="small">Les champs Adresse et Info acceptent du HTML libre (formatage simple).</div>
+		</div>
+
+		<div class="actions">
+			<div class="buttons">
+				<button id="btnQge">Questionnaire gestionnaire</button>
+				<button id="btnQus" class="secondary">Questionnaire usager</button>
+				<button id="btnQte" class="secondary">Audit Technique</button>
+			</div>
+		</div>
+	</div>
+
+	<footer>Les données sont sauvegardées automatiquement dans un cookie.</footer>
+
+	<script src="./shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+	<script>(function(section){
+
+		document.addEventListener('DOMContentLoaded', () => {
+			const db = new Data('sobrieau', 365, false);
+
+			// Initialisation minimale si absent
+			const snap = db.snapshot();
+			if (!('Adresse' in snap)) db.data.Adresse = null;
+			if (!('Info' in snap)) db.data.Info = null;
+			if (!('Date' in snap)) db.data.Date = null;
+			if (!('Auditeur' in snap)) db.data.Auditeur = null;
+			if (!('Qge' in snap)) db.data.Qge = {};
+			if (!('Qus' in snap)) db.data.Qus = {};
+			if (!('Qte' in snap)) db.data.Qte = {};
+
+			const elAdresse = ((section?.querySelector('#adresse')) || document.getElementById('adresse'));
+			const elInfo = ((section?.querySelector('#info')) || document.getElementById('info'));
+			const elDate = ((section?.querySelector('#date')) || document.getElementById('date'));
+			const elAud = ((section?.querySelector('#auditeur')) || document.getElementById('auditeur'));
+
+			// Remplissage initial
+			elAdresse.innerHTML = db.data.Adresse || '';
+			elInfo.innerHTML = db.data.Info || '';
+			elAud.value = db.data.Auditeur || '';
+			if (db.data.Date) {
+				// accepte YYYY-MM-DD ou Date
+				const d = new Date(db.data.Date);
+				if (!isNaN(d)) {
+					const yyyy = d.getFullYear();
+					const mm = String(d.getMonth()+1).padStart(2,'0');
+					const dd = String(d.getDate()).padStart(2,'0');
+					elDate.value = `${yyyy}-${mm}-${dd}`;
+				} else {
+					// si c'est déjà au format ISO
+					elDate.value = db.data.Date;
+				}
+			}
+
+			// Sauvegarde au blur / changement + autosave sur input
+			const saveAdresse = () => db.data.Adresse = elAdresse.innerHTML.trim() ? elAdresse.innerHTML : null;
+			const saveInfo = () => db.data.Info = elInfo.innerHTML.trim() ? elInfo.innerHTML : null;
+			const saveAud = () => db.data.Auditeur = elAud.value.trim() ? elAud.value.trim() : null;
+			const saveDate = () => db.data.Date = elDate.value ? elDate.value : null;
+
+			elAdresse.addEventListener('blur', saveAdresse);
+			elInfo.addEventListener('blur', saveInfo);
+			elAdresse.addEventListener('input', saveAdresse);
+			elInfo.addEventListener('input', saveInfo);
+			elAud.addEventListener('change', saveAud);
+			elDate.addEventListener('change', saveDate);
+
+			// Raccourcis / barre d'outils pour l'édition HTML libre
+			let currentEditable = null;
+			(section || document).querySelectorAll('.editable').forEach(el => {
+				el.addEventListener('focus', () => currentEditable = el);
+				el.addEventListener('focusin', () => currentEditable = el);
+				el.addEventListener('blur', () => setTimeout(()=>{ currentEditable = null; }, 150));
+			});
+
+			function execStyle(cmd, value){
+				if (currentEditable) currentEditable.focus();
+				try{ document.execCommand(cmd, false, value); } catch(e) { console.warn('execCommand failed', e); }
+				// sauvegarde après action
+				saveAdresse(); saveInfo();
+			}
+
+			// Wire toolbar buttons
+			(section || document).querySelectorAll('.toolbar').forEach(tb => {
+				tb.addEventListener('click', (ev)=>{
+					const btn = ev.target.closest('[data-cmd]');
+					if (!btn) return;
+					const cmd = btn.getAttribute('data-cmd');
+					execStyle(cmd, null);
+				});
+				tb.querySelectorAll('input[type=color]').forEach(inp => {
+					inp.addEventListener('input', (e)=> execStyle(inp.getAttribute('data-cmd'), e.target.value));
+				});
+				tb.querySelectorAll('select').forEach(sel => {
+					sel.addEventListener('change', (e)=> execStyle(sel.getAttribute('data-cmd'), e.target.value));
+				});
+			});
+
+			// Boutons — ouvrent les pages correspondantes (désactivés si données manquantes)
+			const btnQge = ((section?.querySelector('#btnQge')) || document.getElementById('btnQge'));
+			const btnQus = ((section?.querySelector('#btnQus')) || document.getElementById('btnQus'));
+			const btnQte = ((section?.querySelector('#btnQte')) || document.getElementById('btnQte'));
+
+			function areRequiredFieldsPresent(){
+				const s = db.snapshot();
+				// Toutes les données sauf 'Info' sont obligatoires : Adresse, Date, Auditeur
+				return s && s.Adresse && String(s.Adresse).trim() !== '' && s.Date && String(s.Date).trim() !== '' && s.Auditeur && String(s.Auditeur).trim() !== '';
+			}
+
+			function updateButtonsState(){
+				const ok = areRequiredFieldsPresent();
+				[btnQge, btnQus, btnQte].forEach(b=>{
+					b.disabled = !ok;
+					b.title = ok ? '' : 'Remplissez Adresse, Date et Auditeur pour activer';
+				});
+			}
+
+			btnQge.addEventListener('click', () => { if (!btnQge.disabled) showPage('page-site-qge-index-html'); });
+			btnQus.addEventListener('click', () => { if (!btnQus.disabled) showPage('page-site-qus-index-html'); });
+			btnQte.addEventListener('click', () => { if (!btnQte.disabled) showPage('page-site-qte-index-html'); });
+
+			// met à jour l'état après chargement et à chaque sauvegarde
+			updateButtonsState();
+
+			// Écoute externe : si d'autres pages modifient les données
+			document.addEventListener('data:change', (ev) => {
+				if (!(ev.detail && ev.detail.nom === 'sobrieau')) return;
+				const d = ev.detail.data || {};
+				// Ne pas écraser le champ en cours d'édition (préserve le curseur)
+				if (!(currentEditable && currentEditable.id === 'adresse')) {
+					const newAdresse = d.Adresse || '';
+					if (elAdresse.innerHTML !== newAdresse) elAdresse.innerHTML = newAdresse;
+				}
+				if (!(currentEditable && currentEditable.id === 'info')) {
+					const newInfo = d.Info || '';
+					if (elInfo.innerHTML !== newInfo) elInfo.innerHTML = newInfo;
+				}
+				if (document.activeElement !== elAud) {
+					elAud.value = d.Auditeur || '';
+				}
+				if (document.activeElement !== elDate) {
+					elDate.value = d.Date || '';
+				}
+				if (typeof updateButtonsState === 'function') updateButtonsState();
+			});
+		});
+	
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qge-index-html" class="page-section" style="display:none">
+<!-- PAGE: site\qge\index.html -->
+<style>
+#page-site-qge-index-html{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f9fb}#page-site-qge-index-html textarea{width:100%;height:60vh;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qge-index-html button{background:#0b566b;color:#fff;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}#page-site-qge-index-html header{margin-bottom:12px}
+</style>
+
+  <header>
+    <h2>Questionnaire gestionnaire (Qge)</h2>
+    <p>Éditez la structure JSON de <strong>Qge</strong>. Sauvegarde automatique dans les cookies via la classe Data.</p>
+  </header>
+  <div>
+    <textarea id="editor"></textarea>
+  </div>
+  <p style="margin-top:8px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    const snap = db.snapshot();
+    editor.value = JSON.stringify(snap.Qge||{}, null, 2);
+
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{
+        const parsed = JSON.parse(editor.value || '{}');
+        db.data.Qge = parsed;
+        alert('Qge sauvegardé.');
+      }catch(e){alert('JSON invalide: '+e.message)}
+    });
+
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-home-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-appareils-nettoyage-lavage-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\appareils_nettoyage_lavage.html -->
+<style>
+#page-site-qte-appareils-nettoyage-lavage-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-appareils-nettoyage-lavage-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-appareils-nettoyage-lavage-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Appareils de nettoyage / lavage</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'appareils_nettoyage_lavage';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-douches-baignoires-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\douches_baignoires.html -->
+<style>
+#page-site-qte-douches-baignoires-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-douches-baignoires-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-douches-baignoires-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Douches / Baignoires</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'douches_baignoires';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-espace-vert-exterieur-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\espace_vert_exterieur.html -->
+<style>
+#page-site-qte-espace-vert-exterieur-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-espace-vert-exterieur-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-espace-vert-exterieur-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Espace vert / Extérieur</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'espace_vert_exterieur';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-index-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\index.html -->
+<style>
+#page-site-qte-index-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222;max-width:1000px;margin:18px auto}#page-site-qte-index-html header.main{display:flex;align-items:center;gap:12px;margin-bottom:14px}#page-site-qte-index-html header.main h1{margin:0;color:#0b566b;font-size:20px}#page-site-qte-index-html header.main button{margin-left:auto;background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-index-html h2{margin:6px 0 12px;color:#09494f}#page-site-qte-index-html .toolbar{display:flex;flex-wrap:nowrap;gap:8px;margin:0;padding:8px 10px;background:linear-gradient(180deg,#eef9fb,#e6f4f7);border:1px solid #d6e6ea;border-bottom:0;border-top-left-radius:8px;border-top-right-radius:8px;align-items:center;overflow-x:auto}#page-site-qte-index-html .toolbar button{background:transparent;border:1px solid transparent;padding:6px 10px;border-radius:6px;cursor:pointer;font-weight:700;color:#074e58;white-space:nowrap}#page-site-qte-index-html .editable{min-height:120px;border:1px solid #d6e6ea;border-top:0;border-bottom-left-radius:8px;border-bottom-right-radius:8px;padding:12px;background:#fff}#page-site-qte-index-html .section{background:#fff;padding:14px;border-radius:8px;border:1px solid #e3eef0;margin-bottom:12px}#page-site-qte-index-html .grid{display:flex;flex-direction:column;gap:10px}#page-site-qte-index-html .card-btn{width:100%;background:linear-gradient(180deg,#ffffff,#f3fbfb);border:1px solid #d6e6ea;padding:12px;border-radius:8px;cursor:pointer;color:#074e58;text-align:left;font-weight:700;box-sizing:border-box;overflow-wrap:break-word}#page-site-qte-index-html .card-btn a{color:inherit;text-decoration:none;display:block;width:100%;box-sizing:border-box;white-space:normal;word-break:break-word}#page-site-qte-index-html .muted{color:#576c70;font-size:14px}#page-site-qte-index-html textarea{width:100%;height:220px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-index-html .actions{margin-top:10px}
+  
+</style>
+
+  <header class="main">
+    <h1>SobriEau — Questionnaire Qte</h1>
+    <button id="back">← Retour</button>
+  </header>
+
+  <div class="section">
+    <h2>Audit Technique</h2>
+    <div>
+      <label style="font-weight:700;margin-bottom:6px;display:block">Info</label>
+      <div class="toolbar" data-target="qte-info">
+        <button type="button" data-cmd="bold"><b>B</b></button>
+        <button type="button" data-cmd="italic"><i>I</i></button>
+        <button type="button" data-cmd="underline"><u>U</u></button>
+        <button type="button" data-cmd="insertUnorderedList">• Liste</button>
+        <label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Couleur<input type="color" data-cmd="foreColor" style="vertical-align:middle"/></label>
+        <label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Taille
+          <select data-cmd="fontSize">
+            <option value="2">Petit</option>
+            <option value="3" selected>Normal</option>
+            <option value="5">Grand</option>
+          </select>
+        </label>
+      </div>
+      <div id="qte-info" class="editable" contenteditable="true"></div>
+    </div>
+
+    <div class="actions">
+      <span class="muted">Les modifications sont sauvegardées lorsque vous quittez le champ (blur).</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Mesure de Pression au point le plus éloigné du réseau (Bar)</h2>
+    <div class="grid" id="subitems">
+      <!-- buttons injected by script -->
+    </div>
+  </div>
+
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    // mapping affichage -> clé interne
+    const displayToKey = {
+      "Relevé compteur général": "releve_compteur_general",
+      "Sous-compteurs": "sous_compteurs",
+      "Réducteurs de pression": "reducteurs_de_pression",
+      "Robinets": "robinets",
+      "Douches / Baignoires": "douches_baignoires",
+      "WC": "wc",
+      "Réseaux d'Eau Chaude Sanitaire": "reseaux_eau_chaude_sanitaire",
+      "Espace vert / Extérieur": "espace_vert_exterieur",
+      "Appareils de nettoyage / lavage": "appareils_nettoyage_lavage",
+      "Ventilation du bâtiment": "ventilation_batiment",
+      "Potentiel d'optimisation": "potentiel_optimisation"
+    };
+
+    const keyToDisplay = Object.fromEntries(Object.entries(displayToKey).map(([k,v])=>[v,k]));
+
+    const items = Object.keys(displayToKey);
+
+    const db = new Data('sobrieau',365,false);
+
+    // init info
+    const infoEl = ((section?.querySelector('#qte-info')) || document.getElementById('qte-info'));
+    infoEl.innerHTML = (db.data.Qte && db.data.Qte.Info) ? db.data.Qte.Info : '';
+
+    // toolbar handling (simple execCommand like on home)
+    let currentEditable = infoEl;
+    function execStyle(cmd, value){
+      if (currentEditable) currentEditable.focus();
+      try{ document.execCommand(cmd, false, value); } catch(e) { console.warn(e); }
+    }
+    (section || document).querySelectorAll('.toolbar').forEach(tb => {
+      tb.addEventListener('click', (ev)=>{
+        const btn = ev.target.closest('[data-cmd]');
+        if (!btn) return;
+        execStyle(btn.getAttribute('data-cmd'), null);
+      });
+      tb.querySelectorAll('input[type=color]').forEach(inp => inp.addEventListener('input', (e)=> execStyle(inp.getAttribute('data-cmd'), e.target.value)));
+      tb.querySelectorAll('select').forEach(sel => sel.addEventListener('change', (e)=> execStyle(sel.getAttribute('data-cmd'), e.target.value)));
+    });
+
+    // sauvegarde au blur (quitte le champ)
+    const saveInfo = ()=>{ db.data.Qte = db.data.Qte || {}; db.data.Qte.Info = infoEl.innerHTML.trim() ? infoEl.innerHTML : null; };
+    infoEl.addEventListener('blur', saveInfo);
+
+    // build subitem buttons
+    const container = ((section?.querySelector('#subitems')) || document.getElementById('subitems'));
+    items.forEach(display => {
+      const key = displayToKey[display];
+      const div = document.createElement('div');
+      div.className = 'card-btn';
+      const a = document.createElement('a');
+      a.onclick = () => showPage('page-site-qte-' + key.replace(/_/g, '-') + '-html'); a.href = 'javascript:void(0)';
+      a.textContent = display;
+      div.appendChild(a);
+      container.appendChild(div);
+    });
+
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-home-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-potentiel-optimisation-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\potentiel_optimisation.html -->
+<style>
+#page-site-qte-potentiel-optimisation-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-potentiel-optimisation-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-potentiel-optimisation-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Potentiel d'optimisation</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'potentiel_optimisation';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-reducteurs-de-pression-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\reducteurs_de_pression.html -->
+<style>
+#page-site-qte-reducteurs-de-pression-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-reducteurs-de-pression-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-reducteurs-de-pression-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Réducteurs de pression</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'reducteurs_de_pression';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-releve-compteur-general-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\releve_compteur_general.html -->
+<style>
+#page-site-qte-releve-compteur-general-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-releve-compteur-general-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-releve-compteur-general-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Relevé compteur général</h2>
+  <p class="muted">Éditez les données JSON de cette section.</p>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'releve_compteur_general';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-reseaux-eau-chaude-sanitaire-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\reseaux_eau_chaude_sanitaire.html -->
+<style>
+#page-site-qte-reseaux-eau-chaude-sanitaire-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-reseaux-eau-chaude-sanitaire-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-reseaux-eau-chaude-sanitaire-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Réseaux d'Eau Chaude Sanitaire</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'reseaux_eau_chaude_sanitaire';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-robinet-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\robinet.html -->
+<style>
+#page-site-qte-robinet-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinet-html label{display:block;margin-top:10px;font-weight:700;color:#0b566b}#page-site-qte-robinet-html input[type=text], #page-site-qte-robinet-html input[type=number], #page-site-qte-robinet-html textarea, #page-site-qte-robinet-html select{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:6px;box-sizing:border-box}#page-site-qte-robinet-html textarea{min-height:100px}#page-site-qte-robinet-html .row{max-width:800px}#page-site-qte-robinet-html .pair{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}#page-site-qte-robinet-html .pair .col{flex:1 1 220px;display:flex;flex-direction:column;min-width:0}#page-site-qte-robinet-html .checkbox-label{display:flex;align-items:center;gap:8px}#page-site-qte-robinet-html .actions{margin-top:12px;display:flex;gap:8px}#page-site-qte-robinet-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinet-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}
+  
+</style>
+
+  <header style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h2 style="margin:0;color:#0b566b">Éditeur Robinet</h2>
+    <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
+  </header>
+
+  <div class="row">
+    <label>Numéro</label>
+    <input id="numero" type="text" />
+
+    <label>Emplacement</label>
+    <input id="emplacement" type="text" />
+
+    <label>Précision emplacement</label>
+    <input id="precision" type="text" />
+
+    <div class="pair">
+      <div class="col">
+        <label>Type</label>
+        <select id="type">
+          <option value=""></option>
+          <option value="Mitigeur">Mitigeur</option>
+          <option value="Mélangeur">Mélangeur</option>
+          <option value="Monocommande">Monocommande</option>
+          <option value="Robinet à bille">Robinet à bille</option>
+          <option value="Robinet à disque céramique">Robinet à disque céramique</option>
+          <option value="Robinet thermostatique">Robinet thermostatique</option>
+          <option value="Robinet temporisé">Robinet temporisé</option>
+          <option value="Robinet d'arrêt">Robinet d'arrêt</option>
+          <option value="Autre">Autre</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Usages</label>
+        <input id="usages" type="text" />
+      </div>
+    </div>
+
+    <div class="pair">
+      <div class="col">
+        <label>Débit (l/min)</label>
+        <input id="debit" type="number" step="0.1" />
+      </div>
+      <div class="col">
+        <label>Présence d'un réducteur de débit</label>
+        <select id="reducteur">
+          <option value=""></option>
+          <option value="true">Oui</option>
+          <option value="false">Non</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pair">
+      <div class="col">
+        <label>Temps obtention ECS (s)</label>
+        <input id="tempsECS" type="number" step="1" />
+      </div>
+      <div class="col">
+        <label>Numéro réseau ECS d'appartenance</label>
+        <input id="numReseauECS" type="text" />
+      </div>
+    </div>
+
+    <div class="pair">
+      <div class="col">
+        <label>Nombre d'utilisation / semaine</label>
+        <input id="nbUtilSemaine" type="number" step="1" />
+      </div>
+      <div class="col">
+        <label>Nombre d'équipement identique</label>
+        <input id="nbEquipIdentique" type="number" step="1" />
+      </div>
+    </div>
+
+    <label>Remarques</label>
+    <textarea id="remarques"></textarea>
+
+    <div class="actions">
+      <button id="save" class="primary">Enregistrer</button>
+      <button id="del" class="ghost">Supprimer</button>
+    </div>
+  </div>
+
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    
+    // initialisation du stockage et paramètres
+    const db = new Data('sobrieau',365,false);
+    const key = 'robinets';
+    const params = new URLSearchParams(location.search);
+    
+    // Fonction pour récupérer l'index actuel (appelée à chaque load)
+    function getCurrentIdx() {
+      if (window.__robinetIdx !== undefined) {
+        // 1. Variable globale définie par navigation SPA
+        return window.__robinetIdx;
+      } else if (localStorage.getItem('currentRobinetIdx')) {
+        // 2. localStorage (persiste après actualisation)
+        return parseInt(localStorage.getItem('currentRobinetIdx'), 10);
+      } else {
+        // 3. URLSearchParams (mode standalone)
+        return parseInt(params.get('idx'), 10);
+      }
+    }
+
+    function load(){
+      // Recalculer l'index à chaque chargement
+      const idx = getCurrentIdx();
+      
+      db.data.Qte = db.data.Qte || {};
+      if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
+      const arr = db.data.Qte[key];
+      if (!Number.isInteger(idx) || idx < 0 || idx >= arr.length){
+        alert('Index invalide');
+        // Nettoyer le localStorage si l'index est invalide
+        localStorage.removeItem('currentRobinetIdx');
+        showPage('page-site-qte-robinets-html');
+        return;
+      }
+      const item = arr[idx] || {};
+        ((section?.querySelector('#numero')) || document.getElementById('numero')).value = item.Numero || '';
+        ((section?.querySelector('#emplacement')) || document.getElementById('emplacement')).value = item.Emplacement || '';
+        ((section?.querySelector('#precision')) || document.getElementById('precision')).value = item.PrecisionEmplacement || '';
+        ((section?.querySelector('#type')) || document.getElementById('type')).value = item.Type || '';
+        ((section?.querySelector('#usages')) || document.getElementById('usages')).value = item.Usages || '';
+        ((section?.querySelector('#debit')) || document.getElementById('debit')).value = item.Debit != null ? item.Debit : '';
+        // PresenceReducteur stored as boolean; map to select value 'true'/'false' or ''
+        const redEl = ((section?.querySelector('#reducteur')) || document.getElementById('reducteur'));
+        if (redEl) {
+          if (item.PresenceReducteur === true) redEl.value = 'true';
+          else if (item.PresenceReducteur === false) redEl.value = 'false';
+          else redEl.value = '';
+        }
+        ((section?.querySelector('#tempsECS')) || document.getElementById('tempsECS')).value = item.TempsECS != null ? item.TempsECS : '';
+        ((section?.querySelector('#numReseauECS')) || document.getElementById('numReseauECS')).value = item.NumeroReseauECS || '';
+        ((section?.querySelector('#nbUtilSemaine')) || document.getElementById('nbUtilSemaine')).value = item.NbUtilisationSemaine != null ? item.NbUtilisationSemaine : '';
+        ((section?.querySelector('#nbEquipIdentique')) || document.getElementById('nbEquipIdentique')).value = item.NbEquipementIdentique != null ? item.NbEquipementIdentique : '';
+        ((section?.querySelector('#remarques')) || document.getElementById('remarques')).value = item.Remarques || '';
+    }
+
+    function save(notify = false){
+      // Récupérer l'index actuel pour la sauvegarde
+      const idx = getCurrentIdx();
+      const arr = db.data.Qte[key];
+      arr[idx] = {
+        Numero: ((section?.querySelector('#numero')) || document.getElementById('numero')).value.trim() || null,
+        Emplacement: ((section?.querySelector('#emplacement')) || document.getElementById('emplacement')).value.trim() || null,
+        PrecisionEmplacement: ((section?.querySelector('#precision')) || document.getElementById('precision')).value.trim() || null,
+        Type: ((section?.querySelector('#type')) || document.getElementById('type')).value.trim() || null,
+        Usages: ((section?.querySelector('#usages')) || document.getElementById('usages')).value.trim() || null,
+        Debit: (((section?.querySelector('#debit')) || document.getElementById('debit')).value!=='') ? parseFloat(((section?.querySelector('#debit')) || document.getElementById('debit')).value) : null,
+        PresenceReducteur: (function(){ const v = ((section?.querySelector('#reducteur')) || document.getElementById('reducteur')).value; return v==='true'?true:(v==='false'?false:null); })(),
+        TempsECS: (((section?.querySelector('#tempsECS')) || document.getElementById('tempsECS')).value!=='') ? parseInt(((section?.querySelector('#tempsECS')) || document.getElementById('tempsECS')).value,10) : null,
+        NumeroReseauECS: ((section?.querySelector('#numReseauECS')) || document.getElementById('numReseauECS')).value.trim() || null,
+        NbUtilisationSemaine: (((section?.querySelector('#nbUtilSemaine')) || document.getElementById('nbUtilSemaine')).value!=='') ? parseInt(((section?.querySelector('#nbUtilSemaine')) || document.getElementById('nbUtilSemaine')).value,10) : null,
+        NbEquipementIdentique: (((section?.querySelector('#nbEquipIdentique')) || document.getElementById('nbEquipIdentique')).value!=='') ? parseInt(((section?.querySelector('#nbEquipIdentique')) || document.getElementById('nbEquipIdentique')).value,10) : null,
+        Remarques: ((section?.querySelector('#remarques')) || document.getElementById('remarques')).value.trim() || null
+      };
+      db.data.Qte[key] = arr;
+      if (notify) {
+        alert('Enregistré');
+        // Nettoyer localStorage et retourner à la liste
+        localStorage.removeItem('currentRobinetIdx');
+        showPage('page-site-qte-robinets-html');
+      }
+    }
+
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=> save(true));
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=>{
+      // Nettoyer le localStorage avant de retourner
+      localStorage.removeItem('currentRobinetIdx');
+      showPage('page-site-qte-robinets-html');
+    });
+    ((section?.querySelector('#del')) || document.getElementById('del')).addEventListener('click', ()=>{
+      if (!confirm('Supprimer ce robinet ?')) return;
+      const idx = getCurrentIdx();
+      const arr = db.data.Qte[key]; arr.splice(idx,1); db.data.Qte[key]=arr;
+      // Nettoyer le localStorage avant de retourner
+      localStorage.removeItem('currentRobinetIdx');
+      showPage('page-site-qte-robinets-html');
+    });
+
+    // save on blur/change for each field (checkbox uses change)
+    ['numero','emplacement','precision','type','usages','debit','tempsECS','numReseauECS','nbUtilSemaine','nbEquipIdentique','remarques'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('blur', ()=> save(false));
+    });
+    const reducteurEl = ((section?.querySelector('#reducteur')) || document.getElementById('reducteur'));
+    if (reducteurEl) reducteurEl.addEventListener('change', ()=> save(false));
+    // Exécuter load() à chaque fois que la section devient visible
+    if (section) {
+      // Appel initial si la section est déjà visible
+      if (section.style.display !== 'none') {
+        load();
+      }
+      
+      // Observer les changements de visibilité pour rappeler load()
+      const obs = new MutationObserver(() => {
+        if (section.style.display !== 'none') {
+          load();  // Recharger à chaque affichage (garde l'observer actif)
+        }
+      });
+      obs.observe(section, { attributes: true, attributeFilter: ['style'] });
+    } else {
+      // Fallback si pas de section
+      load();
+    }
+    
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-robinets-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\robinets.html -->
+<style>
+#page-site-qte-robinets-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinets-html .toolbar{display:flex;gap:8px;margin-bottom:12px}#page-site-qte-robinets-html .list{display:flex;flex-direction:column;gap:10px}#page-site-qte-robinets-html .item{background:#fff;border:1px solid #d6e6ea;padding:12px;border-radius:8px}#page-site-qte-robinets-html .row{display:flex;gap:10px;flex-wrap:wrap}#page-site-qte-robinets-html .field{flex:1 1 200px;display:flex;flex-direction:column}#page-site-qte-robinets-html label{font-weight:700;color:#0b566b;margin-bottom:6px}#page-site-qte-robinets-html input[type="text"], #page-site-qte-robinets-html input[type="number"], #page-site-qte-robinets-html textarea{padding:8px;border:1px solid #d6e6ea;border-radius:6px}#page-site-qte-robinets-html textarea{min-height:60px}#page-site-qte-robinets-html .actions{margin-top:8px;display:flex;gap:8px;justify-content:flex-end}#page-site-qte-robinets-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinets-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}#page-site-qte-robinets-html .muted{color:#576c70}
+  
+</style>
+
+  <header style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <h2 style="margin:0;color:#0b566b">Robinets</h2>
+    <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
+  </header>
+
+  <p class="muted">Gérez la liste des robinets : ajoutez, modifiez ou supprimez des entrées. Les champs sont enregistrés automatiquement lorsque vous quittez un champ (blur).</p>
+
+  <div class="toolbar">
+    <button id="add" class="primary">Ajouter un robinet</button>
+  </div>
+
+  <table id="table" style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #d6e6ea;border-radius:8px;overflow:hidden">
+    <thead style="background:#f3fbfb">
+      <tr>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Numéro</th>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Emplacement</th>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Type</th>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Débit (l/min)</th>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Remarques</th>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0;width:200px">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'robinets';
+
+    function getData(){
+      db.data.Qte = db.data.Qte || {};
+      if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
+      return db.data.Qte[key];
+    }
+
+    const tbody = ((section?.querySelector('#tbody')) || document.getElementById('tbody'));
+
+    function saveList(arr){ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = arr; }
+
+    function render(){
+      const arr = getData();
+      tbody.innerHTML = '';
+      arr.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        const td = (text) => { const c = document.createElement('td'); c.style.padding='10px'; c.style.borderBottom='1px solid #eef6f7'; c.innerHTML = text||''; return c; };
+        tr.appendChild(td(item.Numero || ''));
+        tr.appendChild(td(item.Emplacement || ''));
+        tr.appendChild(td(item.Type || ''));
+        tr.appendChild(td(item.Debit!=null? item.Debit : ''));
+        tr.appendChild(td(item.Remarques || ''));
+        const actionsTd = document.createElement('td'); actionsTd.style.padding='10px'; actionsTd.style.borderBottom='1px solid #eef6f7';
+        // Modifier button
+        const mod = document.createElement('button'); mod.className='ghost'; mod.textContent='Modifier'; mod.style.marginRight='8px';
+        mod.addEventListener('click', ()=>{
+          // Stocker l'index pour éviter "index invalide" après actualisation
+          localStorage.setItem('currentRobinetIdx', idx);
+          (window.__robinetIdx = idx, showPage('page-site-qte-robinet-html'))
+        });
+        const del = document.createElement('button'); del.className='ghost'; del.textContent='Supprimer';
+        del.addEventListener('click', ()=>{ if (confirm('Supprimer ce robinet ?')){ arr.splice(idx,1); saveList(arr); render(); } });
+        actionsTd.appendChild(mod); actionsTd.appendChild(del);
+        tr.appendChild(actionsTd);
+        tbody.appendChild(tr);
+      });
+    }
+
+    ((section?.querySelector('#add')) || document.getElementById('add')).addEventListener('click', ()=>{
+      const arr = getData();
+      arr.push({Numero:null,Emplacement:null,Type:null,Debit:null,Remarques:null});
+      saveList(arr);
+      // Stocker l'index pour éviter "index invalide" après actualisation
+      const newIdx = arr.length - 1;
+      localStorage.setItem('currentRobinetIdx', newIdx);
+      
+      // Attendre un instant pour que la sauvegarde soit bien persistée
+      setTimeout(() => {
+        (window.__robinetIdx = newIdx, showPage('page-site-qte-robinet-html'))
+      }, 50);
+    });
+
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+
+    // initial render
+    render();
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-sous-compteurs-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\sous_compteurs.html -->
+<style>
+#page-site-qte-sous-compteurs-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-sous-compteurs-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-sous-compteurs-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Sous-compteurs</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'sous_compteurs';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-ventilation-batiment-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\ventilation_batiment.html -->
+<style>
+#page-site-qte-ventilation-batiment-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-ventilation-batiment-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-ventilation-batiment-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>Ventilation du bâtiment</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'ventilation_batiment';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qte-wc-html" class="page-section" style="display:none">
+<!-- PAGE: site\qte\wc.html -->
+<style>
+#page-site-qte-wc-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-wc-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-wc-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+</style>
+
+  <h2>WC</h2>
+  <textarea id="editor"></textarea>
+  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const key = 'wc';
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
+    });
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+
+<section id="page-site-qus-index-html" class="page-section" style="display:none">
+<!-- PAGE: site\qus\index.html -->
+<style>
+#page-site-qus-index-html{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f9fb}#page-site-qus-index-html textarea{width:100%;height:60vh;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qus-index-html button{background:#0b566b;color:#fff;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}#page-site-qus-index-html header{margin-bottom:12px}
+</style>
+
+  <header>
+    <h2>Questionnaire usager (Qus)</h2>
+    <p>Éditez la structure JSON de <strong>Qus</strong>.</p>
+  </header>
+  <div>
+    <textarea id="editor"></textarea>
+  </div>
+  <p style="margin-top:8px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+
+  <script src="../shared/Data.js">(function(section){
+
+})(document.currentScript?.closest('section'));</script>
+  <script>(function(section){
+
+    const db = new Data('sobrieau',365,false);
+    const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
+    const snap = db.snapshot();
+    editor.value = JSON.stringify(snap.Qus||{}, null, 2);
+
+    ((section?.querySelector('#save')) || document.getElementById('save')).addEventListener('click', ()=>{
+      try{
+        const parsed = JSON.parse(editor.value || '{}');
+        db.data.Qus = parsed;
+        alert('Qus sauvegardé.');
+      }catch(e){alert('JSON invalide: '+e.message)}
+    });
+
+    ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-home-html'));
+  
+})(document.currentScript?.closest('section'));</script>
+
+</section>
+</body>
+</html>

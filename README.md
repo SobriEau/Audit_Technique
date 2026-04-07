@@ -1,52 +1,275 @@
 # sobriEau
 
+Application web de questionnaires pour l'audit de consommation d'eau.
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## Structure du projet
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.cerema.fr/groupe_batiment_idf/sobrieau.git
-git branch -M main
-git push -uf origin main
+├── fusionner_v2.py          # Script de bundling HTML (fusionne 16 pages → 1 fichier)
+├── index_fusionne.html      # Application single-page générée
+├── site/                    # Sources HTML (16 pages)
+│   ├── home.html           # Page d'accueil
+│   ├── qge/index.html      # Questionnaire Général
+│   ├── qte/                # Questionnaire Technique (12 pages)
+│   │   ├── index.html      # Index des questionnaires techniques
+│   │   ├── robinets.html   # Liste des robinets
+│   │   ├── robinet.html    # Détail d'un robinet
+│   │   └── ...
+│   ├── qus/index.html      # Questionnaire Usage
+│   └── shared/Data.js      # Classe de persistence (localStorage)
 ```
 
-## Integrate with your tools
+## Utilisation
 
-* [Set up project integrations](https://gitlab.cerema.fr/groupe_batiment_idf/sobrieau/-/settings/integrations)
+### Générer le fichier fusionné
 
-## Collaborate with your team
+```bash
+python fusionner_v2.py
+```
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+Génère `index_fusionne.html` (65 Ko environ) en fusionnant toutes les pages du dossier `site/`.
 
-## Test and Deploy
+### Ouvrir l'application
 
-Use the built-in continuous integration in GitLab.
+Ouvrir `index_fusionne.html` dans un navigateur. L'application démarre sur la page d'accueil.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+## Bonnes pratiques pour modifier les fichiers HTML dans `site/`
 
-***
+⚠️ **Important** : Le fichier `index_fusionne.html` est généré automatiquement. Ne le modifiez jamais directement !  
+Modifiez toujours les fichiers sources dans `site/`, puis régénérez avec `python fusionner_v2.py`.
 
-# Editing this README
+### ✅ Navigation entre pages
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+**Utilisez toujours des chemins relatifs** dans les HTML sources :
+
+```javascript
+// ✅ BON - sera automatiquement transformé en showPage()
+location.href = './index.html';
+location.href = '../home.html';
+location.href = './robinet.html?idx=' + i;
+
+// ❌ MAUVAIS - ne fonctionnera pas après fusion
+showPage('page-site-home-html');  // Ne pas utiliser showPage() dans les sources
+window.location = '/site/home.html';  // Chemins absolus ne fonctionnent pas
+```
+
+Le script `fusionner_v2.py` transforme automatiquement :
+- `location.href = './page.html'` → `showPage('page-site-dossier-page-html')`
+- `location.href = '../home.html'` → `showPage('page-site-home-html')`
+
+### ✅ Sélecteurs DOM
+
+**Utilisez normalement `document.getElementById()`** dans les sources :
+
+```javascript
+// ✅ BON - sera automatiquement sécurisé
+document.getElementById('back').addEventListener('click', () => ...);
+document.getElementById('editor').value = data;
+const el = document.getElementById('table');
+
+// ❌ INUTILE - ne pas faire de scope manuel
+section?.querySelector('#back');  // Le script le fait automatiquement
+```
+
+Le script ajoute automatiquement l'isolation par section :
+- `document.getElementById('id')` → `((section?.querySelector('#id')) || document.getElementById('id'))`
+
+### ✅ Styles CSS
+
+**Écrivez vos styles normalement dans le `<head>`** :
+
+```html
+<head>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f6f9fb; }
+    .toolbar { display: flex; gap: 8px; }
+    button.primary { background: #0b566b; color: #fff; }
+  </style>
+</head>
+```
+
+Le script `fusionner_v2.py` **scope automatiquement** les styles à chaque section :
+- Extrait les `<style>` du `<head>`
+- Les place dans la section correspondante
+- Préfixe tous les sélecteurs avec `#page-site-dossier-page-html`
+
+**Exemple de transformation** :
+```css
+/* Source : robinet.html */
+body { padding: 20px; }
+.row { max-width: 800px; }
+
+/* Devient dans index_fusionne.html */
+#page-site-qte-robinet-html { padding: 20px; }
+#page-site-qte-robinet-html .row { max-width: 800px; }
+```
+
+✅ **Avantages** :
+- Pas de conflits CSS entre pages
+- Chaque page garde ses propres styles
+- Le sélecteur `body` est automatiquement converti en style de section
+
+❌ **Éviter** :
+- Les styles globaux qui doivent s'appliquer partout (les mettre dans le `<head>` global du document fusionné)
+- Les `@keyframes` ou `@media` complexes (peuvent nécessiter un traitement spécial)
+
+### ✅ Scripts externes (Data.js)
+
+**Importez Data.js normalement** dans chaque page qui l'utilise :
+
+```html
+<!-- ✅ BON - dans le <head> -->
+<script src="../shared/Data.js"></script>
+```
+
+Le script `fusionner_v2.py` :
+1. Détecte et supprime tous les imports de Data.js
+2. Inclut Data.js **une seule fois** globalement dans le fichier fusionné
+3. La classe Data est accessible partout sans duplication
+
+### ✅ Boutons retour
+
+Les boutons retour fonctionnent comme la navigation normale :
+
+```javascript
+// ✅ BON
+document.getElementById('back').addEventListener('click', () => location.href = '../home.html');
+document.getElementById('back').addEventListener('click', () => location.href = './index.html');
+```
+
+### ✅ Paramètres URL (cas spécial robinet.html)
+
+Pour passer un paramètre `idx` avec persistence et reload :
+
+```javascript
+// ✅ BON - dans robinets.html (envoyer avec localStorage)
+localStorage.setItem('currentRobinetIdx', idx);
+location.href = './robinet.html?idx=' + idx;
+
+// ✅ BON - dans robinet.html (fonction pour recalculer l'index)
+function getCurrentIdx() {
+  if (window.__robinetIdx !== undefined) {
+    return window.__robinetIdx;  // 1. Variable globale SPA
+  } else if (localStorage.getItem('currentRobinetIdx')) {
+    return parseInt(localStorage.getItem('currentRobinetIdx'), 10);  // 2. LocalStorage
+  } else {
+    return parseInt(params.get('idx'), 10);  // 3. URL params
+  }
+}
+
+// ✅ BON - Appeler getCurrentIdx() dans load() pour recalculer
+function load() {
+  const idx = getCurrentIdx();  // Recalculé à chaque affichage
+  // ... utiliser idx
+}
+
+// ✅ BON - Appeler getCurrentIdx() dans save() aussi
+function save() {
+  const idx = getCurrentIdx();  // Toujours à jour
+  // ... utiliser idx
+}
+```
+
+**Pourquoi getCurrentIdx() comme fonction ?**
+- ✅ Recalculé à chaque appel, pas une seule fois
+- ✅ `load()` est rappelé quand la page redevient visible (MutationObserver)
+- ✅ L'index est toujours à jour même si on clique sur plusieurs robinets différents
+- ✅ Survit aux actualisations grâce à localStorage
+
+**⚠️ Erreur classique à éviter :**
+```javascript
+// ❌ MAUVAIS - idx calculé une seule fois au chargement
+const idx = getCurrentIdx();  // Défini au début du script
+
+function load() {
+  // idx garde toujours la valeur initiale même après load() répété
+  const item = arr[idx];  // Toujours le même robinet !
+}
+```
+
+Le script transforme automatiquement en :
+```javascript
+(window.__robinetIdx = i, showPage('page-site-qte-robinet-html'))
+```
+
+La fonction `showPage()` met la section à `display: 'none'` puis `display: 'block'`, ce qui déclenche le `MutationObserver` et rappelle `load()` avec l'index mis à jour.
+
+## Architecture technique
+
+### Comment fonctionne fusionner_v2.py
+
+1. **collecter_pages()** : Liste tous les *.html dans site/
+2. **extraire_head_body()** : Parse <head> et <body> avec regex
+3. **nettoyer_head()** : Retire les imports de Data.js
+4. **transformer_navigation()** : Convertit `location.href` → `showPage()`
+5. **encapsuler_scripts()** : Wrappe chaque <script> dans une IIFE avec `section` parameter
+6. **creer_script_navigation()** : Génère showPage() + inclut Data.js une fois
+7. **assembler()** : Produit le HTML final
+
+### Single-Page Application
+
+Le fichier fusionné contient :
+- Une fonction globale `showPage(pageId)` pour la navigation
+- 16 éléments `<section id="page-site-*-html">` (un par page)
+- Chaque section contient ses propres styles et scripts isolés
+- Navigation par affichage/masquage des sections (`display: block/none`)
+
+### Isolation des scripts
+
+Chaque page est encapsulée dans une IIFE :
+
+```javascript
+(function(section) {
+  // Code de la page avec accès à 'section' (son conteneur)
+  const el = ((section?.querySelector('#btn')) || document.getElementById('btn'));
+})(document.currentScript?.closest('section'));
+```
+
+Cela évite les conflits entre pages (même ID dans plusieurs pages).
+
+## Développement
+
+### Workflow recommandé
+
+1. Modifier les fichiers dans `site/`
+2. Exécuter `python fusionner_v2.py`
+3. Ouvrir `index_fusionne.html` dans le navigateur
+4. Tester la navigation et les fonctionnalités
+
+### Débogage
+
+- **Console navigateur** : Les erreurs JavaScript apparaissent avec le numéro de ligne dans index_fusionne.html
+- **Identifier la source** : Chercher le `<section id="page-site-*">` contenant la ligne d'erreur
+- **Corriger dans site/** : Toujours corriger dans le fichier source, jamais dans index_fusionne.html
+
+## Conventions de code
+
+### CSS
+
+Utilisez des styles inline `<style>` dans chaque page HTML. Ils sont automatiquement isolés dans la section correspondante.
+
+### IDs HTML
+
+Évitez de réutiliser les mêmes IDs sur plusieurs pages (même si l'isolation fonctionne, c'est plus clair d'avoir des IDs uniques ou préfixés).
+
+### localStorage / Cookies
+
+Utilisez la classe `Data` pour toute persistence :
+
+```javascript
+Data.set('key', value);
+const value = Data.get('key', defaultValue);
+```
+
+## Compatibilité
+
+- **Navigateurs** : Tous les navigateurs modernes (Chrome, Firefox, Edge, Safari)
+- **JavaScript** : ES6+ (arrow functions, optional chaining ?., template strings)
+- **Storage** : localStorage (avec fallback cookies dans Data.js)
+
+## Licence
+
+Projet interne Cerema
 
 ## Suggestions for a good README
 
