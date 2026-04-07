@@ -1,9 +1,9 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ã‰diteur Robinet</title>
+  <title>Éditeur Robinet</title>
   <style>h1{margin:0 0 18px;color:#0b566b}.page-header h1{margin:0}.page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}
     label{display:block;margin-top:10px;font-weight:700;color:#0b566b}
     input[type=text], input[type=number], textarea, select{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:6px;box-sizing:border-box}
@@ -18,19 +18,26 @@
   </style>
 </head>
 <body>
+    <div class="page-header">
+		<h1>SobriEau</h1>
+		<div class="data-tools">
+			<button id="exportJson" class="export" type="button">Exporter JSON</button>
+		</div>
+	</div>
   <div class="page-header">
-    <h2 style="margin:0;color:#0b566b">Ã‰diteur Robinet</h2>
-    <button id="back" class="ghost" style="margin-left:auto">â† Retour</button>
+    <button i="home" class="ghost" style="margin-right:auto" onclick="location.href='../home.html'">Accueil</button>
+    <h2>Edition de Robinet</h2>
+    <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
   </div>
 
   <div class="row">
-    <label>NumÃ©ro</label>
+    <label>Numéro</label>
     <input id="numero" type="text" />
 
     <label>Emplacement</label>
     <input id="emplacement" type="text" />
 
-    <label>PrÃ©cision emplacement</label>
+    <label>Précision emplacement</label>
     <input id="precision" type="text" />
 
     <div class="pair">
@@ -39,13 +46,13 @@
         <select id="type">
           <option value=""></option>
           <option value="Mitigeur">Mitigeur</option>
-          <option value="MÃ©langeur">MÃ©langeur</option>
+          <option value="Mélangeur">Mélangeur</option>
           <option value="Monocommande">Monocommande</option>
-          <option value="Robinet Ã  bille">Robinet Ã  bille</option>
-          <option value="Robinet Ã  disque cÃ©ramique">Robinet Ã  disque cÃ©ramique</option>
+          <option value="Robinet à bille">Robinet à bille</option>
+          <option value="Robinet à disque céramique">Robinet à disque céramique</option>
           <option value="Robinet thermostatique">Robinet thermostatique</option>
-          <option value="Robinet temporisÃ©">Robinet temporisÃ©</option>
-          <option value="Robinet d'arrÃªt">Robinet d'arrÃªt</option>
+          <option value="Robinet temporisé">Robinet temporisé</option>
+          <option value="Robinet d'arrêt">Robinet d'arrêt</option>
           <option value="Autre">Autre</option>
         </select>
       </div>
@@ -57,11 +64,11 @@
 
     <div class="pair">
       <div class="col">
-        <label>DÃ©bit (l/min)</label>
+        <label>Débit (l/min)</label>
         <input id="debit" type="number" step="0.1" />
       </div>
       <div class="col">
-        <label>PrÃ©sence d'un rÃ©ducteur de dÃ©bit</label>
+        <label>Présence d'un réducteur de débit</label>
         <select id="reducteur">
           <option value=""></option>
           <option value="true">Oui</option>
@@ -76,7 +83,7 @@
         <input id="tempsECS" type="number" step="1" />
       </div>
       <div class="col">
-        <label>NumÃ©ro rÃ©seau ECS d'appartenance</label>
+        <label>Numéro réseau ECS d'appartenance</label>
         <input id="numReseauECS" type="text" />
       </div>
     </div>
@@ -87,7 +94,7 @@
         <input id="nbUtilSemaine" type="number" step="1" />
       </div>
       <div class="col">
-        <label>Nombre d'Ã©quipement identique</label>
+        <label>Nombre d'équipement identique</label>
         <input id="nbEquipIdentique" type="number" step="1" />
       </div>
     </div>
@@ -104,18 +111,18 @@
   <script src="../shared/Data.js"></script>
   <script>
     
-    // initialisation du stockage et paramÃ¨tres
+    // initialisation du stockage et paramètres
     let db = new Data('sobrieau',365,false);
     const key = 'robinets';
     const params = new URLSearchParams(location.search);
     
-    // Fonction pour rÃ©cupÃ©rer l'index actuel (appelÃ©e Ã  chaque load)
+    // Fonction pour récupérer l'index actuel (appelée à chaque load)
     function getCurrentIdx() {
       if (window.__robinetIdx !== undefined) {
-        // 1. Variable globale dÃ©finie par navigation SPA
+        // 1. Variable globale définie par navigation SPA
         return window.__robinetIdx;
       } else if (localStorage.getItem('currentRobinetIdx')) {
-        // 2. localStorage (persiste aprÃ¨s actualisation)
+        // 2. localStorage (persiste après actualisation)
         return parseInt(localStorage.getItem('currentRobinetIdx'), 10);
       } else {
         // 3. URLSearchParams (mode standalone)
@@ -124,10 +131,10 @@
     }
 
     function load(){
-      // RecrÃ©er l'instance pour forcer le rechargement depuis localStorage
+      // Recréer l'instance pour forcer le rechargement depuis localStorage
       db = new Data('sobrieau',365,false);
       
-      // Recalculer l'index Ã  chaque chargement
+      // Recalculer l'index à chaque chargement
       const idx = getCurrentIdx();
       
       // S'assurer que la structure existe
@@ -164,7 +171,7 @@
     }
 
     function save(notify = false){
-      // RÃ©cupÃ©rer l'index actuel pour la sauvegarde
+      // Récupérer l'index actuel pour la sauvegarde
       const idx = getCurrentIdx();
       
       // S'assurer que la structure existe
@@ -187,20 +194,20 @@
         Remarques: document.getElementById('remarques').value.trim() || null
       };
 
-      // Ã‰viter les sauvegardes inutiles si rien n'a changÃ©
+      // Éviter les sauvegardes inutiles si rien n'a changé
       const currentItem = db.data.Qte[key][idx] || {};
       const hasChanged = JSON.stringify(currentItem) !== JSON.stringify(nextItem);
       if (hasChanged) {
         db.data.Qte[key][idx] = nextItem;
-        // Forcer la sauvegarde en rÃ©affectant le tableau (dÃ©clenche le Proxy)
+        // Forcer la sauvegarde en réaffectant le tableau (déclenche le Proxy)
         db.data.Qte[key] = db.data.Qte[key];
       }
       
       if (notify) {
-        alert('EnregistrÃ©');
-        // Petit dÃ©lai pour laisser la persistance se terminer avant navigation
+        alert('Enregistré');
+        // Petit délai pour laisser la persistance se terminer avant navigation
         setTimeout(() => {
-          // Nettoyer localStorage et retourner Ã  la liste
+          // Nettoyer localStorage et retourner à la liste
           localStorage.removeItem('currentRobinetIdx');
           location.href = './robinets.html';
         }, 80);
@@ -217,15 +224,20 @@
       if (!confirm('Supprimer ce robinet ?')) return;
       const idx = getCurrentIdx();
       const arr = db.data.Qte[key]; arr.splice(idx,1); db.data.Qte[key]=arr;
-      // Petit dÃ©lai pour laisser la persistance se terminer avant navigation
+      // Petit délai pour laisser la persistance se terminer avant navigation
       setTimeout(() => {
         // Nettoyer le localStorage avant de retourner
         localStorage.removeItem('currentRobinetIdx');
         location.href = './robinets.html';
       }, 80);
     });
-
-    // Autosave dÃ©sactivÃ© : la persistance ne se fait que via le bouton Enregistrer
+    const btnExportJSON = document.getElementById('exportJson');
+			// Import/Export JSON via Data.js
+			btnExportJSON.addEventListener('click', () => {
+				const stamp = new Date().toISOString().slice(0,10);
+				db.exporterJSON('sobrieau-' + stamp);
+			});
+    // Autosave désactivé : la persistance ne se fait que via le bouton Enregistrer
 
     load();
   </script>

@@ -12,7 +12,7 @@ from pathlib import Path
 # ═══════════════════════════════════════════════════════════════════════════
 
 RACINE = Path(__file__).parent / "site"
-SORTIE = Path(__file__).parent / "index_fusionne.html"
+SORTIE = Path(__file__).parent / "index.html"
 SHARED_JS = RACINE / "shared" / "Data.js"
 
 # ═══════════════════════════════════════════════════════════════════════════

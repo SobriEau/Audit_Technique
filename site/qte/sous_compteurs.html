@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
@@ -17,7 +17,7 @@
     const editor = document.getElementById('editor');
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
     document.getElementById('save').addEventListener('click', ()=>{
-      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardÃ©'); }catch(e){ alert('JSON invalide: '+e.message); }
+      try{ db.data.Qte = db.data.Qte || {}; db.data.Qte[key] = JSON.parse(editor.value||'{}'); alert('sauvegardé'); }catch(e){ alert('JSON invalide: '+e.message); }
     });
     document.getElementById('back').addEventListener('click', ()=> location.href = './index.html');
   </script>

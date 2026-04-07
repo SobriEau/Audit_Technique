@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>SobriEau — Audit Technique</title>
+	<title>SobriEau</title>
 	<style>
 		body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;background:#f6f9fb;color:#222}
 		.page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
@@ -46,7 +46,7 @@
 </head>
 <body>
 	<div class="page-header">
-		<h1>SobriEau — Audit Technique</h1>
+		<h1>SobriEau</h1>
 		<div class="data-tools">
 			<button id="importJson" class="import" type="button">Importer JSON</button>
 			<button id="exportJson" class="export" type="button">Exporter JSON</button>
@@ -225,7 +225,6 @@
 			btnQge.addEventListener('click', () => { if (!btnQge.disabled) location.href = './qge/index.html'; });
 			btnQus.addEventListener('click', () => { if (!btnQus.disabled) location.href = './qus/index.html'; });
 			btnQte.addEventListener('click', () => { if (!btnQte.disabled) location.href = './qte/index.html'; });
-
 			// Import/Export JSON via Data.js
 			btnExportJSON.addEventListener('click', () => {
 				saveAdresse();

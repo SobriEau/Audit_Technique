@@ -8,13 +8,13 @@
 
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>SobriEau — Audit Technique</title>
+	<title>SobriEau</title>
 	
 <!-- HEAD: site\qge\index.html -->
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Qge — Questionnaire gestionnaire</title>
+  <title>SobriEau — Questionnaire gestionnaire</title>
   
 <!-- HEAD: site\qte\appareils_nettoyage_lavage.html -->
 
@@ -38,7 +38,7 @@
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Qte — Audit Technique</title>
+  <title>SobriEau — Audit Technique</title>
   
 <!-- HEAD: site\qte\potentiel_optimisation.html -->
 
@@ -74,7 +74,7 @@
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Robinets</title>
+  <title>SobriEau — Audit Technique — Robinets</title>
   
 <!-- HEAD: site\qte\sous_compteurs.html -->
 
@@ -98,7 +98,7 @@
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Qus — Questionnaire usager</title>
+  <title>SobriEau — Questionnaire usager</title>
   
 
 <script>
@@ -433,7 +433,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </style>
 
 	<div class="page-header">
-		<h1>SobriEau — Audit Technique</h1>
+		<h1>SobriEau</h1>
 		<div class="data-tools">
 			<button id="importJson" class="import" type="button">Importer JSON</button>
 			<button id="exportJson" class="export" type="button">Exporter JSON</button>
@@ -628,7 +628,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			btnQge.addEventListener('click', () => { if (!btnQge.disabled) showPage('page-site-qge-index-html'); });
 			btnQus.addEventListener('click', () => { if (!btnQus.disabled) showPage('page-site-qus-index-html'); });
 			btnQte.addEventListener('click', () => { if (!btnQte.disabled) showPage('page-site-qte-index-html'); });
-
 			// Import/Export JSON via Data.js
 			btnExportJSON.addEventListener('click', () => {
 				saveAdresse();
@@ -693,13 +692,18 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qge-index-html" class="page-section" style="display:none">
 <!-- PAGE: site\qge\index.html -->
 <style>
-#page-site-qge-index-html{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f9fb}#page-site-qge-index-html textarea{width:100%;height:60vh;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qge-index-html button{background:#0b566b;color:#fff;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}#page-site-qge-index-html header{margin-bottom:12px}
+#page-site-qge-index-html h1{margin:0 0 18px;color:#0b566b}#page-site-qge-index-html .page-header h1{margin:0}#page-site-qge-index-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qge-index-html{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f9fb}#page-site-qge-index-html textarea{width:100%;height:60vh;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qge-index-html button{background:#0b566b;color:#fff;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}#page-site-qge-index-html header{margin-bottom:12px}
 </style>
 
-  <header>
-    <h2>Questionnaire gestionnaire (Qge)</h2>
-    <p>Éditez la structure JSON de <strong>Qge</strong>. Sauvegarde automatique dans les cookies via la classe Data.</p>
-  </header>
+  <div class="page-header">
+		<h1>SobriEau</h1>
+		<div class="data-tools">
+			<button id="importJson" class="import" type="button" disabled>Importer JSON</button>
+			<button id="exportJson" class="export" type="button" disabled>Exporter JSON</button>
+		</div>
+	</div>
+  <div class="page-header"><h1>Questionnaire gestionnaire</h1></div>
+  <p>Éditez la structure JSON de <strong>Qge</strong>. Sauvegarde automatique dans les cookies via la classe Data.</p>
   <div>
     <textarea id="editor"></textarea>
   </div>
@@ -758,10 +762,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-appareils-nettoyage-lavage-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\appareils_nettoyage_lavage.html -->
 <style>
-#page-site-qte-appareils-nettoyage-lavage-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-appareils-nettoyage-lavage-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-appareils-nettoyage-lavage-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-appareils-nettoyage-lavage-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-appareils-nettoyage-lavage-html .page-header h1{margin:0}#page-site-qte-appareils-nettoyage-lavage-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-appareils-nettoyage-lavage-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-appareils-nettoyage-lavage-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-appareils-nettoyage-lavage-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Appareils de nettoyage / lavage</h2>
+  <div class="page-header"><h1>Appareils de nettoyage / lavage</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -811,10 +815,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-douches-baignoires-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\douches_baignoires.html -->
 <style>
-#page-site-qte-douches-baignoires-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-douches-baignoires-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-douches-baignoires-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-douches-baignoires-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-douches-baignoires-html .page-header h1{margin:0}#page-site-qte-douches-baignoires-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-douches-baignoires-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-douches-baignoires-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-douches-baignoires-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Douches / Baignoires</h2>
+  <div class="page-header"><h1>Douches / Baignoires</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -864,10 +868,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-espace-vert-exterieur-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\espace_vert_exterieur.html -->
 <style>
-#page-site-qte-espace-vert-exterieur-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-espace-vert-exterieur-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-espace-vert-exterieur-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-espace-vert-exterieur-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-espace-vert-exterieur-html .page-header h1{margin:0}#page-site-qte-espace-vert-exterieur-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-espace-vert-exterieur-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-espace-vert-exterieur-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-espace-vert-exterieur-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Espace vert / Extérieur</h2>
+  <div class="page-header"><h1>Espace vert / Extérieur</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -917,17 +921,22 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-index-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\index.html -->
 <style>
-#page-site-qte-index-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222;max-width:1000px;margin:18px auto}#page-site-qte-index-html header.main{display:flex;align-items:center;gap:12px;margin-bottom:14px}#page-site-qte-index-html header.main h1{margin:0;color:#0b566b;font-size:20px}#page-site-qte-index-html header.main button{margin-left:auto;background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-index-html h2{margin:6px 0 12px;color:#09494f}#page-site-qte-index-html .toolbar{display:flex;flex-wrap:nowrap;gap:8px;margin:0;padding:8px 10px;background:linear-gradient(180deg,#eef9fb,#e6f4f7);border:1px solid #d6e6ea;border-bottom:0;border-top-left-radius:8px;border-top-right-radius:8px;align-items:center;overflow-x:auto}#page-site-qte-index-html .toolbar button{background:transparent;border:1px solid transparent;padding:6px 10px;border-radius:6px;cursor:pointer;font-weight:700;color:#074e58;white-space:nowrap}#page-site-qte-index-html .editable{min-height:120px;border:1px solid #d6e6ea;border-top:0;border-bottom-left-radius:8px;border-bottom-right-radius:8px;padding:12px;background:#fff}#page-site-qte-index-html .section{background:#fff;padding:14px;border-radius:8px;border:1px solid #e3eef0;margin-bottom:12px}#page-site-qte-index-html .grid{display:flex;flex-direction:column;gap:10px}#page-site-qte-index-html .card-btn{width:100%;background:linear-gradient(180deg,#ffffff,#f3fbfb);border:1px solid #d6e6ea;padding:12px;border-radius:8px;cursor:pointer;color:#074e58;text-align:left;font-weight:700;box-sizing:border-box;overflow-wrap:break-word}#page-site-qte-index-html .card-btn a{color:inherit;text-decoration:none;display:block;width:100%;box-sizing:border-box;white-space:normal;word-break:break-word}#page-site-qte-index-html .muted{color:#576c70;font-size:14px}#page-site-qte-index-html textarea{width:100%;height:220px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-index-html .actions{margin-top:10px}
+#page-site-qte-index-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-index-html .page-header h1{margin:0}#page-site-qte-index-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-index-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222;max-width:1000px;margin:18px auto}#page-site-qte-index-html header.main{display:flex;align-items:center;gap:12px;margin-bottom:14px}#page-site-qte-index-html header.main h1{margin:0;color:#0b566b;font-size:20px}#page-site-qte-index-html header.main button{margin-left:auto;background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-index-html h2{margin:6px 0 12px;color:#09494f}#page-site-qte-index-html .toolbar{display:flex;flex-wrap:nowrap;gap:8px;margin:0;padding:8px 10px;background:linear-gradient(180deg,#eef9fb,#e6f4f7);border:1px solid #d6e6ea;border-bottom:0;border-top-left-radius:8px;border-top-right-radius:8px;align-items:center;overflow-x:auto}#page-site-qte-index-html .toolbar button{background:transparent;border:1px solid transparent;padding:6px 10px;border-radius:6px;cursor:pointer;font-weight:700;color:#074e58;white-space:nowrap}#page-site-qte-index-html .editable{min-height:120px;border:1px solid #d6e6ea;border-top:0;border-bottom-left-radius:8px;border-bottom-right-radius:8px;padding:12px;background:#fff}#page-site-qte-index-html .section{background:#fff;padding:14px;border-radius:8px;border:1px solid #e3eef0;margin-bottom:12px}#page-site-qte-index-html .grid{display:flex;flex-direction:column;gap:10px}#page-site-qte-index-html .card-btn{width:100%;background:linear-gradient(180deg,#ffffff,#f3fbfb);border:1px solid #d6e6ea;padding:12px;border-radius:8px;cursor:pointer;color:#074e58;text-align:left;font-weight:700;box-sizing:border-box;overflow-wrap:break-word}#page-site-qte-index-html .card-btn a{color:inherit;text-decoration:none;display:block;width:100%;box-sizing:border-box;white-space:normal;word-break:break-word}#page-site-qte-index-html .muted{color:#576c70;font-size:14px}#page-site-qte-index-html textarea{width:100%;height:220px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-index-html .actions{margin-top:10px}#page-site-qte-index-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-index-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}
   
 </style>
 
-  <header class="main">
-    <h1>SobriEau — Questionnaire Qte</h1>
-    <button id="back">← Retour</button>
-  </header>
-
-  <div class="section">
+  <div class="page-header">
+		<h1>SobriEau</h1>
+		<div class="data-tools">
+			<button id="exportJson" class="export" type="button" disabled>Exporter JSON</button>
+		</div>
+	</div>
+  <div class="page-header">
+    <button i="home" class="ghost" style="margin-right:auto" onclick="showPage('page-site-home-html')">Accueil</button>
     <h2>Audit Technique</h2>
+    <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
+  </div>
+  <div class="section">
     <div>
       <label style="font-weight:700;margin-bottom:6px;display:block">Info</label>
       <div class="toolbar" data-target="qte-info">
@@ -945,10 +954,6 @@ window.addEventListener('DOMContentLoaded', () => {
         </label>
       </div>
       <div id="qte-info" class="editable" contenteditable="true"></div>
-    </div>
-
-    <div class="actions">
-      <span class="muted">Les modifications sont sauvegardées lorsque vous quittez le champ (blur).</span>
     </div>
   </div>
 
@@ -1034,6 +1039,12 @@ window.addEventListener('DOMContentLoaded', () => {
       div.appendChild(a);
       container.appendChild(div);
     });
+	const btnExportJSON = ((section?.querySelector('#exportJson')) || document.getElementById('exportJson'));
+	// Import/Export JSON via Data.js
+	btnExportJSON.addEventListener('click', () => {
+		const stamp = new Date().toISOString().slice(0,10);
+		db.exporterJSON('sobrieau-' + stamp);
+	});
 
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-home-html'));
   
@@ -1057,10 +1068,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-potentiel-optimisation-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\potentiel_optimisation.html -->
 <style>
-#page-site-qte-potentiel-optimisation-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-potentiel-optimisation-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-potentiel-optimisation-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-potentiel-optimisation-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-potentiel-optimisation-html .page-header h1{margin:0}#page-site-qte-potentiel-optimisation-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-potentiel-optimisation-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-potentiel-optimisation-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-potentiel-optimisation-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Potentiel d'optimisation</h2>
+  <div class="page-header"><h1>Potentiel d'optimisation</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -1110,10 +1121,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-reducteurs-de-pression-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\reducteurs_de_pression.html -->
 <style>
-#page-site-qte-reducteurs-de-pression-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-reducteurs-de-pression-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-reducteurs-de-pression-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-reducteurs-de-pression-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-reducteurs-de-pression-html .page-header h1{margin:0}#page-site-qte-reducteurs-de-pression-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-reducteurs-de-pression-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-reducteurs-de-pression-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-reducteurs-de-pression-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Réducteurs de pression</h2>
+  <div class="page-header"><h1>Réducteurs de pression</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -1163,10 +1174,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-releve-compteur-general-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\releve_compteur_general.html -->
 <style>
-#page-site-qte-releve-compteur-general-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-releve-compteur-general-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-releve-compteur-general-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-releve-compteur-general-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-releve-compteur-general-html .page-header h1{margin:0}#page-site-qte-releve-compteur-general-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-releve-compteur-general-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-releve-compteur-general-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-releve-compteur-general-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Relevé compteur général</h2>
+  <div class="page-header"><h1>Relevé compteur général</h1></div>
   <p class="muted">Éditez les données JSON de cette section.</p>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
@@ -1218,10 +1229,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-reseaux-eau-chaude-sanitaire-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\reseaux_eau_chaude_sanitaire.html -->
 <style>
-#page-site-qte-reseaux-eau-chaude-sanitaire-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-reseaux-eau-chaude-sanitaire-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-reseaux-eau-chaude-sanitaire-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-reseaux-eau-chaude-sanitaire-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-reseaux-eau-chaude-sanitaire-html .page-header h1{margin:0}#page-site-qte-reseaux-eau-chaude-sanitaire-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-reseaux-eau-chaude-sanitaire-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-reseaux-eau-chaude-sanitaire-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-reseaux-eau-chaude-sanitaire-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Réseaux d'Eau Chaude Sanitaire</h2>
+  <div class="page-header"><h1>Réseaux d'Eau Chaude Sanitaire</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -1271,14 +1282,21 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-robinet-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\robinet.html -->
 <style>
-#page-site-qte-robinet-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinet-html label{display:block;margin-top:10px;font-weight:700;color:#0b566b}#page-site-qte-robinet-html input[type=text], #page-site-qte-robinet-html input[type=number], #page-site-qte-robinet-html textarea, #page-site-qte-robinet-html select{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:6px;box-sizing:border-box}#page-site-qte-robinet-html textarea{min-height:100px}#page-site-qte-robinet-html .row{max-width:800px}#page-site-qte-robinet-html .pair{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}#page-site-qte-robinet-html .pair .col{flex:1 1 220px;display:flex;flex-direction:column;min-width:0}#page-site-qte-robinet-html .checkbox-label{display:flex;align-items:center;gap:8px}#page-site-qte-robinet-html .actions{margin-top:12px;display:flex;gap:8px}#page-site-qte-robinet-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinet-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}
+#page-site-qte-robinet-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-robinet-html .page-header h1{margin:0}#page-site-qte-robinet-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-robinet-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinet-html label{display:block;margin-top:10px;font-weight:700;color:#0b566b}#page-site-qte-robinet-html input[type=text], #page-site-qte-robinet-html input[type=number], #page-site-qte-robinet-html textarea, #page-site-qte-robinet-html select{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:6px;box-sizing:border-box}#page-site-qte-robinet-html textarea{min-height:100px}#page-site-qte-robinet-html .row{max-width:800px}#page-site-qte-robinet-html .pair{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}#page-site-qte-robinet-html .pair .col{flex:1 1 220px;display:flex;flex-direction:column;min-width:0}#page-site-qte-robinet-html .checkbox-label{display:flex;align-items:center;gap:8px}#page-site-qte-robinet-html .actions{margin-top:12px;display:flex;gap:8px}#page-site-qte-robinet-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinet-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}
   
 </style>
 
-  <header style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-    <h2 style="margin:0;color:#0b566b">Éditeur Robinet</h2>
+    <div class="page-header">
+		<h1>SobriEau</h1>
+		<div class="data-tools">
+			<button id="exportJson" class="export" type="button">Exporter JSON</button>
+		</div>
+	</div>
+  <div class="page-header">
+    <button i="home" class="ghost" style="margin-right:auto" onclick="showPage('page-site-home-html')">Accueil</button>
+    <h2>Edition de Robinet</h2>
     <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
-  </header>
+  </div>
 
   <div class="row">
     <label>Numéro</label>
@@ -1497,7 +1515,12 @@ window.addEventListener('DOMContentLoaded', () => {
         showPage('page-site-qte-robinets-html');
       }, 80);
     });
-
+    const btnExportJSON = ((section?.querySelector('#exportJson')) || document.getElementById('exportJson'));
+			// Import/Export JSON via Data.js
+			btnExportJSON.addEventListener('click', () => {
+				const stamp = new Date().toISOString().slice(0,10);
+				db.exporterJSON('sobrieau-' + stamp);
+			});
     // Autosave désactivé : la persistance ne se fait que via le bouton Enregistrer
 
     load();
@@ -1522,14 +1545,21 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-robinets-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\robinets.html -->
 <style>
-#page-site-qte-robinets-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinets-html .toolbar{display:flex;gap:8px;margin-bottom:12px}#page-site-qte-robinets-html .list{display:flex;flex-direction:column;gap:10px}#page-site-qte-robinets-html .item{background:#fff;border:1px solid #d6e6ea;padding:12px;border-radius:8px}#page-site-qte-robinets-html .row{display:flex;gap:10px;flex-wrap:wrap}#page-site-qte-robinets-html .field{flex:1 1 200px;display:flex;flex-direction:column}#page-site-qte-robinets-html label{font-weight:700;color:#0b566b;margin-bottom:6px}#page-site-qte-robinets-html input[type="text"], #page-site-qte-robinets-html input[type="number"], #page-site-qte-robinets-html textarea{padding:8px;border:1px solid #d6e6ea;border-radius:6px}#page-site-qte-robinets-html textarea{min-height:60px}#page-site-qte-robinets-html .actions{margin-top:8px;display:flex;gap:8px;justify-content:flex-end}#page-site-qte-robinets-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinets-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}#page-site-qte-robinets-html .muted{color:#576c70}
+#page-site-qte-robinets-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-robinets-html .page-header h1{margin:0}#page-site-qte-robinets-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-robinets-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinets-html .toolbar{display:flex;gap:8px;margin-bottom:12px}#page-site-qte-robinets-html .list{display:flex;flex-direction:column;gap:10px}#page-site-qte-robinets-html .item{background:#fff;border:1px solid #d6e6ea;padding:12px;border-radius:8px}#page-site-qte-robinets-html .row{display:flex;gap:10px;flex-wrap:wrap}#page-site-qte-robinets-html .field{flex:1 1 200px;display:flex;flex-direction:column}#page-site-qte-robinets-html label{font-weight:700;color:#0b566b;margin-bottom:6px}#page-site-qte-robinets-html input[type="text"], #page-site-qte-robinets-html input[type="number"], #page-site-qte-robinets-html textarea{padding:8px;border:1px solid #d6e6ea;border-radius:6px}#page-site-qte-robinets-html textarea{min-height:60px}#page-site-qte-robinets-html .actions{margin-top:8px;display:flex;gap:8px;justify-content:flex-end}#page-site-qte-robinets-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinets-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}#page-site-qte-robinets-html .muted{color:#576c70}
   
 </style>
 
-  <header style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-    <h2 style="margin:0;color:#0b566b">Robinets</h2>
+    <div class="page-header">
+		<h1>SobriEau</h1>
+		<div class="data-tools">
+			<button id="exportJson" class="export" type="button">Exporter JSON</button>
+		</div>
+	</div>
+  <div class="page-header">
+    <button i="home" class="ghost" style="margin-right:auto" onclick="showPage('page-site-home-html')">Accueil</button>
+    <h2>Robinets</h2>
     <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
-  </header>
+  </div>
 
   <p class="muted">Gérez la liste des robinets : ajoutez, modifiez ou supprimez des entrées. Les champs sont enregistrés automatiquement lorsque vous quittez un champ (blur).</p>
 
@@ -1633,7 +1663,12 @@ window.addEventListener('DOMContentLoaded', () => {
       db = new Data('sobrieau',365,false);
       render();
     }
-
+    const btnExportJSON = ((section?.querySelector('#exportJson')) || document.getElementById('exportJson'));
+			// Import/Export JSON via Data.js
+			btnExportJSON.addEventListener('click', () => {
+				const stamp = new Date().toISOString().slice(0,10);
+				db.exporterJSON('sobrieau-' + stamp);
+			});
     // initial render
     load();
   
@@ -1657,10 +1692,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-sous-compteurs-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\sous_compteurs.html -->
 <style>
-#page-site-qte-sous-compteurs-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-sous-compteurs-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-sous-compteurs-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-sous-compteurs-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-sous-compteurs-html .page-header h1{margin:0}#page-site-qte-sous-compteurs-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-sous-compteurs-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-sous-compteurs-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-sous-compteurs-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Sous-compteurs</h2>
+  <div class="page-header"><h1>Sous-compteurs</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -1710,10 +1745,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-ventilation-batiment-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\ventilation_batiment.html -->
 <style>
-#page-site-qte-ventilation-batiment-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-ventilation-batiment-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-ventilation-batiment-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-ventilation-batiment-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-ventilation-batiment-html .page-header h1{margin:0}#page-site-qte-ventilation-batiment-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-ventilation-batiment-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-ventilation-batiment-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-ventilation-batiment-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>Ventilation du bâtiment</h2>
+  <div class="page-header"><h1>Ventilation du bâtiment</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -1763,10 +1798,10 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-wc-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\wc.html -->
 <style>
-#page-site-qte-wc-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-wc-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-wc-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+#page-site-qte-wc-html h1{margin:0 0 18px;color:#0b566b}#page-site-qte-wc-html .page-header h1{margin:0}#page-site-qte-wc-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qte-wc-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}#page-site-qte-wc-html textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qte-wc-html button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
 </style>
 
-  <h2>WC</h2>
+  <div class="page-header"><h1>WC</h1></div>
   <textarea id="editor"></textarea>
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
@@ -1816,13 +1851,18 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qus-index-html" class="page-section" style="display:none">
 <!-- PAGE: site\qus\index.html -->
 <style>
-#page-site-qus-index-html{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f9fb}#page-site-qus-index-html textarea{width:100%;height:60vh;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qus-index-html button{background:#0b566b;color:#fff;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}#page-site-qus-index-html header{margin-bottom:12px}
+#page-site-qus-index-html h1{margin:0 0 18px;color:#0b566b}#page-site-qus-index-html .page-header h1{margin:0}#page-site-qus-index-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-qus-index-html{font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f6f9fb}#page-site-qus-index-html textarea{width:100%;height:60vh;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}#page-site-qus-index-html button{background:#0b566b;color:#fff;border:none;padding:10px 12px;border-radius:6px;cursor:pointer}#page-site-qus-index-html header{margin-bottom:12px}
 </style>
 
-  <header>
-    <h2>Questionnaire usager (Qus)</h2>
-    <p>Éditez la structure JSON de <strong>Qus</strong>.</p>
-  </header>
+  <div class="page-header">
+		<h1>SobriEau</h1>
+		<div class="data-tools">
+			<button id="importJson" class="import" type="button" disabled>Importer JSON</button>
+			<button id="exportJson" class="export" type="button" disabled>Exporter JSON</button>
+		</div>
+	</div>
+  <div class="page-header"><h1>Questionnaire usagers</h1></div>
+  <p>Éditez la structure JSON de <strong>Qus</strong>.</p>
   <div>
     <textarea id="editor"></textarea>
   </div>
