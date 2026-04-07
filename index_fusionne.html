@@ -1077,6 +1077,17 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function load(){
+      // Forcer le rechargement des données depuis localStorage
+      try {
+        const raw = localStorage.getItem('sobrieau');
+        if (raw) {
+          const freshData = JSON.parse(raw);
+          db.data.Qte = freshData.Qte || {};
+        }
+      } catch (e) {
+        console.warn('Erreur rechargement données:', e);
+      }
+      
       // Recalculer l'index à chaque chargement
       const idx = getCurrentIdx();
       
@@ -1161,18 +1172,37 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     const reducteurEl = ((section?.querySelector('#reducteur')) || document.getElementById('reducteur'));
     if (reducteurEl) reducteurEl.addEventListener('change', ()=> save(false));
+
+    // Fonction cleanup() appelée automatiquement quand la section devient invisible
+    function cleanup(){
+      // Nettoyer les données temporaires de cette page
+      delete window.__robinetIdx;
+      localStorage.removeItem('currentRobinetIdx');
+    }
     // Exécuter load() à chaque fois que la section devient visible
     if (section) {
+      let wasVisible = section.style.display !== 'none';
+      
       // Appel initial si la section est déjà visible
-      if (section.style.display !== 'none') {
+      if (wasVisible) {
         load();
       }
       
-      // Observer les changements de visibilité pour rappeler load()
+      // Observer les changements de visibilité
       const obs = new MutationObserver(() => {
-        if (section.style.display !== 'none') {
-          load();  // Recharger à chaque affichage (garde l'observer actif)
+        const isVisible = section.style.display !== 'none';
+        
+        // Devient visible : recharger les données
+        if (isVisible && !wasVisible) {
+          load();
         }
+        
+        // Devient invisible : nettoyer le contexte si cleanup() existe
+        if (!isVisible && wasVisible && typeof cleanup === 'function') {
+          cleanup();
+        }
+        
+        wasVisible = isVisible;
       });
       obs.observe(section, { attributes: true, attributeFilter: ['style'] });
     } else {
@@ -1279,22 +1309,51 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Fonction load() appelée automatiquement quand la section devient visible
     function load(){
+      // Forcer le rechargement des données depuis localStorage
+      try {
+        const raw = localStorage.getItem('sobrieau');
+        if (raw) {
+          const freshData = JSON.parse(raw);
+          db.data.Qte = freshData.Qte || {};
+        }
+      } catch (e) {
+        console.warn('Erreur rechargement données:', e);
+      }
       render();
+    }
+
+    // Fonction cleanup() appelée automatiquement quand la section devient invisible
+    function cleanup(){
+      // Nettoyer les données temporaires liées aux robinets
+      delete window.__robinetIdx;
+      localStorage.removeItem('currentRobinetIdx');
     }
 
     // initial render
     // Exécuter load() à chaque fois que la section devient visible
     if (section) {
+      let wasVisible = section.style.display !== 'none';
+      
       // Appel initial si la section est déjà visible
-      if (section.style.display !== 'none') {
+      if (wasVisible) {
         load();
       }
       
-      // Observer les changements de visibilité pour rappeler load()
+      // Observer les changements de visibilité
       const obs = new MutationObserver(() => {
-        if (section.style.display !== 'none') {
-          load();  // Recharger à chaque affichage (garde l'observer actif)
+        const isVisible = section.style.display !== 'none';
+        
+        // Devient visible : recharger les données
+        if (isVisible && !wasVisible) {
+          load();
         }
+        
+        // Devient invisible : nettoyer le contexte si cleanup() existe
+        if (!isVisible && wasVisible && typeof cleanup === 'function') {
+          cleanup();
+        }
+        
+        wasVisible = isVisible;
       });
       obs.observe(section, { attributes: true, attributeFilter: ['style'] });
     } else {

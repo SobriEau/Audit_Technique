@@ -106,6 +106,16 @@
 
     // Fonction load() appelée automatiquement quand la section devient visible
     function load(){
+      // Forcer le rechargement des données depuis localStorage
+      try {
+        const raw = localStorage.getItem('sobrieau');
+        if (raw) {
+          const freshData = JSON.parse(raw);
+          db.data.Qte = freshData.Qte || {};
+        }
+      } catch (e) {
+        console.warn('Erreur rechargement données:', e);
+      }
       render();
     }
 

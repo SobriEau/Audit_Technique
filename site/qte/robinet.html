@@ -125,6 +125,17 @@
     }
 
     function load(){
+      // Forcer le rechargement des données depuis localStorage
+      try {
+        const raw = localStorage.getItem('sobrieau');
+        if (raw) {
+          const freshData = JSON.parse(raw);
+          db.data.Qte = freshData.Qte || {};
+        }
+      } catch (e) {
+        console.warn('Erreur rechargement données:', e);
+      }
+      
       // Recalculer l'index à chaque chargement
       const idx = getCurrentIdx();
       
