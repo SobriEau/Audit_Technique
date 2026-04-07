@@ -210,6 +210,13 @@
     const reducteurEl = document.getElementById('reducteur');
     if (reducteurEl) reducteurEl.addEventListener('change', ()=> save(false));
 
+    // Fonction cleanup() appelée automatiquement quand la section devient invisible
+    function cleanup(){
+      // Nettoyer les données temporaires de cette page
+      delete window.__robinetIdx;
+      localStorage.removeItem('currentRobinetIdx');
+    }
+
     load();
   </script>
 </body>

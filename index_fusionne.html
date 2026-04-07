@@ -1277,9 +1277,31 @@ window.addEventListener('DOMContentLoaded', () => {
 
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
 
+    // Fonction load() appelée automatiquement quand la section devient visible
+    function load(){
+      render();
+    }
+
     // initial render
-    render();
-  
+    // Exécuter load() à chaque fois que la section devient visible
+    if (section) {
+      // Appel initial si la section est déjà visible
+      if (section.style.display !== 'none') {
+        load();
+      }
+      
+      // Observer les changements de visibilité pour rappeler load()
+      const obs = new MutationObserver(() => {
+        if (section.style.display !== 'none') {
+          load();  // Recharger à chaque affichage (garde l'observer actif)
+        }
+      });
+      obs.observe(section, { attributes: true, attributeFilter: ['style'] });
+    } else {
+      // Fallback si pas de section
+      load();
+    }
+    
 })(document.currentScript?.closest('section'));</script>
 
 </section>

@@ -104,8 +104,20 @@
 
     document.getElementById('back').addEventListener('click', ()=> location.href = './index.html');
 
+    // Fonction load() appelée automatiquement quand la section devient visible
+    function load(){
+      render();
+    }
+
+    // Fonction cleanup() appelée automatiquement quand la section devient invisible
+    function cleanup(){
+      // Nettoyer les données temporaires liées aux robinets
+      delete window.__robinetIdx;
+      localStorage.removeItem('currentRobinetIdx');
+    }
+
     // initial render
-    render();
+    load();
   </script>
 </body>
 </html>

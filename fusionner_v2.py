@@ -222,16 +222,28 @@ def encapsuler_scripts(body: str) -> str:
                 r"""
     // Exécuter load() à chaque fois que la section devient visible
     if (section) {
+      let wasVisible = section.style.display !== 'none';
+      
       // Appel initial si la section est déjà visible
-      if (section.style.display !== 'none') {
+      if (wasVisible) {
         load();
       }
       
-      // Observer les changements de visibilité pour rappeler load()
+      // Observer les changements de visibilité
       const obs = new MutationObserver(() => {
-        if (section.style.display !== 'none') {
-          load();  // Recharger à chaque affichage (garde l'observer actif)
+        const isVisible = section.style.display !== 'none';
+        
+        // Devient visible : recharger les données
+        if (isVisible && !wasVisible) {
+          load();
         }
+        
+        // Devient invisible : nettoyer le contexte si cleanup() existe
+        if (!isVisible && wasVisible && typeof cleanup === 'function') {
+          cleanup();
+        }
+        
+        wasVisible = isVisible;
       });
       obs.observe(section, { attributes: true, attributeFilter: ['style'] });
     } else {
