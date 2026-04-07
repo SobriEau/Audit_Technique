@@ -1,11 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Qte — Audit Technique</title>
-  <style>
-    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222;max-width:1000px;margin:18px auto}
+  <title>Qte â€” Audit Technique</title>
+  <style>h1{margin:0 0 18px;color:#0b566b}.page-header h1{margin:0}.page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222;max-width:1000px;margin:18px auto}
     header.main{display:flex;align-items:center;gap:12px;margin-bottom:14px}
     header.main h1{margin:0;color:#0b566b;font-size:20px}
     header.main button{margin-left:auto;background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
@@ -23,10 +22,10 @@
   </style>
 </head>
 <body>
-  <header class="main">
-    <h1>SobriEau — Questionnaire Qte</h1>
-    <button id="back">← Retour</button>
-  </header>
+  <div class="page-header">
+    <h1>SobriEau â€” Questionnaire Qte</h1>
+    <button id="back">â† Retour</button>
+  </div>
 
   <div class="section">
     <h2>Audit Technique</h2>
@@ -36,7 +35,7 @@
         <button type="button" data-cmd="bold"><b>B</b></button>
         <button type="button" data-cmd="italic"><i>I</i></button>
         <button type="button" data-cmd="underline"><u>U</u></button>
-        <button type="button" data-cmd="insertUnorderedList">• Liste</button>
+        <button type="button" data-cmd="insertUnorderedList">â€¢ Liste</button>
         <label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Couleur<input type="color" data-cmd="foreColor" style="vertical-align:middle"/></label>
         <label style="display:inline-flex;align-items:center;gap:6px;margin-left:8px">Taille
           <select data-cmd="fontSize">
@@ -50,12 +49,12 @@
     </div>
 
     <div class="actions">
-      <span class="muted">Les modifications sont sauvegardées lorsque vous quittez le champ (blur).</span>
+      <span class="muted">Les modifications sont sauvegardÃ©es lorsque vous quittez le champ (blur).</span>
     </div>
   </div>
 
   <div class="section">
-    <h2>Mesure de Pression au point le plus éloigné du réseau (Bar)</h2>
+    <h2>Mesure de Pression au point le plus Ã©loignÃ© du rÃ©seau (Bar)</h2>
     <div class="grid" id="subitems">
       <!-- buttons injected by script -->
     </div>
@@ -63,18 +62,18 @@
 
   <script src="../shared/Data.js"></script>
   <script>
-    // mapping affichage -> clé interne
+    // mapping affichage -> clÃ© interne
     const displayToKey = {
-      "Relevé compteur général": "releve_compteur_general",
+      "RelevÃ© compteur gÃ©nÃ©ral": "releve_compteur_general",
       "Sous-compteurs": "sous_compteurs",
-      "Réducteurs de pression": "reducteurs_de_pression",
+      "RÃ©ducteurs de pression": "reducteurs_de_pression",
       "Robinets": "robinets",
       "Douches / Baignoires": "douches_baignoires",
       "WC": "wc",
-      "Réseaux d'Eau Chaude Sanitaire": "reseaux_eau_chaude_sanitaire",
-      "Espace vert / Extérieur": "espace_vert_exterieur",
+      "RÃ©seaux d'Eau Chaude Sanitaire": "reseaux_eau_chaude_sanitaire",
+      "Espace vert / ExtÃ©rieur": "espace_vert_exterieur",
       "Appareils de nettoyage / lavage": "appareils_nettoyage_lavage",
-      "Ventilation du bâtiment": "ventilation_batiment",
+      "Ventilation du bÃ¢timent": "ventilation_batiment",
       "Potentiel d'optimisation": "potentiel_optimisation"
     };
 
@@ -125,3 +124,5 @@
   </script>
 </body>
 </html>
+
+

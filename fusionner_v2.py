@@ -207,6 +207,13 @@ def encapsuler_scripts(body: str) -> str:
         
         # document.querySelector → (section || document).querySelector
         code = re.sub(r"\bdocument\.querySelector(All)?\(", r"(section || document).querySelector\1(", code)
+
+        # Si une page instancie Data localement, permettre reset au changement de page
+        code = re.sub(
+            r"\bconst\s+db\s*=\s*new\s+Data\s*\(",
+            "let db = new Data(",
+            code
+        )
         
         # Gérer le paramètre idx dans robinet.html
         code = re.sub(
@@ -215,48 +222,24 @@ def encapsuler_scripts(body: str) -> str:
             code
         )
         
-        # Différer load() pour qu'elle s'exécute à chaque affichage de la page
-        if "function load()" in code and "load();" in code:
-            code = re.sub(
-                r"\n\s*load\(\);\s*$",
-                r"""
-    // Exécuter load() à chaque fois que la section devient visible
-    if (section) {
-      let wasVisible = section.style.display !== 'none';
-      
-      // Appel initial si la section est déjà visible
-      if (wasVisible) {
-        load();
-      }
-      
-      // Observer les changements de visibilité
-      const obs = new MutationObserver(() => {
-        const isVisible = section.style.display !== 'none';
+        # Encapsuler + enregistrer hooks show/hide pilotés par showPage()
+        wrapped = f"""(function(section){{
+{code}
+
+        if (section) {{
+            window.__pageHooks = window.__pageHooks || {{}};
+            window.__pageHooks[section.id] = {{
+                onShow: function() {{
+                    if (typeof load === 'function') load();
+                }},
+                onHide: function() {{
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }}
+            }};
+        }}
+}})(document.currentScript?.closest('section'));"""
         
-        // Devient visible : recharger les données
-        if (isVisible && !wasVisible) {
-          load();
-        }
-        
-        // Devient invisible : nettoyer le contexte si cleanup() existe
-        if (!isVisible && wasVisible && typeof cleanup === 'function') {
-          cleanup();
-        }
-        
-        wasVisible = isVisible;
-      });
-      obs.observe(section, { attributes: true, attributeFilter: ['style'] });
-    } else {
-      // Fallback si pas de section
-      load();
-    }
-    """,
-                code,
-                flags=re.MULTILINE
-            )
-        
-        # Encapsuler
-        wrapped = f"(function(section){{\n{code}\n}})(document.currentScript?.closest('section'));"
         return f"<script{attrs}>{wrapped}</script>"
     
     body = re.sub(r"<script([^>]*)>(.*?)</script>", encapsuler, body, flags=re.DOTALL | re.IGNORECASE)
@@ -275,10 +258,25 @@ def creer_script_navigation():
 
 // Navigation simple
 function showPage(id) {
+    const hooks = window.__pageHooks || {};
+
+    // Nettoyer TOUTES les pages non actives pour éviter plusieurs Data simultanés
+    Object.keys(hooks).forEach((pid) => {
+        if (pid !== id && hooks[pid] && typeof hooks[pid].onHide === 'function') {
+            try { hooks[pid].onHide(); } catch (e) { console.warn('onHide error:', e); }
+        }
+    });
+
   document.querySelectorAll('.page-section').forEach(s => s.style.display = 'none');
   const target = document.getElementById(id);
   if (target) {
     target.style.display = 'block';
+        window.__activePageId = id;
+
+        if (hooks[id] && typeof hooks[id].onShow === 'function') {
+            try { hooks[id].onShow(); } catch (e) { console.warn('onShow error:', e); }
+        }
+
     window.scrollTo(0, 0);
   }
 }
@@ -286,7 +284,7 @@ function showPage(id) {
 // Démarrage : afficher la première page
 window.addEventListener('DOMContentLoaded', () => {
   const first = document.querySelector('.page-section');
-  if (first) first.style.display = 'block';
+    if (first) showPage(first.id);
 });
 </script>
 """

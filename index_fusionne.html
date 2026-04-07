@@ -390,10 +390,25 @@ class Data {
 
 // Navigation simple
 function showPage(id) {
+    const hooks = window.__pageHooks || {};
+
+    // Nettoyer TOUTES les pages non actives pour éviter plusieurs Data simultanés
+    Object.keys(hooks).forEach((pid) => {
+        if (pid !== id && hooks[pid] && typeof hooks[pid].onHide === 'function') {
+            try { hooks[pid].onHide(); } catch (e) { console.warn('onHide error:', e); }
+        }
+    });
+
   document.querySelectorAll('.page-section').forEach(s => s.style.display = 'none');
   const target = document.getElementById(id);
   if (target) {
     target.style.display = 'block';
+        window.__activePageId = id;
+
+        if (hooks[id] && typeof hooks[id].onShow === 'function') {
+            try { hooks[id].onShow(); } catch (e) { console.warn('onShow error:', e); }
+        }
+
     window.scrollTo(0, 0);
   }
 }
@@ -401,7 +416,7 @@ function showPage(id) {
 // Démarrage : afficher la première page
 window.addEventListener('DOMContentLoaded', () => {
   const first = document.querySelector('.page-section');
-  if (first) first.style.display = 'block';
+    if (first) showPage(first.id);
 });
 </script>
 
@@ -411,13 +426,19 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-home-html" class="page-section" style="display:block">
 <!-- PAGE: site\home.html -->
 <style>
-#page-site-home-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;background:#f6f9fb;color:#222}#page-site-home-html h1{margin:0 0 18px;color:#0b566b}#page-site-home-html .card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 6px 18px rgba(11,86,107,0.06)}#page-site-home-html label{display:block;margin-top:12px;font-weight:600;color:#0b566b}#page-site-home-html .editable{min-height:90px;border:1px solid #d6e6ea;border-radius:6px;padding:10px;background:linear-gradient(180deg,#ffffff,#fbfeff);outline:none}#page-site-home-html .editable:empty:before{content:"(cliquez pour éditer du HTML libre...)";color:#9aaeb4}#page-site-home-html /* toolbar styled as header of the editable area (single-line) */
+#page-site-home-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;background:#f6f9fb;color:#222}#page-site-home-html .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#page-site-home-html h1{margin:0 0 18px;color:#0b566b}#page-site-home-html .page-header h1{margin:0}#page-site-home-html .data-tools{display:flex;gap:8px;align-items:center}#page-site-home-html .data-tools button{width:auto;padding:8px 12px;font-size:13px;border-radius:8px;box-shadow:none}#page-site-home-html .data-tools button:hover{transform:none;box-shadow:none}#page-site-home-html .data-tools .import{background:#2b7f8b}#page-site-home-html .data-tools .export{background:#0b566b}#page-site-home-html .card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 6px 18px rgba(11,86,107,0.06)}#page-site-home-html label{display:block;margin-top:12px;font-weight:600;color:#0b566b}#page-site-home-html .editable{min-height:90px;border:1px solid #d6e6ea;border-radius:6px;padding:10px;background:linear-gradient(180deg,#ffffff,#fbfeff);outline:none}#page-site-home-html .editable:empty:before{content:"(cliquez pour éditer du HTML libre...)";color:#9aaeb4}#page-site-home-html /* toolbar styled as header of the editable area (single-line) */
 		.toolbar{display:flex;flex-wrap:nowrap;gap:8px;margin:0;padding:8px 10px;background:linear-gradient(180deg,#eef9fb,#e6f4f7);border:1px solid #d6e6ea;border-bottom:0;border-top-left-radius:8px;border-top-right-radius:8px;align-items:center;overflow-x:auto}#page-site-home-html .toolbar::-webkit-scrollbar{height:8px}#page-site-home-html .toolbar::-webkit-scrollbar-thumb{background:rgba(11,86,107,0.12);border-radius:8px}#page-site-home-html .toolbar button{background:transparent;border:1px solid transparent;padding:6px 10px;border-radius:6px;cursor:pointer;font-weight:700;color:#074e58;white-space:nowrap}#page-site-home-html .toolbar button:hover{background:rgba(7,78,88,0.06);border-color:rgba(7,78,88,0.08)}#page-site-home-html .toolbar input[type="color"]{width:34px;height:26px;padding:0;border:0;background:transparent}#page-site-home-html .toolbar label{white-space:nowrap;display:inline-flex;align-items:center;gap:6px}#page-site-home-html .toolbar select{padding:6px;border-radius:6px;border:1px solid #d6e6ea;background:#fff;min-width:74px}#page-site-home-html /* Make the editable area look attached to the toolbar */
 		.editable{min-height:90px;border:1px solid #d6e6ea;border-top:0;border-bottom-left-radius:8px;border-bottom-right-radius:8px;padding:12px;background:#fff}#page-site-home-html .editable:empty:before{content:"(cliquez pour éditer du HTML libre...)";color:#9aaeb4}#page-site-home-html input[type="date"], #page-site-home-html input[type="text"]{padding:8px;border:1px solid #d6e6ea;border-radius:6px;width:100%;box-sizing:border-box}#page-site-home-html .buttons{margin-top:18px;display:flex;flex-direction:column;gap:12px;width:100%}#page-site-home-html button{background:#0b566b;color:#fff;border:none;padding:12px 14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;box-shadow:0 6px 18px rgba(11,86,107,0.12);transition:transform .12s ease,box-shadow .12s ease;width:100%}#page-site-home-html button:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none}#page-site-home-html button:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(11,86,107,0.16)}#page-site-home-html button.secondary{background:#2b7f8b}#page-site-home-html #btnQge{background:linear-gradient(180deg,#1b7a8b,#0b566b)}#page-site-home-html #btnQus{background:linear-gradient(180deg,#2b8f6f,#167a59)}#page-site-home-html #btnQte{background:linear-gradient(180deg,#8a6ab8,#5b3fa5)}#page-site-home-html .actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-start}#page-site-home-html footer{margin-top:14px;font-size:13px;color:#657b81}#page-site-home-html .small{font-size:13px;color:#53686d;margin-top:6px}
 	
 </style>
 
-	<h1>SobriEau — Audit Technique</h1>
+	<div class="page-header">
+		<h1>SobriEau — Audit Technique</h1>
+		<div class="data-tools">
+			<button id="importJson" class="import" type="button">Importer JSON</button>
+			<button id="exportJson" class="export" type="button">Exporter JSON</button>
+		</div>
+	</div>
 	<div class="card">
 		<div>
 			<label>Adresse</label>
@@ -481,11 +502,24 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	<script src="./shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 	<script>(function(section){
 
 		document.addEventListener('DOMContentLoaded', () => {
-			const db = new Data('sobrieau', 365, false);
+			let db = new Data('sobrieau', 365, false);
 
 			// Initialisation minimale si absent
 			const snap = db.snapshot();
@@ -501,14 +535,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			const elInfo = ((section?.querySelector('#info')) || document.getElementById('info'));
 			const elDate = ((section?.querySelector('#date')) || document.getElementById('date'));
 			const elAud = ((section?.querySelector('#auditeur')) || document.getElementById('auditeur'));
+			const btnImportJSON = ((section?.querySelector('#importJson')) || document.getElementById('importJson'));
+			const btnExportJSON = ((section?.querySelector('#exportJson')) || document.getElementById('exportJson'));
 
-			// Remplissage initial
-			elAdresse.innerHTML = db.data.Adresse || '';
-			elInfo.innerHTML = db.data.Info || '';
-			elAud.value = db.data.Auditeur || '';
-			if (db.data.Date) {
+			function remplirDepuisSnapshot(snapData){
+				elAdresse.innerHTML = snapData.Adresse || '';
+				elInfo.innerHTML = snapData.Info || '';
+				elAud.value = snapData.Auditeur || '';
+				if (snapData.Date) {
 				// accepte YYYY-MM-DD ou Date
-				const d = new Date(db.data.Date);
+					const d = new Date(snapData.Date);
 				if (!isNaN(d)) {
 					const yyyy = d.getFullYear();
 					const mm = String(d.getMonth()+1).padStart(2,'0');
@@ -516,9 +552,15 @@ window.addEventListener('DOMContentLoaded', () => {
 					elDate.value = `${yyyy}-${mm}-${dd}`;
 				} else {
 					// si c'est déjà au format ISO
-					elDate.value = db.data.Date;
+						elDate.value = snapData.Date;
 				}
+				} else {
+					elDate.value = '';
 			}
+			}
+
+			// Remplissage initial
+			remplirDepuisSnapshot(db.snapshot());
 
 			// Sauvegarde au blur / changement + autosave sur input
 			const saveAdresse = () => db.data.Adresse = elAdresse.innerHTML.trim() ? elAdresse.innerHTML : null;
@@ -587,6 +629,24 @@ window.addEventListener('DOMContentLoaded', () => {
 			btnQus.addEventListener('click', () => { if (!btnQus.disabled) showPage('page-site-qus-index-html'); });
 			btnQte.addEventListener('click', () => { if (!btnQte.disabled) showPage('page-site-qte-index-html'); });
 
+			// Import/Export JSON via Data.js
+			btnExportJSON.addEventListener('click', () => {
+				saveAdresse();
+				saveInfo();
+				saveAud();
+				saveDate();
+				const stamp = new Date().toISOString().slice(0,10);
+				db.exporterJSON('sobrieau-' + stamp);
+			});
+
+			btnImportJSON.addEventListener('click', () => {
+				db.importerJSON((nouvellesDonnees) => {
+					remplirDepuisSnapshot(nouvellesDonnees || db.snapshot());
+					updateButtonsState();
+					alert('Données JSON importées.');
+				});
+			});
+
 			// met à jour l'état après chargement et à chaque sauvegarde
 			updateButtonsState();
 
@@ -613,6 +673,19 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		});
 	
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -634,10 +707,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     const snap = db.snapshot();
     editor.value = JSON.stringify(snap.Qge||{}, null, 2);
@@ -652,6 +738,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-home-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -667,10 +766,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'appareils_nettoyage_lavage';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -679,6 +791,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -694,10 +819,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'douches_baignoires';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -706,6 +844,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -721,10 +872,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'espace_vert_exterieur';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -733,6 +897,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -784,6 +961,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
@@ -806,7 +996,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const items = Object.keys(displayToKey);
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
 
     // init info
     const infoEl = ((section?.querySelector('#qte-info')) || document.getElementById('qte-info'));
@@ -847,6 +1037,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-home-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -862,10 +1065,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'potentiel_optimisation';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -874,6 +1090,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -889,10 +1118,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'reducteurs_de_pression';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -901,6 +1143,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -918,10 +1173,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'releve_compteur_general';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -930,6 +1198,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -945,10 +1226,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'reseaux_eau_chaude_sanitaire';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -957,6 +1251,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -964,7 +1271,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-robinet-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\robinet.html -->
 <style>
-#page-site-qte-robinet-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinet-html label{display:block;margin-top:10px;font-weight:700;color:#0b566b}#page-site-qte-robinet-html input[type=text], #page-site-qte-robinet-html input[type=number], #page-site-qte-robinet-html textarea, #page-site-qte-robinet-html select{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:6px;box-sizing:border-box}#page-site-qte-robinet-html textarea{min-height:100px}#page-site-qte-robinet-html .row{max-width:800px}#page-site-qte-robinet-html .pair{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}#page-site-qte-robinet-html .pair .col{flex:1 1 220px;display:flex;flex-direction:column;min-width:0}#page-site-qte-robinet-html .checkbox-label{display:flex;align-items:center;gap:8px}#page-site-qte-robinet-html .actions{margin-top:12px;display:flex;gap:8px}#page-site-qte-robinet-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinet-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}
+#page-site-qte-robinet-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinet-html label{display:block;margin-top:10px;font-weight:700;color:#0b566b}#page-site-qte-robinet-html input[type=text], #page-site-qte-robinet-html input[type=number], #page-site-qte-robinet-html textarea, #page-site-qte-robinet-html select{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:6px;box-sizing:border-box}#page-site-qte-robinet-html textarea{min-height:100px}#page-site-qte-robinet-html .row{max-width:800px}#page-site-qte-robinet-html .pair{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}#page-site-qte-robinet-html .pair .col{flex:1 1 220px;display:flex;flex-direction:column;min-width:0}#page-site-qte-robinet-html .checkbox-label{display:flex;align-items:center;gap:8px}#page-site-qte-robinet-html .actions{margin-top:12px;display:flex;gap:8px}#page-site-qte-robinet-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinet-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}
   
 </style>
 
@@ -1053,12 +1360,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
     
     // initialisation du stockage et paramètres
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'robinets';
     const params = new URLSearchParams(location.search);
     
@@ -1077,23 +1397,17 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function load(){
-      // Forcer le rechargement des données depuis localStorage
-      try {
-        const raw = localStorage.getItem('sobrieau');
-        if (raw) {
-          const freshData = JSON.parse(raw);
-          db.data.Qte = freshData.Qte || {};
-        }
-      } catch (e) {
-        console.warn('Erreur rechargement données:', e);
-      }
+      // Recréer l'instance pour forcer le rechargement depuis localStorage
+      db = new Data('sobrieau',365,false);
       
       // Recalculer l'index à chaque chargement
       const idx = getCurrentIdx();
       
+      // S'assurer que la structure existe
       db.data.Qte = db.data.Qte || {};
       if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
       const arr = db.data.Qte[key];
+      
       if (!Number.isInteger(idx) || idx < 0 || idx >= arr.length){
         alert('Index invalide');
         // Nettoyer le localStorage si l'index est invalide
@@ -1125,8 +1439,13 @@ window.addEventListener('DOMContentLoaded', () => {
     function save(notify = false){
       // Récupérer l'index actuel pour la sauvegarde
       const idx = getCurrentIdx();
-      const arr = db.data.Qte[key];
-      arr[idx] = {
+      
+      // S'assurer que la structure existe
+      db.data.Qte = db.data.Qte || {};
+      if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
+      
+      // Construire la valeur cible
+      const nextItem = {
         Numero: ((section?.querySelector('#numero')) || document.getElementById('numero')).value.trim() || null,
         Emplacement: ((section?.querySelector('#emplacement')) || document.getElementById('emplacement')).value.trim() || null,
         PrecisionEmplacement: ((section?.querySelector('#precision')) || document.getElementById('precision')).value.trim() || null,
@@ -1140,12 +1459,24 @@ window.addEventListener('DOMContentLoaded', () => {
         NbEquipementIdentique: (((section?.querySelector('#nbEquipIdentique')) || document.getElementById('nbEquipIdentique')).value!=='') ? parseInt(((section?.querySelector('#nbEquipIdentique')) || document.getElementById('nbEquipIdentique')).value,10) : null,
         Remarques: ((section?.querySelector('#remarques')) || document.getElementById('remarques')).value.trim() || null
       };
-      db.data.Qte[key] = arr;
+
+      // Éviter les sauvegardes inutiles si rien n'a changé
+      const currentItem = db.data.Qte[key][idx] || {};
+      const hasChanged = JSON.stringify(currentItem) !== JSON.stringify(nextItem);
+      if (hasChanged) {
+        db.data.Qte[key][idx] = nextItem;
+        // Forcer la sauvegarde en réaffectant le tableau (déclenche le Proxy)
+        db.data.Qte[key] = db.data.Qte[key];
+      }
+      
       if (notify) {
         alert('Enregistré');
-        // Nettoyer localStorage et retourner à la liste
-        localStorage.removeItem('currentRobinetIdx');
-        showPage('page-site-qte-robinets-html');
+        // Petit délai pour laisser la persistance se terminer avant navigation
+        setTimeout(() => {
+          // Nettoyer localStorage et retourner à la liste
+          localStorage.removeItem('currentRobinetIdx');
+          showPage('page-site-qte-robinets-html');
+        }, 80);
       }
     }
 
@@ -1159,57 +1490,31 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!confirm('Supprimer ce robinet ?')) return;
       const idx = getCurrentIdx();
       const arr = db.data.Qte[key]; arr.splice(idx,1); db.data.Qte[key]=arr;
-      // Nettoyer le localStorage avant de retourner
-      localStorage.removeItem('currentRobinetIdx');
-      showPage('page-site-qte-robinets-html');
+      // Petit délai pour laisser la persistance se terminer avant navigation
+      setTimeout(() => {
+        // Nettoyer le localStorage avant de retourner
+        localStorage.removeItem('currentRobinetIdx');
+        showPage('page-site-qte-robinets-html');
+      }, 80);
     });
 
-    // save on blur/change for each field (checkbox uses change)
-    ['numero','emplacement','precision','type','usages','debit','tempsECS','numReseauECS','nbUtilSemaine','nbEquipIdentique','remarques'].forEach(id=>{
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('blur', ()=> save(false));
-    });
-    const reducteurEl = ((section?.querySelector('#reducteur')) || document.getElementById('reducteur'));
-    if (reducteurEl) reducteurEl.addEventListener('change', ()=> save(false));
+    // Autosave désactivé : la persistance ne se fait que via le bouton Enregistrer
 
-    // Fonction cleanup() appelée automatiquement quand la section devient invisible
-    function cleanup(){
-      // Nettoyer les données temporaires de cette page
-      delete window.__robinetIdx;
-      localStorage.removeItem('currentRobinetIdx');
-    }
-    // Exécuter load() à chaque fois que la section devient visible
-    if (section) {
-      let wasVisible = section.style.display !== 'none';
-      
-      // Appel initial si la section est déjà visible
-      if (wasVisible) {
-        load();
-      }
-      
-      // Observer les changements de visibilité
-      const obs = new MutationObserver(() => {
-        const isVisible = section.style.display !== 'none';
-        
-        // Devient visible : recharger les données
-        if (isVisible && !wasVisible) {
-          load();
+    load();
+  
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
         }
-        
-        // Devient invisible : nettoyer le contexte si cleanup() existe
-        if (!isVisible && wasVisible && typeof cleanup === 'function') {
-          cleanup();
-        }
-        
-        wasVisible = isVisible;
-      });
-      obs.observe(section, { attributes: true, attributeFilter: ['style'] });
-    } else {
-      // Fallback si pas de section
-      load();
-    }
-    
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -1217,7 +1522,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <section id="page-site-qte-robinets-html" class="page-section" style="display:none">
 <!-- PAGE: site\qte\robinets.html -->
 <style>
-#page-site-qte-robinets-html{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinets-html .toolbar{display:flex;gap:8px;margin-bottom:12px}#page-site-qte-robinets-html .list{display:flex;flex-direction:column;gap:10px}#page-site-qte-robinets-html .item{background:#fff;border:1px solid #d6e6ea;padding:12px;border-radius:8px}#page-site-qte-robinets-html .row{display:flex;gap:10px;flex-wrap:wrap}#page-site-qte-robinets-html .field{flex:1 1 200px;display:flex;flex-direction:column}#page-site-qte-robinets-html label{font-weight:700;color:#0b566b;margin-bottom:6px}#page-site-qte-robinets-html input[type="text"], #page-site-qte-robinets-html input[type="number"], #page-site-qte-robinets-html textarea{padding:8px;border:1px solid #d6e6ea;border-radius:6px}#page-site-qte-robinets-html textarea{min-height:60px}#page-site-qte-robinets-html .actions{margin-top:8px;display:flex;gap:8px;justify-content:flex-end}#page-site-qte-robinets-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinets-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}#page-site-qte-robinets-html .muted{color:#576c70}
+#page-site-qte-robinets-html{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}#page-site-qte-robinets-html .toolbar{display:flex;gap:8px;margin-bottom:12px}#page-site-qte-robinets-html .list{display:flex;flex-direction:column;gap:10px}#page-site-qte-robinets-html .item{background:#fff;border:1px solid #d6e6ea;padding:12px;border-radius:8px}#page-site-qte-robinets-html .row{display:flex;gap:10px;flex-wrap:wrap}#page-site-qte-robinets-html .field{flex:1 1 200px;display:flex;flex-direction:column}#page-site-qte-robinets-html label{font-weight:700;color:#0b566b;margin-bottom:6px}#page-site-qte-robinets-html input[type="text"], #page-site-qte-robinets-html input[type="number"], #page-site-qte-robinets-html textarea{padding:8px;border:1px solid #d6e6ea;border-radius:6px}#page-site-qte-robinets-html textarea{min-height:60px}#page-site-qte-robinets-html .actions{margin-top:8px;display:flex;gap:8px;justify-content:flex-end}#page-site-qte-robinets-html button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}#page-site-qte-robinets-html button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}#page-site-qte-robinets-html .muted{color:#576c70}
   
 </style>
 
@@ -1248,15 +1553,30 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'robinets';
 
     function getData(){
-      db.data.Qte = db.data.Qte || {};
-      if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
+      // Toujours lire depuis db.data actuel, pas de cache
+      if (!db.data.Qte || !Array.isArray(db.data.Qte[key])) {
+        return [];
+      }
       return db.data.Qte[key];
     }
 
@@ -1309,58 +1629,27 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Fonction load() appelée automatiquement quand la section devient visible
     function load(){
-      // Forcer le rechargement des données depuis localStorage
-      try {
-        const raw = localStorage.getItem('sobrieau');
-        if (raw) {
-          const freshData = JSON.parse(raw);
-          db.data.Qte = freshData.Qte || {};
-        }
-      } catch (e) {
-        console.warn('Erreur rechargement données:', e);
-      }
+      // Recréer l'instance pour forcer le rechargement depuis localStorage
+      db = new Data('sobrieau',365,false);
       render();
     }
 
-    // Fonction cleanup() appelée automatiquement quand la section devient invisible
-    function cleanup(){
-      // Nettoyer les données temporaires liées aux robinets
-      delete window.__robinetIdx;
-      localStorage.removeItem('currentRobinetIdx');
-    }
-
     // initial render
-    // Exécuter load() à chaque fois que la section devient visible
-    if (section) {
-      let wasVisible = section.style.display !== 'none';
-      
-      // Appel initial si la section est déjà visible
-      if (wasVisible) {
-        load();
-      }
-      
-      // Observer les changements de visibilité
-      const obs = new MutationObserver(() => {
-        const isVisible = section.style.display !== 'none';
-        
-        // Devient visible : recharger les données
-        if (isVisible && !wasVisible) {
-          load();
+    load();
+  
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
         }
-        
-        // Devient invisible : nettoyer le contexte si cleanup() existe
-        if (!isVisible && wasVisible && typeof cleanup === 'function') {
-          cleanup();
-        }
-        
-        wasVisible = isVisible;
-      });
-      obs.observe(section, { attributes: true, attributeFilter: ['style'] });
-    } else {
-      // Fallback si pas de section
-      load();
-    }
-    
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -1376,10 +1665,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'sous_compteurs';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -1388,6 +1690,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -1403,10 +1718,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'ventilation_batiment';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -1415,6 +1743,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -1430,10 +1771,23 @@ window.addEventListener('DOMContentLoaded', () => {
   <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'wc';
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     editor.value = JSON.stringify((db.data.Qte && db.data.Qte[key])||{}, null, 2);
@@ -1442,6 +1796,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-qte-index-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>
@@ -1463,10 +1830,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <script src="../shared/Data.js">(function(section){
 
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
   <script>(function(section){
 
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const editor = ((section?.querySelector('#editor')) || document.getElementById('editor'));
     const snap = db.snapshot();
     editor.value = JSON.stringify(snap.Qus||{}, null, 2);
@@ -1481,6 +1861,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
     ((section?.querySelector('#back')) || document.getElementById('back')).addEventListener('click', ()=> showPage('page-site-home-html'));
   
+
+        if (section) {
+            window.__pageHooks = window.__pageHooks || {};
+            window.__pageHooks[section.id] = {
+                onShow: function() {
+                    if (typeof load === 'function') load();
+                },
+                onHide: function() {
+                    if (typeof cleanup === 'function') cleanup();
+                    if (typeof db !== 'undefined') db = null;
+                }
+            };
+        }
 })(document.currentScript?.closest('section'));</script>
 
 </section>

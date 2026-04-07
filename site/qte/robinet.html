@@ -1,11 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Éditeur Robinet</title>
-  <style>
-    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222}
+  <title>Ã‰diteur Robinet</title>
+  <style>h1{margin:0 0 18px;color:#0b566b}.page-header h1{margin:0}.page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}
     label{display:block;margin-top:10px;font-weight:700;color:#0b566b}
     input[type=text], input[type=number], textarea, select{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:6px;box-sizing:border-box}
     textarea{min-height:100px}
@@ -19,19 +18,19 @@
   </style>
 </head>
 <body>
-  <header style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-    <h2 style="margin:0;color:#0b566b">Éditeur Robinet</h2>
-    <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
-  </header>
+  <div class="page-header">
+    <h2 style="margin:0;color:#0b566b">Ã‰diteur Robinet</h2>
+    <button id="back" class="ghost" style="margin-left:auto">â† Retour</button>
+  </div>
 
   <div class="row">
-    <label>Numéro</label>
+    <label>NumÃ©ro</label>
     <input id="numero" type="text" />
 
     <label>Emplacement</label>
     <input id="emplacement" type="text" />
 
-    <label>Précision emplacement</label>
+    <label>PrÃ©cision emplacement</label>
     <input id="precision" type="text" />
 
     <div class="pair">
@@ -40,13 +39,13 @@
         <select id="type">
           <option value=""></option>
           <option value="Mitigeur">Mitigeur</option>
-          <option value="Mélangeur">Mélangeur</option>
+          <option value="MÃ©langeur">MÃ©langeur</option>
           <option value="Monocommande">Monocommande</option>
-          <option value="Robinet à bille">Robinet à bille</option>
-          <option value="Robinet à disque céramique">Robinet à disque céramique</option>
+          <option value="Robinet Ã  bille">Robinet Ã  bille</option>
+          <option value="Robinet Ã  disque cÃ©ramique">Robinet Ã  disque cÃ©ramique</option>
           <option value="Robinet thermostatique">Robinet thermostatique</option>
-          <option value="Robinet temporisé">Robinet temporisé</option>
-          <option value="Robinet d'arrêt">Robinet d'arrêt</option>
+          <option value="Robinet temporisÃ©">Robinet temporisÃ©</option>
+          <option value="Robinet d'arrÃªt">Robinet d'arrÃªt</option>
           <option value="Autre">Autre</option>
         </select>
       </div>
@@ -58,11 +57,11 @@
 
     <div class="pair">
       <div class="col">
-        <label>Débit (l/min)</label>
+        <label>DÃ©bit (l/min)</label>
         <input id="debit" type="number" step="0.1" />
       </div>
       <div class="col">
-        <label>Présence d'un réducteur de débit</label>
+        <label>PrÃ©sence d'un rÃ©ducteur de dÃ©bit</label>
         <select id="reducteur">
           <option value=""></option>
           <option value="true">Oui</option>
@@ -77,7 +76,7 @@
         <input id="tempsECS" type="number" step="1" />
       </div>
       <div class="col">
-        <label>Numéro réseau ECS d'appartenance</label>
+        <label>NumÃ©ro rÃ©seau ECS d'appartenance</label>
         <input id="numReseauECS" type="text" />
       </div>
     </div>
@@ -88,7 +87,7 @@
         <input id="nbUtilSemaine" type="number" step="1" />
       </div>
       <div class="col">
-        <label>Nombre d'équipement identique</label>
+        <label>Nombre d'Ã©quipement identique</label>
         <input id="nbEquipIdentique" type="number" step="1" />
       </div>
     </div>
@@ -105,18 +104,18 @@
   <script src="../shared/Data.js"></script>
   <script>
     
-    // initialisation du stockage et paramètres
-    const db = new Data('sobrieau',365,false);
+    // initialisation du stockage et paramÃ¨tres
+    let db = new Data('sobrieau',365,false);
     const key = 'robinets';
     const params = new URLSearchParams(location.search);
     
-    // Fonction pour récupérer l'index actuel (appelée à chaque load)
+    // Fonction pour rÃ©cupÃ©rer l'index actuel (appelÃ©e Ã  chaque load)
     function getCurrentIdx() {
       if (window.__robinetIdx !== undefined) {
-        // 1. Variable globale définie par navigation SPA
+        // 1. Variable globale dÃ©finie par navigation SPA
         return window.__robinetIdx;
       } else if (localStorage.getItem('currentRobinetIdx')) {
-        // 2. localStorage (persiste après actualisation)
+        // 2. localStorage (persiste aprÃ¨s actualisation)
         return parseInt(localStorage.getItem('currentRobinetIdx'), 10);
       } else {
         // 3. URLSearchParams (mode standalone)
@@ -125,23 +124,17 @@
     }
 
     function load(){
-      // Forcer le rechargement des données depuis localStorage
-      try {
-        const raw = localStorage.getItem('sobrieau');
-        if (raw) {
-          const freshData = JSON.parse(raw);
-          db.data.Qte = freshData.Qte || {};
-        }
-      } catch (e) {
-        console.warn('Erreur rechargement données:', e);
-      }
+      // RecrÃ©er l'instance pour forcer le rechargement depuis localStorage
+      db = new Data('sobrieau',365,false);
       
-      // Recalculer l'index à chaque chargement
+      // Recalculer l'index Ã  chaque chargement
       const idx = getCurrentIdx();
       
+      // S'assurer que la structure existe
       db.data.Qte = db.data.Qte || {};
       if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
       const arr = db.data.Qte[key];
+      
       if (!Number.isInteger(idx) || idx < 0 || idx >= arr.length){
         alert('Index invalide');
         // Nettoyer le localStorage si l'index est invalide
@@ -171,10 +164,15 @@
     }
 
     function save(notify = false){
-      // Récupérer l'index actuel pour la sauvegarde
+      // RÃ©cupÃ©rer l'index actuel pour la sauvegarde
       const idx = getCurrentIdx();
-      const arr = db.data.Qte[key];
-      arr[idx] = {
+      
+      // S'assurer que la structure existe
+      db.data.Qte = db.data.Qte || {};
+      if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
+      
+      // Construire la valeur cible
+      const nextItem = {
         Numero: document.getElementById('numero').value.trim() || null,
         Emplacement: document.getElementById('emplacement').value.trim() || null,
         PrecisionEmplacement: document.getElementById('precision').value.trim() || null,
@@ -188,12 +186,24 @@
         NbEquipementIdentique: (document.getElementById('nbEquipIdentique').value!=='') ? parseInt(document.getElementById('nbEquipIdentique').value,10) : null,
         Remarques: document.getElementById('remarques').value.trim() || null
       };
-      db.data.Qte[key] = arr;
+
+      // Ã‰viter les sauvegardes inutiles si rien n'a changÃ©
+      const currentItem = db.data.Qte[key][idx] || {};
+      const hasChanged = JSON.stringify(currentItem) !== JSON.stringify(nextItem);
+      if (hasChanged) {
+        db.data.Qte[key][idx] = nextItem;
+        // Forcer la sauvegarde en rÃ©affectant le tableau (dÃ©clenche le Proxy)
+        db.data.Qte[key] = db.data.Qte[key];
+      }
+      
       if (notify) {
-        alert('Enregistré');
-        // Nettoyer localStorage et retourner à la liste
-        localStorage.removeItem('currentRobinetIdx');
-        location.href = './robinets.html';
+        alert('EnregistrÃ©');
+        // Petit dÃ©lai pour laisser la persistance se terminer avant navigation
+        setTimeout(() => {
+          // Nettoyer localStorage et retourner Ã  la liste
+          localStorage.removeItem('currentRobinetIdx');
+          location.href = './robinets.html';
+        }, 80);
       }
     }
 
@@ -207,28 +217,19 @@
       if (!confirm('Supprimer ce robinet ?')) return;
       const idx = getCurrentIdx();
       const arr = db.data.Qte[key]; arr.splice(idx,1); db.data.Qte[key]=arr;
-      // Nettoyer le localStorage avant de retourner
-      localStorage.removeItem('currentRobinetIdx');
-      location.href = './robinets.html';
+      // Petit dÃ©lai pour laisser la persistance se terminer avant navigation
+      setTimeout(() => {
+        // Nettoyer le localStorage avant de retourner
+        localStorage.removeItem('currentRobinetIdx');
+        location.href = './robinets.html';
+      }, 80);
     });
 
-    // save on blur/change for each field (checkbox uses change)
-    ['numero','emplacement','precision','type','usages','debit','tempsECS','numReseauECS','nbUtilSemaine','nbEquipIdentique','remarques'].forEach(id=>{
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('blur', ()=> save(false));
-    });
-    const reducteurEl = document.getElementById('reducteur');
-    if (reducteurEl) reducteurEl.addEventListener('change', ()=> save(false));
-
-    // Fonction cleanup() appelée automatiquement quand la section devient invisible
-    function cleanup(){
-      // Nettoyer les données temporaires de cette page
-      delete window.__robinetIdx;
-      localStorage.removeItem('currentRobinetIdx');
-    }
+    // Autosave dÃ©sactivÃ© : la persistance ne se fait que via le bouton Enregistrer
 
     load();
   </script>
 </body>
 </html>
+
+

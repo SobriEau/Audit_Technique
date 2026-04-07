@@ -6,7 +6,14 @@
 	<title>SobriEau — Audit Technique</title>
 	<style>
 		body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;background:#f6f9fb;color:#222}
+		.page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
 		h1{margin:0 0 18px;color:#0b566b}
+		.page-header h1{margin:0}
+		.data-tools{display:flex;gap:8px;align-items:center}
+		.data-tools button{width:auto;padding:8px 12px;font-size:13px;border-radius:8px;box-shadow:none}
+		.data-tools button:hover{transform:none;box-shadow:none}
+		.data-tools .import{background:#2b7f8b}
+		.data-tools .export{background:#0b566b}
 		.card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 6px 18px rgba(11,86,107,0.06)}
 		label{display:block;margin-top:12px;font-weight:600;color:#0b566b}
 		.editable{min-height:90px;border:1px solid #d6e6ea;border-radius:6px;padding:10px;background:linear-gradient(180deg,#ffffff,#fbfeff);outline:none}
@@ -38,7 +45,13 @@
 	</style>
 </head>
 <body>
-	<h1>SobriEau — Audit Technique</h1>
+	<div class="page-header">
+		<h1>SobriEau — Audit Technique</h1>
+		<div class="data-tools">
+			<button id="importJson" class="import" type="button">Importer JSON</button>
+			<button id="exportJson" class="export" type="button">Exporter JSON</button>
+		</div>
+	</div>
 	<div class="card">
 		<div>
 			<label>Adresse</label>
@@ -119,14 +132,16 @@
 			const elInfo = document.getElementById('info');
 			const elDate = document.getElementById('date');
 			const elAud = document.getElementById('auditeur');
+			const btnImportJSON = document.getElementById('importJson');
+			const btnExportJSON = document.getElementById('exportJson');
 
-			// Remplissage initial
-			elAdresse.innerHTML = db.data.Adresse || '';
-			elInfo.innerHTML = db.data.Info || '';
-			elAud.value = db.data.Auditeur || '';
-			if (db.data.Date) {
+			function remplirDepuisSnapshot(snapData){
+				elAdresse.innerHTML = snapData.Adresse || '';
+				elInfo.innerHTML = snapData.Info || '';
+				elAud.value = snapData.Auditeur || '';
+				if (snapData.Date) {
 				// accepte YYYY-MM-DD ou Date
-				const d = new Date(db.data.Date);
+					const d = new Date(snapData.Date);
 				if (!isNaN(d)) {
 					const yyyy = d.getFullYear();
 					const mm = String(d.getMonth()+1).padStart(2,'0');
@@ -134,9 +149,15 @@
 					elDate.value = `${yyyy}-${mm}-${dd}`;
 				} else {
 					// si c'est déjà au format ISO
-					elDate.value = db.data.Date;
+						elDate.value = snapData.Date;
 				}
+				} else {
+					elDate.value = '';
 			}
+			}
+
+			// Remplissage initial
+			remplirDepuisSnapshot(db.snapshot());
 
 			// Sauvegarde au blur / changement + autosave sur input
 			const saveAdresse = () => db.data.Adresse = elAdresse.innerHTML.trim() ? elAdresse.innerHTML : null;
@@ -204,6 +225,24 @@
 			btnQge.addEventListener('click', () => { if (!btnQge.disabled) location.href = './qge/index.html'; });
 			btnQus.addEventListener('click', () => { if (!btnQus.disabled) location.href = './qus/index.html'; });
 			btnQte.addEventListener('click', () => { if (!btnQte.disabled) location.href = './qte/index.html'; });
+
+			// Import/Export JSON via Data.js
+			btnExportJSON.addEventListener('click', () => {
+				saveAdresse();
+				saveInfo();
+				saveAud();
+				saveDate();
+				const stamp = new Date().toISOString().slice(0,10);
+				db.exporterJSON('sobrieau-' + stamp);
+			});
+
+			btnImportJSON.addEventListener('click', () => {
+				db.importerJSON((nouvellesDonnees) => {
+					remplirDepuisSnapshot(nouvellesDonnees || db.snapshot());
+					updateButtonsState();
+					alert('Données JSON importées.');
+				});
+			});
 
 			// met à jour l'état après chargement et à chaque sauvegarde
 			updateButtonsState();

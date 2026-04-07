@@ -1,11 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Robinets</title>
-  <style>
-    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222}
+  <style>h1{margin:0 0 18px;color:#0b566b}.page-header h1{margin:0}.page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:32px auto;padding:20px;background:#f6f9fb;color:#222}
     .toolbar{display:flex;gap:8px;margin-bottom:12px}
     .list{display:flex;flex-direction:column;gap:10px}
     .item{background:#fff;border:1px solid #d6e6ea;padding:12px;border-radius:8px}
@@ -21,12 +20,12 @@
   </style>
 </head>
 <body>
-  <header style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+  <div class="page-header">
     <h2 style="margin:0;color:#0b566b">Robinets</h2>
-    <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
-  </header>
+    <button id="back" class="ghost" style="margin-left:auto">â† Retour</button>
+  </div>
 
-  <p class="muted">Gérez la liste des robinets : ajoutez, modifiez ou supprimez des entrées. Les champs sont enregistrés automatiquement lorsque vous quittez un champ (blur).</p>
+  <p class="muted">GÃ©rez la liste des robinets : ajoutez, modifiez ou supprimez des entrÃ©es. Les champs sont enregistrÃ©s automatiquement lorsque vous quittez un champ (blur).</p>
 
   <div class="toolbar">
     <button id="add" class="primary">Ajouter un robinet</button>
@@ -35,10 +34,10 @@
   <table id="table" style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #d6e6ea;border-radius:8px;overflow:hidden">
     <thead style="background:#f3fbfb">
       <tr>
-        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Numéro</th>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">NumÃ©ro</th>
         <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Emplacement</th>
         <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Type</th>
-        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Débit (l/min)</th>
+        <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">DÃ©bit (l/min)</th>
         <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0">Remarques</th>
         <th style="text-align:left;padding:10px;border-bottom:1px solid #e6eef0;width:200px">Actions</th>
       </tr>
@@ -48,12 +47,14 @@
 
   <script src="../shared/Data.js"></script>
   <script>
-    const db = new Data('sobrieau',365,false);
+    let db = new Data('sobrieau',365,false);
     const key = 'robinets';
 
     function getData(){
-      db.data.Qte = db.data.Qte || {};
-      if (!Array.isArray(db.data.Qte[key])) db.data.Qte[key] = [];
+      // Toujours lire depuis db.data actuel, pas de cache
+      if (!db.data.Qte || !Array.isArray(db.data.Qte[key])) {
+        return [];
+      }
       return db.data.Qte[key];
     }
 
@@ -76,7 +77,7 @@
         // Modifier button
         const mod = document.createElement('button'); mod.className='ghost'; mod.textContent='Modifier'; mod.style.marginRight='8px';
         mod.addEventListener('click', ()=>{
-          // Stocker l'index pour éviter "index invalide" après actualisation
+          // Stocker l'index pour Ã©viter "index invalide" aprÃ¨s actualisation
           localStorage.setItem('currentRobinetIdx', idx);
           location.href = './robinet.html?idx='+idx;
         });
@@ -92,11 +93,11 @@
       const arr = getData();
       arr.push({Numero:null,Emplacement:null,Type:null,Debit:null,Remarques:null});
       saveList(arr);
-      // Stocker l'index pour éviter "index invalide" après actualisation
+      // Stocker l'index pour Ã©viter "index invalide" aprÃ¨s actualisation
       const newIdx = arr.length - 1;
       localStorage.setItem('currentRobinetIdx', newIdx);
       
-      // Attendre un instant pour que la sauvegarde soit bien persistée
+      // Attendre un instant pour que la sauvegarde soit bien persistÃ©e
       setTimeout(() => {
         location.href = './robinet.html?idx=' + newIdx;
       }, 50);
@@ -104,26 +105,11 @@
 
     document.getElementById('back').addEventListener('click', ()=> location.href = './index.html');
 
-    // Fonction load() appelée automatiquement quand la section devient visible
+    // Fonction load() appelÃ©e automatiquement quand la section devient visible
     function load(){
-      // Forcer le rechargement des données depuis localStorage
-      try {
-        const raw = localStorage.getItem('sobrieau');
-        if (raw) {
-          const freshData = JSON.parse(raw);
-          db.data.Qte = freshData.Qte || {};
-        }
-      } catch (e) {
-        console.warn('Erreur rechargement données:', e);
-      }
+      // RecrÃ©er l'instance pour forcer le rechargement depuis localStorage
+      db = new Data('sobrieau',365,false);
       render();
-    }
-
-    // Fonction cleanup() appelée automatiquement quand la section devient invisible
-    function cleanup(){
-      // Nettoyer les données temporaires liées aux robinets
-      delete window.__robinetIdx;
-      localStorage.removeItem('currentRobinetIdx');
     }
 
     // initial render
@@ -131,3 +117,5 @@
   </script>
 </body>
 </html>
+
+
