@@ -2,6 +2,10 @@
 
 Application web de questionnaires pour l'audit de consommation d'eau.
 
+## A ajouter 
+ajouter la fonctionnalité micro-> txt
+Ajouter l'auditeur au nom de la sauvegarde
+Ajouter aussi le nom du batiment
 ## Structure du projet
 
 ```
