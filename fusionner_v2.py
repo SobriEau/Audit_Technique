@@ -371,7 +371,7 @@ LOGO_SOBRIEAU = RACINE.parent / "site" / "Charte graphique" / "Capture d'écran 
 
 def remplacer_titre_logo(body: str, logo_src: str) -> str:
     """Remplace <h1>SobriEau</h1> par le logo image (sans wrapper h1 pour préserver l'alignement flex)"""
-    img_tag = f'<img src="{logo_src}" alt="SobriEau" style="height:48px;width:auto;display:block;mix-blend-mode:multiply;">'
+    img_tag = f'<img src="{logo_src}" alt="SobriEau" style="height:72px;width:auto;display:block;mix-blend-mode:multiply;">'
     return re.sub(
         r'<h1[^>]*>\s*SobriEau\s*</h1>',
         img_tag,

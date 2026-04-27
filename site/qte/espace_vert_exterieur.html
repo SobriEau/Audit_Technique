@@ -4,13 +4,28 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Espace vert / Extérieur</title>
-  <style>h1{margin:0 0 18px;color:#0b566b}.page-header h1{margin:0}.page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb}textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}button{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}</style>
+  <style>
+    h1{margin:0 0 18px;color:#0b566b}
+    h2{margin:6px 0 12px;color:#09494f}
+    .page-header h1,.page-header h2{margin:0}
+    .page-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f6f9fb;color:#222;max-width:1000px;margin:18px auto}
+    textarea{width:100%;min-height:360px;padding:12px;border-radius:6px;border:1px solid #d6e6ea;box-sizing:border-box}
+    .muted{color:#576c70;font-size:14px}
+    button.primary{background:#0b566b;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid #d6e6ea;padding:6px 10px;border-radius:6px;cursor:pointer}
+    .actions{margin-top:10px;display:flex;gap:8px}
+  </style>
 </head>
 <body>
   <div class="page-header"><h1>SobriEau</h1></div>
-  <div class="page-header"><h1>Espace vert / Extérieur</h1></div>
+  <div class="page-header">
+    <button class="ghost" onclick="location.href='../home.html'" style="margin-right:auto">Accueil</button>
+    <h2>Espace vert / Extérieur</h2>
+    <button id="back" class="ghost" style="margin-left:auto">← Retour</button>
+  </div>
   <textarea id="editor"></textarea>
-  <p style="margin-top:10px"><button id="save">Enregistrer</button> <button id="back" style="margin-left:8px">Retour</button></p>
+  <p class="actions"><button id="save" class="primary">Enregistrer</button></p>
   <script src="../shared/Data.js"></script>
   <script>
     const db = new Data('sobrieau',365,false);
