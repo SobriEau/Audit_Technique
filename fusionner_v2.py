@@ -5,6 +5,8 @@ Fusionne toutes les pages HTML en un seul fichier avec navigation par sections.
 """
 
 import re
+import base64
+import mimetypes
 from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -249,6 +251,81 @@ def encapsuler_scripts(body: str) -> str:
 # 4. Assemblage
 # ═══════════════════════════════════════════════════════════════════════════
 
+def logo_data_uri(chemin: Path) -> str:
+    """Encode un fichier image en data URI base64"""
+    mime, _ = mimetypes.guess_type(str(chemin))
+    if mime is None:
+        # fallback selon extension
+        ext = chemin.suffix.lower()
+        mime = {'webp': 'image/webp', 'png': 'image/png', 'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg', 'svg': 'image/svg+xml'}.get(ext.lstrip('.'), 'image/png')
+    data = base64.b64encode(chemin.read_bytes()).decode('ascii')
+    return f"data:{mime};base64,{data}"
+
+
+def creer_bandeau_logos():
+    """Génère le bandeau de logos partenaires (fixe en bas, discret)"""
+    logos_def = [
+        (RACINE.parent / "site" / "Charte graphique" / "APT_Logo_Innovation_RVB_Positif.webp",  "APT Innovation"),
+        (RACINE.parent / "site" / "Charte graphique" / "Horiz-fin-Benef-F2030-ADEME-BD.png",    "ADEME France 2030"),
+        (RACINE.parent / "site" / "Charte graphique" / "LogosRF+Cerema_horizontal.png",          "République Française + Cerema"),
+        (RACINE.parent / "site" / "Charte graphique" / "Logo-ENPC.svg.png",                      "École des Ponts ParisTech"),
+    ]
+
+    img_tags = []
+    for chemin, alt in logos_def:
+        if chemin.exists():
+            src = logo_data_uri(chemin)
+        else:
+            print(f"    ⚠️  Logo introuvable : {chemin.name}")
+            src = ""
+        img_tags.append(f'<img src="{src}" alt="{alt}" title="{alt}">')
+
+    imgs = "\n    ".join(img_tags)
+
+    return f"""<style>
+#bandeau-logos {{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(11,86,107,0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 28px;
+    padding: 8px 24px;
+    z-index: 9999;
+    opacity: 0.55;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}}
+#bandeau-logos:hover {{
+    opacity: 1;
+    pointer-events: auto;
+}}
+#bandeau-logos img {{
+    height: 52px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    filter: grayscale(15%) brightness(0.96);
+    display: block;
+}}
+/* Ajouter un espace sous chaque section pour que le contenu ne disparaisse pas sous le bandeau */
+.page-section {{
+    padding-bottom: 80px;
+    box-sizing: border-box;
+}}
+</style>
+<div id="bandeau-logos">
+    {imgs}
+</div>"""
+
+
 def creer_script_navigation():
     """Génère le script de navigation simple"""
     return """
@@ -289,9 +366,30 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 """
 
+LOGO_SOBRIEAU = RACINE.parent / "site" / "Charte graphique" / "Capture d'écran 2026-04-27 172346.png"
+
+
+def remplacer_titre_logo(body: str, logo_src: str) -> str:
+    """Remplace <h1>SobriEau</h1> par le logo image (sans wrapper h1 pour préserver l'alignement flex)"""
+    img_tag = f'<img src="{logo_src}" alt="SobriEau" style="height:48px;width:auto;display:block;mix-blend-mode:multiply;">'
+    return re.sub(
+        r'<h1[^>]*>\s*SobriEau\s*</h1>',
+        img_tag,
+        body,
+        flags=re.IGNORECASE
+    )
+
+
 def assembler(pages: list[Path]):
     """Assemble tout en un seul fichier HTML"""
-    
+
+    # Encoder le logo SobriEau une seule fois
+    if LOGO_SOBRIEAU.exists():
+        logo_src = logo_data_uri(LOGO_SOBRIEAU)
+    else:
+        print(f"    ⚠️  Logo SobriEau introuvable : {LOGO_SOBRIEAU.name}")
+        logo_src = None
+
     # Créer la carte des pages
     carte = {p: page_id(p) for p in pages}
     
@@ -321,6 +419,8 @@ def assembler(pages: list[Path]):
         head = nettoyer_head(head)
         styles_scopes = scoper_styles(styles, pid)
         body = transformer_navigation(body, page, carte)
+        if logo_src:
+            body = remplacer_titre_logo(body, logo_src)
         body = encapsuler_scripts(body)
         
         # Collecter head (sans les styles)
@@ -347,6 +447,7 @@ def assembler(pages: list[Path]):
 </head>
 <body>
 {chr(10).join(sections)}
+{creer_bandeau_logos()}
 </body>
 </html>'''
     
