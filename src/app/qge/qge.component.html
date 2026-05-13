@@ -1,7 +1,9 @@
 <app-page-header [showExport]="true" />
 
 <div class="page-header">
+  <button class="ghost" (click)="router.navigate(['/home'])">Accueil</button>
   <h2>Questionnaire gestionnaire</h2>
+  <button class="ghost" (click)="back()">← Retour</button>
 </div>
 
 <p>
@@ -11,7 +13,6 @@
 
 <textarea [(ngModel)]="jsonText" rows="25"></textarea>
 
-<p class="form-actions">
-  <button (click)="save()">Enregistrer</button>
-  <button class="ghost" (click)="back()">Retour</button>
+<p class="actions">
+  <button class="primary" (click)="save()">Enregistrer</button>
 </p>

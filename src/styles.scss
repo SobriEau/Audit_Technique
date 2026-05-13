@@ -6,8 +6,8 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  max-width: 900px;
-  margin: 32px auto;
+  max-width: 1000px;
+  margin: 18px auto;
   padding: 20px;
   background: #f6f9fb;
   color: #222;
@@ -18,7 +18,7 @@ h1, h2 {
 }
 
 h1 { margin: 0 0 18px; }
-h2 { margin: 0; }
+h2 { margin: 6px 0 12px; color: #09494f; }
 
 /* Boutons */
 button {

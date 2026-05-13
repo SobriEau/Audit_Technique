@@ -14,7 +14,7 @@ import { PageHeaderComponent } from '../shared/components/page-header/page-heade
 export class QusComponent implements OnInit {
   jsonText = '';
 
-  constructor(private dataService: DataService, private router: Router) {}
+  constructor(private dataService: DataService, public router: Router) {}
 
   ngOnInit(): void {
     this.jsonText = JSON.stringify(this.dataService.data.Qus ?? {}, null, 2);
