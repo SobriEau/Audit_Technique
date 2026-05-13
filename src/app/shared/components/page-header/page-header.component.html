@@ -1,0 +1,22 @@
+<div class="page-header">
+  <h1>SobriEau</h1>
+  <div class="data-tools">
+    @if (showImport) {
+      <button class="import" type="button" (click)="fileInput.click()">
+        Importer JSON
+      </button>
+      <input
+        #fileInput
+        type="file"
+        accept=".json"
+        style="display:none"
+        (change)="handleFile($event)"
+      />
+    }
+    @if (showExport) {
+      <button class="export" type="button" (click)="onExport()">
+        Exporter JSON
+      </button>
+    }
+  </div>
+</div>

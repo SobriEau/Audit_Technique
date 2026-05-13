@@ -1,0 +1,26 @@
+<div class="toolbar">
+  <button type="button" (mousedown)="exec($event, 'bold')"><b>B</b></button>
+  <button type="button" (mousedown)="exec($event, 'italic')"><i>I</i></button>
+  <button type="button" (mousedown)="exec($event, 'underline')"><u>U</u></button>
+  <button type="button" (mousedown)="exec($event, 'insertUnorderedList')">• Liste</button>
+  <label>
+    Couleur
+    <input type="color" (change)="execWithValue('foreColor', $event)" />
+  </label>
+  <label>
+    Taille
+    <select (change)="execWithValue('fontSize', $event)">
+      <option value="2">Petit</option>
+      <option value="3" selected>Normal</option>
+      <option value="5">Grand</option>
+    </select>
+  </label>
+</div>
+
+<div
+  #editor
+  class="editable"
+  contenteditable="true"
+  (input)="onContentInput()"
+  (blur)="onTouchedFn()"
+></div>

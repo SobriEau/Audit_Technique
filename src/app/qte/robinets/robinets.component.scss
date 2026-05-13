@@ -1,0 +1,60 @@
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #d6e6ea;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e6eef0;
+  background: #f3fbfb;
+  font-size: 13px;
+  color: #0b566b;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eef6f7;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.col-actions {
+  width: 200px;
+  white-space: nowrap;
+
+  button {
+    font-size: 13px;
+    padding: 6px 10px;
+    margin-right: 4px;
+  }
+}
+
+.btn-delete {
+  color: #b94040;
+  border-color: #f0d6d6;
+
+  &:hover {
+    background: #fff0f0;
+  }
+}
+
+.empty-row {
+  text-align: center;
+  color: #9aaeb4;
+  padding: 20px;
+}

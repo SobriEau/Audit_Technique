@@ -1,0 +1,87 @@
+<app-page-header [showExport]="true" />
+
+<div class="page-header">
+  <button class="ghost" (click)="router.navigate(['/home'])">Accueil</button>
+  <h2>Édition de Robinet</h2>
+  <button class="ghost" (click)="back()">← Retour</button>
+</div>
+
+@if (robinet) {
+  <div class="row">
+    <label>Numéro</label>
+    <input type="text" [(ngModel)]="robinet.Numero" />
+
+    <label>Emplacement</label>
+    <input type="text" [(ngModel)]="robinet.Emplacement" />
+
+    <label>Précision emplacement</label>
+    <input type="text" [(ngModel)]="robinet.PrecisionEmplacement" />
+
+    <div class="pair">
+      <div class="col">
+        <label>Type</label>
+        <select [(ngModel)]="robinet.Type">
+          <option value=""></option>
+          <option>Mitigeur</option>
+          <option>Mélangeur</option>
+          <option>Monocommande</option>
+          <option>Robinet à bille</option>
+          <option>Robinet à disque céramique</option>
+          <option>Robinet thermostatique</option>
+          <option>Robinet temporisé</option>
+          <option>Robinet d'arrêt</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Usages</label>
+        <input type="text" [(ngModel)]="robinet.Usages" />
+      </div>
+    </div>
+
+    <div class="pair">
+      <div class="col">
+        <label>Débit (l/min)</label>
+        <input type="number" step="0.1" [(ngModel)]="robinet.Debit" />
+      </div>
+      <div class="col">
+        <label>Présence d'un réducteur de débit</label>
+        <select [(ngModel)]="robinet.PresenceReducteur">
+          <option [ngValue]="null"></option>
+          <option [ngValue]="true">Oui</option>
+          <option [ngValue]="false">Non</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pair">
+      <div class="col">
+        <label>Temps obtention ECS (s)</label>
+        <input type="number" step="1" [(ngModel)]="robinet.TempsECS" />
+      </div>
+      <div class="col">
+        <label>Numéro réseau ECS d'appartenance</label>
+        <input type="text" [(ngModel)]="robinet.NumeroReseauECS" />
+      </div>
+    </div>
+
+    <div class="pair">
+      <div class="col">
+        <label>Nombre d'utilisation / semaine</label>
+        <input type="number" step="1" [(ngModel)]="robinet.NbUtilisationSemaine" />
+      </div>
+      <div class="col">
+        <label>Nombre d'équipement identique</label>
+        <input type="number" step="1" [(ngModel)]="robinet.NbEquipementIdentique" />
+      </div>
+    </div>
+
+    <label>Remarques</label>
+    <textarea [(ngModel)]="robinet.Remarques"></textarea>
+
+    <div class="actions">
+      <button class="primary" (click)="save()">Enregistrer</button>
+      <button class="ghost btn-delete" (click)="deleteRobinet()">Supprimer</button>
+    </div>
+  </div>
+}

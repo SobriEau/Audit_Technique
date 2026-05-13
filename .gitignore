@@ -1,0 +1,13 @@
+# Dépendances npm
+node_modules/
+
+# Cache Angular CLI
+.angular/
+
+# Artefacts de build intermédiaires
+dist/
+
+# Environnement Python (legacy)
+.venv/
+__pycache__/
+*.pyc

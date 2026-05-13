@@ -1,0 +1,43 @@
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(11, 86, 107, 0.06);
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+
+  button {
+    padding: 14px;
+    font-size: 15px;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(11, 86, 107, 0.12);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    width: 100%;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 26px rgba(11, 86, 107, 0.16);
+      opacity: 1;
+    }
+  }
+}
+
+#btnQge { background: linear-gradient(180deg, #1b7a8b, #0b566b); }
+#btnQus { background: linear-gradient(180deg, #2b8f6f, #167a59); }
+#btnQte { background: linear-gradient(180deg, #8a6ab8, #5b3fa5); }
+
+footer {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #657b81;
+}

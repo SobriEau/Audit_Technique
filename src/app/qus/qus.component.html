@@ -1,0 +1,17 @@
+<app-page-header [showExport]="true" />
+
+<div class="page-header">
+  <h2>Questionnaire usagers</h2>
+</div>
+
+<p>
+  Éditez la structure JSON de <strong>Qus</strong>.
+  Sauvegarde dans le localStorage via DataService.
+</p>
+
+<textarea [(ngModel)]="jsonText" rows="25"></textarea>
+
+<p class="form-actions">
+  <button (click)="save()">Enregistrer</button>
+  <button class="ghost" (click)="back()">Retour</button>
+</p>

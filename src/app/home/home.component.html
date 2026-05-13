@@ -1,0 +1,32 @@
+<app-page-header [showImport]="true" [showExport]="true" />
+
+<div class="card">
+  <label>Adresse</label>
+  <app-rich-editor [(ngModel)]="adresse" (ngModelChange)="autoSave()" />
+
+  <label>Info</label>
+  <app-rich-editor [(ngModel)]="info" (ngModelChange)="autoSave()" />
+
+  <label>Date</label>
+  <input type="date" [(ngModel)]="date" (change)="autoSave()" />
+
+  <label>Auditeur</label>
+  <input
+    type="text"
+    [(ngModel)]="auditeur"
+    placeholder="Nom de l'auditeur"
+    (blur)="autoSave()"
+  />
+
+  <p class="muted hint">
+    Les champs Adresse et Info acceptent du HTML libre (formatage simple).
+  </p>
+
+  <div class="buttons">
+    <button id="btnQge" (click)="nav('qge')">Questionnaire gestionnaire</button>
+    <button id="btnQus" (click)="nav('qus')">Questionnaire usager</button>
+    <button id="btnQte" (click)="nav('qte')">Audit Technique</button>
+  </div>
+</div>
+
+<footer>Les données sont sauvegardées automatiquement dans le localStorage.</footer>

@@ -1,0 +1,117 @@
+/* Styles globaux SobriEau */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 20px;
+  background: #f6f9fb;
+  color: #222;
+}
+
+h1, h2 {
+  color: #0b566b;
+}
+
+h1 { margin: 0 0 18px; }
+h2 { margin: 0; }
+
+/* Boutons */
+button {
+  background: #0b566b;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  transition: opacity 0.1s;
+}
+
+button:hover { opacity: 0.88; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button.ghost {
+  background: transparent;
+  border: 1px solid #d6e6ea;
+  color: #0b566b;
+}
+
+button.ghost:hover { background: #f0f8fa; opacity: 1; }
+
+button.primary { background: #0b566b; color: #fff; }
+button.secondary { background: #2b7f8b; color: #fff; }
+
+/* Inputs */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  padding: 8px;
+  border: 1px solid #d6e6ea;
+  border-radius: 6px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  color: #222;
+}
+
+textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+label {
+  display: block;
+  font-weight: 700;
+  color: #0b566b;
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+
+/* En-tête de page */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.page-header h1,
+.page-header h2 {
+  margin: 0;
+}
+
+/* Barre d'outils import/export */
+.data-tools {
+  display: flex;
+  gap: 8px;
+}
+
+.data-tools .import { background: #2b7f8b; }
+.data-tools .export { background: #0b566b; }
+
+.data-tools button {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* Actions */
+.actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+/* Texte discret */
+.muted {
+  color: #576c70;
+  font-size: 14px;
+}

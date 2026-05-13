@@ -1,0 +1,18 @@
+<app-page-header [showExport]="true" />
+
+<div class="page-header">
+  <button class="ghost" (click)="router.navigate(['/home'])">Accueil</button>
+  <h2>{{ sectionLabel }}</h2>
+  <button class="ghost" (click)="back()">← Retour</button>
+</div>
+
+<p>
+  Éditez la structure JSON de <strong>{{ sectionLabel }}</strong>.
+</p>
+
+<textarea [(ngModel)]="jsonText" rows="20"></textarea>
+
+<p class="form-actions">
+  <button (click)="save()">Enregistrer</button>
+  <button class="ghost" (click)="back()">Retour</button>
+</p>

@@ -1,0 +1,31 @@
+.row {
+  max-width: 800px;
+}
+
+.pair {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+
+  .col {
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+}
+
+textarea {
+  min-height: 100px;
+}
+
+.btn-delete {
+  color: #b94040;
+  border-color: #f0d6d6;
+
+  &:hover {
+    background: #fff0f0;
+    opacity: 1;
+  }
+}

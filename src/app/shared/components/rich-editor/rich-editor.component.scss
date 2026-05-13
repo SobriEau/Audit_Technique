@@ -1,0 +1,74 @@
+.toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #eef9fb, #e6f4f7);
+  border: 1px solid #d6e6ea;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  align-items: center;
+  overflow-x: auto;
+
+  button {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    color: #074e58;
+    white-space: nowrap;
+    font-size: 14px;
+
+    &:hover {
+      background: rgba(7, 78, 88, 0.06);
+      border-color: rgba(7, 78, 88, 0.08);
+      opacity: 1;
+    }
+  }
+
+  input[type='color'] {
+    width: 34px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  label {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;
+    color: #074e58;
+    margin: 0;
+    font-size: 13px;
+  }
+
+  select {
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid #d6e6ea;
+    width: auto;
+    font-size: 13px;
+  }
+}
+
+.editable {
+  min-height: 90px;
+  border: 1px solid #d6e6ea;
+  border-radius: 0 0 8px 8px;
+  padding: 12px;
+  background: #fff;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.5;
+
+  &:empty::before {
+    content: '(cliquez pour éditer...)';
+    color: #9aaeb4;
+  }
+}
