@@ -1,0 +1,44 @@
+<div class="address-editor">
+  <!-- Input field -->
+  <div class="input-wrapper">
+    <input
+      type="text"
+      [value]="inputValue"
+      (input)="onInput($any($event.target).value)"
+      (blur)="onBlur()"
+      placeholder="Rechercher une adresse…"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Adresse"
+      aria-autocomplete="list"
+      [attr.aria-expanded]="showDropdown"
+    />
+    @if (isLoading) {
+      <span class="spinner" aria-hidden="true"></span>
+    }
+  </div>
+
+  <!-- Suggestions dropdown -->
+  @if (showDropdown) {
+    <ul class="suggestions" role="listbox">
+      @for (s of suggestions; track s.label) {
+        <li role="option" (mousedown)="select(s)">
+          <span class="suggestion-label">{{ s.label }}</span>
+          @if (s.lat !== undefined) {
+            <span class="suggestion-coords">{{ suggestionCoords(s) }}</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- Offline notice -->
+  @if (isOffline) {
+    <p class="status-hint offline">⚡ Hors-ligne — saisie libre activée.</p>
+  }
+
+  <!-- GPS coordinates of selected address -->
+  @if (coordsLabel) {
+    <p class="status-hint coords">📍 {{ coordsLabel }}</p>
+  }
+</div>

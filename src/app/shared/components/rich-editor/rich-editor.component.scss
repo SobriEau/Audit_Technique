@@ -57,6 +57,161 @@
   }
 }
 
+// ─── Toolbar separator ────────────────────────────────────────────────────
+
+.toolbar-sep {
+  display: inline-block;
+  width: 1px;
+  height: 22px;
+  background: #c8dde2;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+// ─── Microphone button ────────────────────────────────────────────────────
+
+.mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px !important;
+  border-radius: 50% !important;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  color: #0b566b;
+  font-size: 12px;
+  font-weight: 600;
+
+  svg {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(11, 86, 107, 0.1) !important;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  // "Activer la dictée" — bouton texte + icône
+  &.mic-init {
+    width: auto !important;
+    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    border: 1px dashed #aac6cf !important;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #0b566b;
+
+    &:hover {
+      border-color: #0b566b !important;
+      background: rgba(11, 86, 107, 0.06) !important;
+    }
+  }
+
+  // Erreur → rouge
+  &.mic-error {
+    width: auto !important;
+    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    color: #c0392b;
+    border: 1px dashed rgba(192, 57, 43, 0.5) !important;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &:hover {
+      background: rgba(192, 57, 43, 0.08) !important;
+    }
+  }
+
+  // Dictée active — rouge pulsant
+  &.listening {
+    color: #c0392b !important;
+    background: rgba(192, 57, 43, 0.1) !important;
+    border-color: rgba(192, 57, 43, 0.3) !important;
+    animation: mic-pulse 1.4s ease-in-out infinite;
+
+    &:hover {
+      background: rgba(192, 57, 43, 0.16) !important;
+    }
+  }
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.35); }
+  50%       { box-shadow: 0 0 0 6px rgba(192, 57, 43, 0); }
+}
+
+// ─── Download progress bar ────────────────────────────────────────────────
+
+.mic-progress {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 140px;
+  height: 26px;
+  background: #e6f4f7;
+  border: 1px solid #c8dde2;
+  border-radius: 20px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mic-progress-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #0b566b, #1a8fa8);
+  border-radius: 20px;
+  transition: width 0.3s ease;
+  min-width: 4px;
+
+  &--indeterminate {
+    width: 40% !important;
+    animation: mic-indeterminate 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes mic-indeterminate {
+  0%   { left: -40%; }
+  60%  { left: 100%; }
+  100% { left: 100%; }
+}
+
+.mic-progress-label {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 600;
+  color: #074e58;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+// ─── Interim speech text ──────────────────────────────────────────────────
+
+.interim-text {
+  font-size: 12px;
+  color: #c0392b;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  flex-shrink: 1;
+  opacity: 0.85;
+}
+
+// ─── Editable area ────────────────────────────────────────────────────────
+
 .editable {
   min-height: 90px;
   border: 1px solid #d6e6ea;
@@ -72,3 +227,4 @@
     color: #9aaeb4;
   }
 }
+
