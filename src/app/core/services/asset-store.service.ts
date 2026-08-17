@@ -12,6 +12,12 @@ export interface StoredAsset {
   name: string;
   type: string;
   blob: Blob;
+  /**
+   * Audit propriétaire. Les images de plusieurs audits cohabitent dans le même
+   * magasin — leurs identifiants sont uniques — mais sans ce rattachement,
+   * supprimer un audit laisserait ses images orphelines, indéfiniment.
+   */
+  auditId?: string;
 }
 
 export type { AssetRef };
@@ -32,6 +38,13 @@ export class AssetStoreService {
 
   /** URL d'objet par identifiant, pour ne pas recréer un Blob URL à chaque rendu. */
   private urlCache = new Map<string, string>();
+
+  /** Audit auquel rattacher les images ajoutées. Fixé par DataService. */
+  private auditScope = '';
+
+  setScope(auditId: string): void {
+    this.auditScope = auditId;
+  }
 
   private open(): Promise<IDBDatabase> {
     if (!this.dbPromise) {
@@ -72,6 +85,7 @@ export class AssetStoreService {
       name: file.name,
       type: file.type || 'image/jpeg',
       blob: file,
+      auditId: this.auditScope,
     };
     await this.tx('readwrite', (s) => s.put(asset));
     return { id: asset.id, name: asset.name };
@@ -84,6 +98,7 @@ export class AssetStoreService {
       name,
       type: blob.type || 'image/png',
       blob,
+      auditId: this.auditScope,
     };
     await this.tx('readwrite', (s) => s.put(asset));
     return { id: asset.id, name: asset.name };
@@ -97,6 +112,7 @@ export class AssetStoreService {
       name,
       type: blob.type || 'image/jpeg',
       blob,
+      auditId: this.auditScope,
     };
     await this.tx('readwrite', (s) => s.put(asset));
     return { id: asset.id, name: asset.name };
@@ -150,6 +166,14 @@ export class AssetStoreService {
     for (const url of this.urlCache.values()) URL.revokeObjectURL(url);
     this.urlCache.clear();
     await this.tx('readwrite', (s) => s.clear());
+  }
+
+  /** Supprime toutes les images d'un audit — appelé quand celui-ci est effacé. */
+  async purgeAudit(auditId: string): Promise<void> {
+    const all = await this.tx<StoredAsset[]>('readonly', (s) => s.getAll());
+    for (const a of all) {
+      if (a.auditId === auditId) await this.remove(a.id);
+    }
   }
 
   /** Identifiants présents en base, pour repérer les images orphelines. */

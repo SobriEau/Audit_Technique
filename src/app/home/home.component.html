@@ -1,27 +1,103 @@
 <app-page-header [showImport]="true" [showExport]="true" />
 
 <div class="panel">
-  <label>Adresse</label>
-  <app-rich-editor [(ngModel)]="adresse" (ngModelChange)="autoSave()" />
+  <h2>Audit</h2>
+
+  <div class="audit-bar">
+    <div class="audit-pick">
+      <label for="auditSel">Audit ouvert</label>
+      <select
+        id="auditSel"
+        [value]="auditCourantId"
+        (change)="ouvrirAudit($any($event.target).value)"
+      >
+        @for (a of audits; track a.Id) {
+          <option [value]="a.Id">{{ libelle(a) }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="audit-actions">
+      <button type="button" class="ghost" (click)="nouvelAudit()">+ Nouvel audit</button>
+      <button type="button" class="ghost btn-delete" (click)="supprimerAudit()">
+        Supprimer
+      </button>
+    </div>
+  </div>
+
+  <p class="muted audit-hint">
+    {{ audits.length }} audit(s) conservé(s) sur ce poste. Changer d'adresse propose
+    d'ouvrir l'audit correspondant ou d'en commencer un nouveau.
+  </p>
+</div>
+
+<div class="panel">
+  <label for="adresse">Adresse</label>
+  <input
+    id="adresse"
+    type="text"
+    list="adresses-connues"
+    placeholder="12 rue des Lilas, Créteil"
+    [(ngModel)]="adresse"
+    (blur)="onAdresseBlur()"
+  />
+  <!-- Les adresses déjà saisies sont proposées : on choisit au lieu de retaper,
+       ce qui évite les quasi-doublons que la normalisation ne rapproche pas. -->
+  <datalist id="adresses-connues">
+    @for (a of audits; track a.Id) {
+      @if (a.Adresse) {
+        <option [value]="a.Adresse"></option>
+      }
+    }
+  </datalist>
+
+  @if (arbitrage) {
+    <div class="arbitrage" role="alert">
+      @if (arbitrage.genre === 'existe') {
+        <p>
+          Un audit existe déjà à <strong>{{ arbitrage.cible.Adresse }}</strong>.
+        </p>
+        <div class="actions">
+          <button type="button" class="primary" (click)="arbitrerOuvrir()">
+            Ouvrir cet audit
+          </button>
+          <button type="button" class="ghost" (click)="arbitrerRenommer()">
+            Garder l'audit en cours sous cette adresse
+          </button>
+          <button type="button" class="ghost" (click)="arbitrerAnnuler()">Annuler</button>
+        </div>
+      } @else {
+        <p>
+          L'audit en cours contient déjà des données. Que faire de l'adresse
+          <strong>{{ arbitrage.adresse }}</strong> ?
+        </p>
+        <div class="actions">
+          <button type="button" class="primary" (click)="arbitrerRenommer()">
+            Corriger l'adresse de cet audit
+          </button>
+          <button type="button" class="ghost" (click)="arbitrerNouveau()">
+            Commencer un nouvel audit ici
+          </button>
+          <button type="button" class="ghost" (click)="arbitrerAnnuler()">Annuler</button>
+        </div>
+      }
+    </div>
+  }
 
   <label>Info</label>
   <app-rich-editor [(ngModel)]="info" (ngModelChange)="autoSave()" />
 
-  <label>Date</label>
-  <input type="date" [(ngModel)]="date" (change)="autoSave()" />
+  <label for="date">Date</label>
+  <input id="date" type="date" [(ngModel)]="date" (change)="autoSave()" />
 
-  <label>Auditeur</label>
+  <label for="auditeur">Auditeur</label>
   <input
+    id="auditeur"
     type="text"
     [(ngModel)]="auditeur"
     placeholder="Nom de l'auditeur"
     (blur)="autoSave()"
   />
-
-  <p class="muted hint">
-    Les champs Adresse et Info acceptent du HTML libre (formatage simple).
-  </p>
-
 </div>
 
 <div class="panel">

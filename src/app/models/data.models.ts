@@ -102,8 +102,31 @@ export interface QteData {
   [key: string]: unknown;
 }
 
+/**
+ * Fiche signalétique d'un audit dans le registre.
+ *
+ * Le registre reste léger : il est relu à chaque démarrage et ne doit pas
+ * charger les données complètes de tous les audits.
+ */
+export interface AuditSummary {
+  /** Identité technique stable. Ne change jamais, même si l'adresse change. */
+  Id: string;
+  /** Adresse telle que saisie, pour l'affichage. */
+  Adresse: string;
+  /** Adresse normalisée, pour retrouver un audit — jamais une identité. */
+  AdresseKey: string;
+  Auditeur?: string | null;
+  Date?: string | null;
+  /** Horodatage ISO de la dernière écriture, pour trier du plus récent. */
+  UpdatedAt: string;
+}
+
 export interface AppData {
+  /** Identité de l'audit, reprise dans le registre. */
+  Id?: string;
   Adresse?: string | null;
+  /** Forme normalisée de `Adresse`, recalculée à chaque enregistrement. */
+  AdresseKey?: string;
   Info?: string | null;
   Date?: string | null;
   Auditeur?: string | null;

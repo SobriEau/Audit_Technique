@@ -52,12 +52,16 @@ Une modification qui fonctionne sous `npm start` peut être cassée en `file://`
 
 ## 3. Modèle de données
 
-Racine unique en `localStorage`, clé **`sobrieau`**, décrite par `AppData` dans
-[data.models.ts](src/app/models/data.models.ts).
+Un audit est décrit par `AppData` dans
+[data.models.ts](src/app/models/data.models.ts). Plusieurs audits coexistent —
+voir §4 pour leur rangement en `localStorage`.
 
 ```
 AppData
-├── Adresse, Info        HTML libre (éditeur riche)
+├── Id                   identité de l'audit
+├── Adresse              texte simple (sert au rapprochement, voir §4)
+├── AdresseKey           forme normalisée, recalculée à l'enregistrement
+├── Info                 HTML libre (éditeur riche)
 ├── Date, Auditeur       texte
 ├── Plans[]              AssetRef — plans du bâtiment, communs à l'audit
 ├── Photos[]             AssetRef — galerie générale
@@ -115,19 +119,40 @@ subsistent que pour relire les audits enregistrés à ce moment-là.
 
 | Support | Contenu | Limite |
 |---|---|---|
-| `localStorage['sobrieau']` | Tout le JSON de l'audit **sauf les images** | ~5 Mo |
+| `localStorage` (voir ci-dessous) | Le JSON des audits, **sauf les images** | ~5 Mo |
 | IndexedDB `sobrieau-assets` | Les images (plans, photos), en `Blob` | large |
-| Cookie `sobrieau` | Secours hérité de l'ancienne version HTML | **~4 Ko** |
+
+### Plusieurs audits, pas un seul
+
+Un auditeur enchaîne les bâtiments. Chaque audit est stocké à part :
+
+```
+sobrieau.index          → AuditSummary[]  (fiches légères, relues au démarrage)
+sobrieau.current        → identifiant de l'audit ouvert
+sobrieau.audit.<Id>     → données complètes d'un audit
+sobrieau.legacy-backup  → l'audit mono-utilisateur d'avant, conservé par sécurité
+```
+
+`AuditRegistryService` porte cette disposition et reprend automatiquement
+l'ancienne clé `sobrieau` au premier démarrage.
+
+**L'adresse n'est pas une clé.** Chaque audit garde un `Id` technique ; l'adresse
+normalisée (`AdresseKey`) sert seulement à *rapprocher*. Sans cette séparation,
+affiner un jour les règles de normalisation rendrait orphelins tous les audits.
+
+Le rapprochement se fait **à la sortie du champ**, jamais à la frappe — sinon
+saisir une adresse créerait autant d'audits que de caractères. Et une question
+n'est posée que s'il y a des données à perdre : clé inchangée ou audit vide,
+c'est un simple renommage.
+
+**Le repli cookie a été retiré** : il ne pouvait porter qu'un audit, et son
+plafond de ~4 Ko le rendait de toute façon inopérant dès qu'un audit se
+remplissait.
 
 **Ne jamais mettre d'image dans `localStorage`.** Une photo de téléphone (2–4 Mo,
 +33 % en base64) sature à elle seule le quota. Les images passent par
 [AssetStoreService](src/app/core/services/asset-store.service.ts) ; le JSON ne
 transporte que des `AssetRef { id, name }`.
-
-**Le cookie n'est écrit que si la charge fait moins de 3 500 caractères.** Un
-cookie plus gros est rejeté par le navigateur *sans erreur*. La version
-antérieure y recopiait tout l'audit à chaque sauvegarde et échouait en silence ;
-ne pas réintroduire ce comportement.
 
 ### Cohérence des images
 
@@ -140,6 +165,12 @@ retiré.
 
 Supprimer un plan doit purger les localisations qui le référencent :
 `DataService.purgePlanReferences()`.
+
+Chaque image porte l'`auditId` de son audit : les images de plusieurs audits
+cohabitent dans le même magasin, et `purgeAudit()` permet de n'effacer que
+celles de l'audit supprimé. L'import réattribue de nouveaux identifiants
+d'images, sinon deux audits importés de la même source les partageraient — et
+supprimer l'un effacerait les images de l'autre.
 
 ---
 
@@ -253,6 +284,16 @@ l'appariement voulu — « Commande / Temporisation / Cool-start » sur une lign
 
 Routes : `#/qte/<route>` pour la liste — ou directement la fiche si l'entité est
 déclarée `single` — et `#/qte/<route>/<Id>` pour un élément.
+
+### Deux formes pour un champ à choix
+
+`audit-field` choisit seul, selon le nombre d'options : **moins de quatre**
+donne des boutons radio, **quatre ou plus** un champ de recherche filtrant la
+liste. Le seuil est `RADIO_THRESHOLD`. Le Oui/Non suit la même règle — c'est un
+choix à deux options comme un autre.
+
+Le filtrage ignore casse et accents : sur le terrain, personne ne tape
+« Mélangeur » avec son accent.
 
 ### Deux pièges déjà rencontrés
 
