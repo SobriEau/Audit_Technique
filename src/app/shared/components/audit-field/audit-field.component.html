@@ -1,95 +1,149 @@
-<label [attr.for]="def.key">
-  {{ def.label }}@if (def.unit) {<span class="unit">&nbsp;({{ def.unit }})</span>}
-</label>
+@if (useRadio) {
+  <!-- Peu d'options : un groupe de boutons radio, avec une légende plutôt
+       qu'une étiquette, puisqu'aucun contrôle unique ne la porte. -->
+  <fieldset class="radio-field">
+    <legend>
+      {{ def.label }}@if (def.unit) {<span class="unit">&nbsp;({{ def.unit }})</span>}
+    </legend>
 
-@switch (def.kind) {
-  @case ('text') {
-    <input
-      [id]="def.key"
-      type="text"
-      [value]="value ?? ''"
-      (input)="onInput($any($event.target).value)"
-      (blur)="onTouchedFn()"
-    />
-  }
-
-  @case ('textarea') {
-    <textarea
-      [id]="def.key"
-      [value]="value ?? ''"
-      (input)="onInput($any($event.target).value)"
-      (blur)="onTouchedFn()"
-    ></textarea>
-  }
-
-  @case ('number') {
-    <input
-      [id]="def.key"
-      type="number"
-      step="any"
-      [value]="value ?? ''"
-      (input)="onNumber($any($event.target).value)"
-      (blur)="onTouchedFn()"
-    />
-  }
-
-  @case ('select') {
-    <select
-      [id]="def.key"
-      [value]="value ?? ''"
-      (change)="onInput($any($event.target).value)"
-      (blur)="onTouchedFn()"
-    >
-      <option value=""></option>
-      @for (o of def.options; track o) {
-        <option [value]="o">{{ o }}</option>
+    <div class="radio-group">
+      @for (c of choices; track c.label) {
+        <label class="radio" [class.checked]="isSelected(c)">
+          <input
+            type="radio"
+            [name]="uid"
+            [checked]="isSelected(c)"
+            (change)="selectChoice(c)"
+            (blur)="onTouchedFn()"
+          />
+          <span>{{ c.label }}</span>
+        </label>
       }
-      <!-- Valeur enregistrée qui ne figure plus dans la liste : conservée -->
-      @if (orphanValue) {
-        <option [value]="orphanValue">{{ orphanValue }} (valeur hors liste)</option>
+
+      @if (hasValue) {
+        <button type="button" class="clear" (click)="clear()" title="Effacer la réponse">
+          Effacer
+        </button>
       }
-    </select>
-  }
+    </div>
+  </fieldset>
+} @else {
+  <label [attr.for]="uid">
+    {{ def.label }}@if (def.unit) {<span class="unit">&nbsp;({{ def.unit }})</span>}
+  </label>
 
-  @case ('boolean') {
-    <select
-      [id]="def.key"
-      [value]="booleanValue"
-      (change)="onBoolean($any($event.target).value)"
-      (blur)="onTouchedFn()"
-    >
-      <option value=""></option>
-      <option value="true">Oui</option>
-      <option value="false">Non</option>
-    </select>
-  }
-
-  @case ('entity-ref') {
-    @if (refOptions.length) {
-      <select
-        [id]="def.key"
+  @switch (def.kind) {
+    @case ('text') {
+      <input
+        [id]="uid"
+        type="text"
         [value]="value ?? ''"
-        (change)="onInput($any($event.target).value)"
+        (input)="onInput($any($event.target).value)"
         (blur)="onTouchedFn()"
-      >
-        <option value="">—</option>
-        @for (o of refOptions; track o.Id) {
-          <option [value]="o.Id">{{ refLabel(o) }}</option>
-        }
-      </select>
-    } @else {
-      <p class="muted empty-ref">
-        Aucun élément à référencer pour l'instant. Créez-le d'abord dans sa propre section.
-      </p>
+      />
     }
-  }
 
-  @case ('rich') {
-    <app-rich-editor [ngModel]="value ?? ''" (ngModelChange)="onInput($event)" />
-  }
+    @case ('textarea') {
+      <textarea
+        [id]="uid"
+        [value]="value ?? ''"
+        (input)="onInput($any($event.target).value)"
+        (blur)="onTouchedFn()"
+      ></textarea>
+    }
 
-  @case ('photos') {
-    <app-photo-editor [ngModel]="value ?? []" (ngModelChange)="onInput($event)" />
+    @case ('number') {
+      <input
+        [id]="uid"
+        type="number"
+        step="any"
+        [value]="value ?? ''"
+        (input)="onNumber($any($event.target).value)"
+        (blur)="onTouchedFn()"
+      />
+    }
+
+    @case ('select') {
+      <!-- Beaucoup d'options : liste filtrable à la saisie -->
+      <div class="combo">
+        <input
+          [id]="uid"
+          type="text"
+          role="combobox"
+          autocomplete="off"
+          aria-autocomplete="list"
+          [attr.aria-expanded]="comboOpen"
+          [attr.aria-controls]="uid + '-list'"
+          [attr.aria-activedescendant]="comboOpen && activeIndex >= 0 ? uid + '-opt-' + activeIndex : null"
+          placeholder="Rechercher ou choisir…"
+          [value]="comboDisplay"
+          (focus)="openCombo()"
+          (input)="onComboInput($any($event.target).value)"
+          (keydown)="onComboKeydown($event)"
+          (blur)="closeCombo()"
+        />
+
+        @if (hasValue) {
+          <button type="button" class="combo-clear" (click)="clear()" title="Effacer la réponse">
+            ✕
+          </button>
+        }
+
+        @if (comboOpen) {
+          <ul class="combo-list" [id]="uid + '-list'" role="listbox">
+            @for (c of filtered; track c.label; let i = $index) {
+              <li
+                role="option"
+                [id]="uid + '-opt-' + i"
+                [attr.aria-selected]="isSelected(c)"
+                [class.active]="i === activeIndex"
+                [class.selected]="isSelected(c)"
+                (mousedown)="chooseFromList(c)"
+              >
+                {{ c.label }}
+              </li>
+            }
+            @empty {
+              <li class="combo-empty">Aucune option ne correspond.</li>
+            }
+          </ul>
+        }
+      </div>
+
+      @if (orphanValue && !comboOpen) {
+        <p class="field-warn">
+          Valeur enregistrée hors liste : « {{ orphanValue }} ». Conservée telle quelle.
+        </p>
+      }
+    }
+
+    @case ('entity-ref') {
+      @if (refOptions.length) {
+        <select
+          [id]="uid"
+          [value]="value ?? ''"
+          (change)="onInput($any($event.target).value)"
+          (blur)="onTouchedFn()"
+        >
+          <option value="">—</option>
+          @for (o of refOptions; track o.Id) {
+            <option [value]="o.Id">{{ refLabel(o) }}</option>
+          }
+        </select>
+      } @else {
+        <p class="muted empty-ref">
+          Aucun élément à référencer pour l'instant. Créez-le d'abord dans sa propre section.
+        </p>
+      }
+    }
+
+    @case ('rich') {
+      <app-rich-editor [ngModel]="value ?? ''" (ngModelChange)="onInput($event)" />
+    }
+
+    @case ('photos') {
+      <app-photo-editor [ngModel]="value ?? []" (ngModelChange)="onInput($event)" />
+    }
   }
 }
 

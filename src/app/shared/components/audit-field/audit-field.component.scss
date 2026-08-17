@@ -24,3 +24,144 @@
   font-size: var(--fs-sm);
   font-style: italic;
 }
+
+/* ── Boutons radio (moins de quatre options) ────────────────────────── */
+
+.radio-field {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.radio-field legend {
+  display: block;
+  padding: 0;
+  font-weight: 700;
+  color: var(--c-primary);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+/* La pastille native est masquée au profit d'une cible large : plus facile à
+   atteindre au doigt qu'un cercle de 13 px. */
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  cursor: pointer;
+  font-weight: normal;
+  color: var(--c-text);
+  margin: 0;
+  user-select: none;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.radio:hover {
+  background: var(--c-surface-hover);
+}
+
+.radio input {
+  margin: 0;
+  accent-color: var(--c-primary);
+  flex-shrink: 0;
+}
+
+.radio.checked {
+  border-color: var(--c-primary);
+  background: var(--c-surface-hover);
+  font-weight: 700;
+  color: var(--c-primary);
+}
+
+.radio:focus-within {
+  outline: 2px solid var(--c-primary-light);
+  outline-offset: 2px;
+}
+
+.clear {
+  background: transparent;
+  border: none;
+  color: var(--c-text-muted);
+  font-weight: normal;
+  font-size: var(--fs-sm);
+  text-decoration: underline;
+  padding: var(--sp-1) var(--sp-2);
+}
+
+.clear:hover {
+  color: var(--c-danger);
+  opacity: 1;
+}
+
+/* ── Liste filtrable (quatre options ou plus) ───────────────────────── */
+
+.combo {
+  position: relative;
+}
+
+.combo-clear {
+  position: absolute;
+  right: var(--sp-1);
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+  padding: var(--sp-1) var(--sp-2);
+}
+
+.combo-clear:hover {
+  color: var(--c-danger);
+  opacity: 1;
+}
+
+.combo-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--sp-1);
+  list-style: none;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+
+.combo-list li {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: var(--fs-base);
+}
+
+.combo-list li.active {
+  background: var(--c-surface-hover);
+}
+
+.combo-list li.selected {
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.combo-empty {
+  color: var(--c-text-faint);
+  font-style: italic;
+  cursor: default;
+}
