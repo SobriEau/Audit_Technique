@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>SobriEau — sonde OAuth device flow</title>
+<style>
+ body{font:14px/1.5 system-ui,sans-serif;margin:24px;max-width:820px;color:#222}
+ h1{font-size:20px;color:#0b566b} h2{font-size:15px;color:#0b566b;margin-top:24px}
+ input{width:100%;padding:8px;border:1px solid #d6e6ea;border-radius:8px;font:inherit;margin:4px 0 12px}
+ button{background:#0b566b;color:#fff;border:0;padding:9px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+ button:disabled{opacity:.45;cursor:not-allowed}
+ pre{background:#f6f9fb;border:1px solid #d6e6ea;border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:12px}
+ .code{font-size:30px;letter-spacing:3px;font-weight:700;color:#0b566b}
+ .ok{color:#0a7a35;font-weight:700}.ko{color:#b00;font-weight:700}
+ .note{background:#fffbe6;border:1px solid #e8d98a;border-radius:8px;padding:10px 12px;font-size:13px}
+</style>
+</head>
+<body>
+<h1>Sonde OAuth — Google Drive depuis un fichier local</h1>
+
+<p>Cette page répond à <strong>une seule question</strong> : Google accorde-t-il les
+autorisations Drive à un client « TV et périphériques à saisie limitée », depuis une page
+ouverte en <code>file://</code> ?</p>
+
+<p class="note">
+  <strong>À faire avant :</strong> dans Google Cloud Console, créer un identifiant OAuth de
+  type <em>Téléviseurs et périphériques d'entrée limités</em>, puis coller ci-dessous
+  l'identifiant et le secret. Ouvrir <em>ce fichier</em> par double-clic — pas via un serveur,
+  sinon le test ne prouve rien.
+</p>
+
+<h2>1. Identifiants du client</h2>
+<label>client_id</label>
+<input id="cid" placeholder="xxxxx.apps.googleusercontent.com">
+<label>client_secret</label>
+<input id="csec" placeholder="GOCSPX-…">
+
+<label>Portée demandée</label>
+<input id="scope" value="https://www.googleapis.com/auth/drive.file">
+
+<button id="go">Démarrer le device flow</button>
+
+<h2>2. Déroulé</h2>
+<div id="step"></div>
+<pre id="log">En attente…</pre>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const log = (m) => { $('log').textContent += '\n' + m; };
+
+/** Le device flow n'utilise aucune URI de redirection : c'est tout l'intérêt ici. */
+async function post(url, params) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(params).toString(),
+  });
+  return { status: r.status, body: await r.json().catch(() => ({})) };
+}
+
+$('go').onclick = async () => {
+  const client_id = $('cid').value.trim();
+  const client_secret = $('csec').value.trim();
+  const scope = $('scope').value.trim();
+  if (!client_id) return alert('client_id requis');
+
+  $('go').disabled = true;
+  $('log').textContent = `Origine de la page : ${window.origin}`;
+
+  try {
+    // ── Étape 1 : demander un code d'appareil ─────────────────────────────
+    const dc = await post('https://oauth2.googleapis.com/device/code', { client_id, scope });
+    log(`\n[device/code] HTTP ${dc.status}\n${JSON.stringify(dc.body, null, 2)}`);
+
+    if (dc.status !== 200) {
+      $('step').innerHTML = `<p class="ko">Refus dès la demande de code.</p>
+        <p>Si l'erreur mentionne la portée, c'est la réponse cherchée : Drive n'est pas
+        autorisé sur ce flux. Si elle mentionne le client, vérifier son type.</p>`;
+      return;
+    }
+
+    // ── Étape 2 : l'utilisateur saisit le code sur un autre appareil ──────
+    $('step').innerHTML = `
+      <p>Ouvrez <a href="${dc.body.verification_url}" target="_blank">${dc.body.verification_url}</a>
+      et saisissez :</p>
+      <p class="code">${dc.body.user_code}</p>
+      <p>Interrogation du serveur en cours…</p>`;
+
+    // ── Étape 3 : interroger jusqu'à obtention du jeton ───────────────────
+    const fin = Date.now() + (dc.body.expires_in || 300) * 1000;
+    const pas = (dc.body.interval || 5) * 1000;
+
+    while (Date.now() < fin) {
+      await new Promise((r) => setTimeout(r, pas));
+      const t = await post('https://oauth2.googleapis.com/token', {
+        client_id, client_secret,
+        device_code: dc.body.device_code,
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+      });
+
+      if (t.status === 200) {
+        log(`\n[token] jeton obtenu (portées : ${t.body.scope})`);
+
+        // ── Étape 4 : le test qui compte — déposer un fichier ─────────────
+        const contenu = JSON.stringify({ sobrieau: 'test de dépôt', date: new Date().toISOString() });
+        const limite = '-------sobrieau' + Date.now();
+        const corps =
+          `--${limite}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+          JSON.stringify({ name: 'sobrieau-test.json' }) +
+          `\r\n--${limite}\r\nContent-Type: application/json\r\n\r\n${contenu}\r\n--${limite}--`;
+
+        const up = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + t.body.access_token,
+            'Content-Type': `multipart/related; boundary=${limite}`,
+          },
+          body: corps,
+        });
+        const upBody = await up.json().catch(() => ({}));
+        log(`\n[upload] HTTP ${up.status}\n${JSON.stringify(upBody, null, 2)}`);
+
+        $('step').innerHTML = up.ok
+          ? `<p class="ok">Concluant : dépôt réussi depuis une page file://.
+             Fichier créé sur le Drive (id ${upBody.id}). La piste est viable.</p>`
+          : `<p class="ko">Jeton obtenu mais dépôt refusé — voir le journal.</p>`;
+        return;
+      }
+
+      const err = t.body.error;
+      if (err === 'authorization_pending') continue;
+      if (err === 'slow_down') { await new Promise((r) => setTimeout(r, pas)); continue; }
+
+      log(`\n[token] HTTP ${t.status}\n${JSON.stringify(t.body, null, 2)}`);
+      $('step').innerHTML = `<p class="ko">Arrêt : ${err}</p>`;
+      return;
+    }
+    $('step').innerHTML = '<p class="ko">Délai dépassé.</p>';
+  } catch (e) {
+    log(`\nEXCEPTION : ${e.name} — ${e.message}`);
+    $('step').innerHTML = `<p class="ko">Requête bloquée par le navigateur (CORS).</p>`;
+  } finally {
+    $('go').disabled = false;
+  }
+};
+</script>
+</body>
+</html>
