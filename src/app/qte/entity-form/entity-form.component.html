@@ -1,0 +1,35 @@
+@if (def) {
+  <app-page-header [pageTitle]="title" [backTo]="backTo" />
+
+  <div class="panel">
+    <!-- Une ligne du formulaire = une ligne du tableau Excel -->
+    @for (row of formRows; track $index) {
+      <div class="field-row">
+        @for (f of row; track f.key) {
+          <app-audit-field
+            [def]="f"
+            [ngModel]="valueOf(f)"
+            (ngModelChange)="onFieldChange(f, $event)"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        }
+      </div>
+    }
+
+    <label>Photos</label>
+    <app-photo-editor
+      [ngModel]="photos"
+      (ngModelChange)="onPhotosChange($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+
+    <div class="actions">
+      <button class="primary" (click)="save()">Enregistrer</button>
+      @if (!def.single) {
+        <button class="ghost btn-delete" (click)="remove()">Supprimer</button>
+      }
+    </div>
+  </div>
+
+  <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
+}

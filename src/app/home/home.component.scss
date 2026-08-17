@@ -1,43 +1,45 @@
-.card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 18px;
-  box-shadow: 0 6px 18px rgba(11, 86, 107, 0.06);
-}
-
 .hint {
-  margin-top: 8px;
-  font-size: 13px;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
 }
 
 .buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 20px;
-
-  button {
-    padding: 14px;
-    font-size: 15px;
-    border-radius: 10px;
-    box-shadow: 0 6px 18px rgba(11, 86, 107, 0.12);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
-    width: 100%;
-
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 26px rgba(11, 86, 107, 0.16);
-      opacity: 1;
-    }
-  }
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
 }
 
-#btnQge { background: linear-gradient(180deg, #1b7a8b, #0b566b); }
-#btnQus { background: linear-gradient(180deg, #2b8f6f, #167a59); }
-#btnQte { background: linear-gradient(180deg, #8a6ab8, #5b3fa5); }
+/* Boutons de navigation vers les trois questionnaires */
+.nav-btn {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-lg);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.nav-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  opacity: 1;
+}
+
+.nav-btn--qge {
+  background: var(--grad-qge);
+}
+
+.nav-btn--qus {
+  background: var(--grad-qus);
+}
+
+.nav-btn--qte {
+  background: var(--grad-qte);
+}
 
 footer {
-  margin-top: 14px;
-  font-size: 13px;
-  color: #657b81;
+  display: block;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-sm);
 }

@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.unit {
+  font-weight: normal;
+  color: var(--c-text-muted);
+}
+
+.field-help {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+}
+
+.field-warn {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}
+
+.empty-ref {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  font-style: italic;
+}

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { DataService } from '../core/services/data.service';
 import { PageHeaderComponent } from '../shared/components/page-header/page-header.component';
 
@@ -9,12 +8,11 @@ import { PageHeaderComponent } from '../shared/components/page-header/page-heade
   standalone: true,
   imports: [FormsModule, PageHeaderComponent],
   templateUrl: './qus.component.html',
-  styleUrl: './qus.component.scss',
 })
 export class QusComponent implements OnInit {
   jsonText = '';
 
-  constructor(private dataService: DataService, public router: Router) {}
+  constructor(private dataService: DataService) {}
 
   ngOnInit(): void {
     this.jsonText = JSON.stringify(this.dataService.data.Qus ?? {}, null, 2);
@@ -28,9 +26,5 @@ export class QusComponent implements OnInit {
     } catch (e) {
       alert('JSON invalide : ' + (e instanceof Error ? e.message : String(e)));
     }
-  }
-
-  back(): void {
-    this.router.navigate(['/home']);
   }
 }

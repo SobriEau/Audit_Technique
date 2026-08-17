@@ -1,0 +1,103 @@
+<label [attr.for]="def.key">
+  {{ def.label }}@if (def.unit) {<span class="unit">&nbsp;({{ def.unit }})</span>}
+</label>
+
+@switch (def.kind) {
+  @case ('text') {
+    <input
+      [id]="def.key"
+      type="text"
+      [value]="value ?? ''"
+      (input)="onInput($any($event.target).value)"
+      (blur)="onTouchedFn()"
+    />
+  }
+
+  @case ('textarea') {
+    <textarea
+      [id]="def.key"
+      [value]="value ?? ''"
+      (input)="onInput($any($event.target).value)"
+      (blur)="onTouchedFn()"
+    ></textarea>
+  }
+
+  @case ('number') {
+    <input
+      [id]="def.key"
+      type="number"
+      step="any"
+      [value]="value ?? ''"
+      (input)="onNumber($any($event.target).value)"
+      (blur)="onTouchedFn()"
+    />
+  }
+
+  @case ('select') {
+    <select
+      [id]="def.key"
+      [value]="value ?? ''"
+      (change)="onInput($any($event.target).value)"
+      (blur)="onTouchedFn()"
+    >
+      <option value=""></option>
+      @for (o of def.options; track o) {
+        <option [value]="o">{{ o }}</option>
+      }
+      <!-- Valeur enregistrée qui ne figure plus dans la liste : conservée -->
+      @if (orphanValue) {
+        <option [value]="orphanValue">{{ orphanValue }} (valeur hors liste)</option>
+      }
+    </select>
+  }
+
+  @case ('boolean') {
+    <select
+      [id]="def.key"
+      [value]="booleanValue"
+      (change)="onBoolean($any($event.target).value)"
+      (blur)="onTouchedFn()"
+    >
+      <option value=""></option>
+      <option value="true">Oui</option>
+      <option value="false">Non</option>
+    </select>
+  }
+
+  @case ('entity-ref') {
+    @if (refOptions.length) {
+      <select
+        [id]="def.key"
+        [value]="value ?? ''"
+        (change)="onInput($any($event.target).value)"
+        (blur)="onTouchedFn()"
+      >
+        <option value="">—</option>
+        @for (o of refOptions; track o.Id) {
+          <option [value]="o.Id">{{ refLabel(o) }}</option>
+        }
+      </select>
+    } @else {
+      <p class="muted empty-ref">
+        Aucun élément à référencer pour l'instant. Créez-le d'abord dans sa propre section.
+      </p>
+    }
+  }
+
+  @case ('rich') {
+    <app-rich-editor [ngModel]="value ?? ''" (ngModelChange)="onInput($event)" />
+  }
+
+  @case ('photos') {
+    <app-photo-editor [ngModel]="value ?? []" (ngModelChange)="onInput($event)" />
+  }
+}
+
+@if (def.help) {
+  <p class="muted field-help">{{ def.help }}</p>
+}
+@if (def.warn) {
+  <p class="field-warn" title="Point à arbitrer, issu du classeur de spécification">
+    ⚠️ {{ def.warn }}
+  </p>
+}

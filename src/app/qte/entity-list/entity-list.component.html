@@ -1,0 +1,58 @@
+<!-- Entité unique (compteur général, collecte d'eau de pluie) : pas de liste,
+     on affiche directement sa fiche. -->
+@if (def && def.single) {
+  <app-entity-form />
+}
+
+@if (def && !def.single) {
+  <app-page-header [pageTitle]="def.plural" [backTo]="['/qte']" />
+
+  <p class="muted">
+    Liste des éléments saisis. Cliquez sur une ligne pour ouvrir sa fiche.
+  </p>
+
+  <div class="actions actions--top">
+    <button class="primary" (click)="add()">Ajouter — {{ def.singular }}</button>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Numéro</th>
+          @for (c of columns; track c.key) {
+            @if (c.key !== 'Numero') {
+              <th>{{ c.label }}</th>
+            }
+          }
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items; track item.Id) {
+          <tr class="clickable" (click)="open(item)">
+            <td>{{ item.Numero ?? '' }}</td>
+            @for (c of columns; track c.key) {
+              @if (c.key !== 'Numero') {
+                <td>{{ display(item, c) }}</td>
+              }
+            }
+            <td class="col-actions">
+              <button class="ghost" (click)="open(item)">Modifier</button>
+              <button class="ghost btn-delete" (click)="remove(item, $event)">
+                Supprimer
+              </button>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr>
+            <td [attr.colspan]="columns.length + 1" class="empty-row">
+              Aucun élément. Cliquez sur « Ajouter — {{ def.singular }} ».
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

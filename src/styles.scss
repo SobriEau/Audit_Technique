@@ -1,65 +1,197 @@
-/* Styles globaux SobriEau */
+/* ============================================================
+   SobriEau — Charte graphique et styles globaux
+   ------------------------------------------------------------
+   Toutes les valeurs de la charte (couleurs, rayons, espacements,
+   typographie, ombres) sont centralisées ici sous forme de
+   variables CSS. Les composants ne codent plus aucune valeur en
+   dur : ils consomment ces tokens.
+   ============================================================ */
 
-*, *::before, *::after {
+:root {
+  /* ── Couleurs de marque ─────────────────────────────────── */
+  --c-primary: #0b566b;
+  --c-primary-dark: #073f4f;
+  --c-primary-light: #1b7a8b;
+  --c-accent: #2b7f8b;
+
+  /* ── Dégradés de catégorie (boutons d'accueil) ──────────── */
+  --grad-qge: linear-gradient(180deg, #1b7a8b, #0b566b);
+  --grad-qus: linear-gradient(180deg, #2b8f6f, #167a59);
+  --grad-qte: linear-gradient(180deg, #2f6f9f, #1d4e73);
+
+  /* ── Surfaces ───────────────────────────────────────────── */
+  --c-bg: #f6f9fb;
+  --c-surface: #ffffff;
+  --c-surface-alt: #f3fbfb;
+  --c-surface-hover: #e6f4f7;
+
+  /* ── Bordures ───────────────────────────────────────────── */
+  --c-border: #d6e6ea;
+  --c-border-soft: #eef6f7;
+
+  /* ── Texte ──────────────────────────────────────────────── */
+  --c-text: #222222;
+  --c-text-muted: #576c70;
+  --c-text-faint: #9aaeb4;
+  --c-text-on-primary: #ffffff;
+
+  /* ── État danger / suppression ──────────────────────────── */
+  --c-danger: #b94040;
+  --c-danger-border: #f0d6d6;
+  --c-danger-bg: #fff0f0;
+
+  /* ── Rayons ─────────────────────────────────────────────── */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* ── Espacements ────────────────────────────────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 18px;
+  --sp-5: 24px;
+
+  /* ── Typographie ────────────────────────────────────────── */
+  --font-base: Arial, Helvetica, sans-serif;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-lg: 16px;
+
+  /* ── Ombres ─────────────────────────────────────────────── */
+  --shadow-sm: 0 6px 18px rgba(11, 86, 107, 0.06);
+  --shadow-md: 0 6px 18px rgba(11, 86, 107, 0.12);
+  --shadow-lg: 0 10px 26px rgba(11, 86, 107, 0.16);
+
+  /* ── Divers ─────────────────────────────────────────────── */
+  --layout-max: 1000px;
+  --transition: 0.12s ease;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  max-width: 1000px;
-  margin: 18px auto;
-  padding: 20px;
-  background: #f6f9fb;
-  color: #222;
+  font-family: var(--font-base);
+  font-size: var(--fs-base);
+  max-width: var(--layout-max);
+  /* Pas de marge haute : l'en-tête est collant et doit affleurer le haut de la
+     fenêtre dès le chargement, sans saut au premier défilement. */
+  margin: 0 auto var(--sp-5);
+  padding: 0 var(--sp-5) var(--sp-5);
+  background: var(--c-bg);
+  color: var(--c-text);
+  /* L'en-tête déborde la colonne en `vw` pour occuper toute la largeur ;
+     `clip` neutralise la barre de défilement horizontale que la largeur de
+     l'ascenseur vertical provoquerait, sans créer de conteneur de défilement. */
+  overflow-x: clip;
 }
 
-h1, h2 {
-  color: #0b566b;
+/* ── Titres ───────────────────────────────────────────────── */
+
+h1,
+h2 {
+  color: var(--c-primary);
 }
 
-h1 { margin: 0 0 18px; }
-h2 { margin: 6px 0 12px; color: #09494f; }
+h1 {
+  margin: 0 0 var(--sp-4);
+  font-size: 24px;
+}
 
-/* Boutons */
+h2 {
+  margin: 0 0 var(--sp-3);
+  font-size: 19px;
+}
+
+/* ── Boutons ──────────────────────────────────────────────── */
+
 button {
-  background: #0b566b;
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  border: 1px solid transparent;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
   cursor: pointer;
+  font-family: inherit;
   font-weight: 700;
-  font-size: 14px;
-  transition: opacity 0.1s;
+  font-size: var(--fs-base);
+  transition: opacity var(--transition), background var(--transition);
 }
 
-button:hover { opacity: 0.88; }
-button:disabled { opacity: 0.45; cursor: not-allowed; }
+button:hover {
+  opacity: 0.88;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--c-primary-light);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+
+button.secondary {
+  background: var(--c-accent);
+  color: var(--c-text-on-primary);
+}
 
 button.ghost {
   background: transparent;
-  border: 1px solid #d6e6ea;
-  color: #0b566b;
+  border-color: var(--c-border);
+  color: var(--c-primary);
 }
 
-button.ghost:hover { background: #f0f8fa; opacity: 1; }
+button.ghost:hover {
+  background: var(--c-surface-hover);
+  opacity: 1;
+}
 
-button.primary { background: #0b566b; color: #fff; }
-button.secondary { background: #2b7f8b; color: #fff; }
+/* Variante destructive, combinable avec .ghost */
+button.btn-delete {
+  color: var(--c-danger);
+  border-color: var(--c-danger-border);
+}
 
-/* Inputs */
-input[type="text"],
-input[type="number"],
-input[type="date"],
+button.btn-delete:hover {
+  background: var(--c-danger-bg);
+  opacity: 1;
+}
+
+/* ── Champs de saisie ─────────────────────────────────────── */
+
+input[type='text'],
+input[type='number'],
+input[type='date'],
 select,
 textarea {
-  padding: 8px;
-  border: 1px solid #d6e6ea;
-  border-radius: 6px;
+  padding: var(--sp-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
   width: 100%;
+  background: var(--c-surface);
   font-family: inherit;
-  font-size: 14px;
-  color: #222;
+  font-size: var(--fs-base);
+  color: var(--c-text);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--c-primary-light);
+  outline-offset: 1px;
 }
 
 textarea {
@@ -70,48 +202,72 @@ textarea {
 label {
   display: block;
   font-weight: 700;
-  color: #0b566b;
-  margin-bottom: 4px;
-  margin-top: 12px;
+  color: var(--c-primary);
+  margin: var(--sp-3) 0 var(--sp-1);
 }
 
-/* En-tête de page */
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
+/* ── Surfaces / panneaux ──────────────────────────────────── */
+
+.panel {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--sp-3);
 }
 
-.page-header h1,
-.page-header h2 {
-  margin: 0;
-}
+/* ── Rangées d'actions ────────────────────────────────────── */
 
-/* Barre d'outils import/export */
-.data-tools {
-  display: flex;
-  gap: 8px;
-}
-
-.data-tools .import { background: #2b7f8b; }
-.data-tools .export { background: #0b566b; }
-
-.data-tools button {
-  padding: 8px 12px;
-  font-size: 13px;
-}
-
-/* Actions */
 .actions {
-  margin-top: 12px;
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
 }
 
-/* Texte discret */
+/* Rangée d'actions placée au-dessus du contenu */
+.actions--top {
+  margin-top: 0;
+  margin-bottom: var(--sp-3);
+}
+
+/* ── Éditeur JSON (Qge, Qus, sections QTE génériques) ─────── */
+
+.json-editor {
+  width: 100%;
+  min-height: 60vh;
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  font-family: 'Consolas', 'Menlo', monospace;
+  font-size: var(--fs-sm);
+}
+
+/* ── Texte discret ────────────────────────────────────────── */
+
 .muted {
-  color: #576c70;
-  font-size: 14px;
+  color: var(--c-text-muted);
+  font-size: var(--fs-base);
+}
+
+/* ── Adaptation mobile / tablette ─────────────────────────── */
+
+@media (max-width: 640px) {
+  body {
+    margin: 0 auto;
+    padding: var(--sp-3);
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  h2 {
+    font-size: 17px;
+  }
+
+  .json-editor {
+    min-height: 45vh;
+  }
 }

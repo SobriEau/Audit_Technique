@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { DataService } from '../../core/services/data.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { RichEditorComponent } from '../../shared/components/rich-editor/rich-editor.component';
-import { QTE_SECTIONS } from '../../models/data.models';
+import { AUDIT_SCHEMA } from '../../models/audit-schema';
+import { EntityDef } from '../../models/field.models';
 
 @Component({
   selector: 'app-qte-index',
@@ -15,9 +16,9 @@ import { QTE_SECTIONS } from '../../models/data.models';
 })
 export class QteIndexComponent implements OnInit {
   info = '';
-  sections = QTE_SECTIONS;
+  sections = AUDIT_SCHEMA;
 
-  constructor(public router: Router, private dataService: DataService) {}
+  constructor(private router: Router, private dataService: DataService) {}
 
   ngOnInit(): void {
     this.info = this.dataService.data.Qte?.Info ?? '';
@@ -29,13 +30,13 @@ export class QteIndexComponent implements OnInit {
     this.dataService.save();
   }
 
-  navigate(section: { key: string; isCrud?: boolean }): void {
-    if (section.isCrud) {
-      // Robinets → composant CRUD dédié
-      this.router.navigate(['/qte/robinets']);
-    } else {
-      // Autres sections → éditeur JSON générique
-      this.router.navigate(['/qte', section.key]);
-    }
+  /** Nombre d'éléments saisis, affiché en regard de chaque section. */
+  count(section: EntityDef): number | null {
+    if (section.single) return null;
+    return this.dataService.getEntities(section.key).length;
+  }
+
+  navigate(section: EntityDef): void {
+    this.router.navigate(['/qte', section.route]);
   }
 }

@@ -3,8 +3,69 @@
  * Conserve les mêmes clés que le localStorage existant pour la rétrocompatibilité.
  */
 
-export interface Robinet {
+/**
+ * Référence à une image stockée en IndexedDB (plan ou photo).
+ * Seule cette référence légère transite par le JSON de l'audit.
+ */
+export interface AssetRef {
+  id: string;
+  name: string;
+}
+
+/**
+ * Emplacement d'un élément sur un plan.
+ * x et y sont des fractions (0 à 1) de la largeur et de la hauteur du plan,
+ * afin que la punaise reste juste quelle que soit la taille d'affichage.
+ */
+export interface PlanLocation {
+  planId: string;
+  x: number;
+  y: number;
+}
+
+/**
+ * Socle commun à tout élément d'audit listé puis détaillé sur sa propre fiche
+ * (robinets aujourd'hui ; sous-compteurs, WC, douches… à venir).
+ *
+ * Deux notions à ne jamais confondre :
+ *
+ * - `Id` est l'identité technique. Attribuée une fois, jamais réattribuée,
+ *   jamais renumérotée. C'est vers elle que pointent les relations entre
+ *   éléments et les URL de fiche.
+ * - `Numero` est un simple libellé affiché à l'auditeur. La spécification
+ *   prévoit de le renuméroter après une suppression ; il ne peut donc pas
+ *   servir de clé, sous peine de faire glisser silencieusement les relations
+ *   d'un élément vers un autre.
+ */
+export interface AuditEntity {
+  /** Identité technique stable. Ne jamais la réutiliser ni la recalculer. */
+  Id: string;
+  /** Numéro affiché. Libellé uniquement — jamais une clé. */
   Numero?: string | null;
+  /**
+   * Les autres champs sont déclarés dans le schéma (`audit-schema.ts`) et non
+   * dans le type : c'est ce qui permet à un même moteur de rendre les dix
+   * entités. Les entités fortement typées, comme `Robinet`, précisent leurs
+   * champs en plus de cette signature.
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * Référence vers un autre élément de l'audit, par son `Id`.
+ *
+ * À utiliser pour toutes les relations décrites par la spécification
+ * (« Numéro robinet correspondant », « Numéro réseau ECS d'appartenance »…) :
+ * on stocke l'identité, on n'affiche que le `Numero` de la cible.
+ */
+export type EntityRef = string;
+
+export interface Robinet extends AuditEntity {
+  /** Emplacement sur un plan de l'audit. Stocké dans l'élément lui-même,
+   *  pour qu'il suive le robinet lors des suppressions dans la liste. */
+  Localisation?: PlanLocation | null;
+  /** Photos propres à ce robinet. */
+  Photos?: AssetRef[];
   Emplacement?: string | null;
   PrecisionEmplacement?: string | null;
   Type?: string | null;
@@ -20,17 +81,25 @@ export interface Robinet {
 
 export interface QteData {
   Info?: string | null;
+
+  /** Robinets — typés explicitement car historiquement les plus anciens. */
   robinets?: Robinet[];
-  wc?: Record<string, unknown>;
-  douches_baignoires?: Record<string, unknown>;
-  reseaux_eau_chaude_sanitaire?: Record<string, unknown>;
-  espace_vert_exterieur?: Record<string, unknown>;
-  appareils_nettoyage_lavage?: Record<string, unknown>;
-  ventilation_batiment?: Record<string, unknown>;
-  potentiel_optimisation?: Record<string, unknown>;
-  reducteurs_de_pression?: Record<string, unknown>;
-  releve_compteur_general?: Record<string, unknown>;
-  sous_compteurs?: Record<string, unknown>;
+
+  /**
+   * Vestige de l'époque où les sections étaient éditées en JSON brut :
+   * localisation et photos y étaient rangées à part, faute d'éléments
+   * structurés où les loger. Conservé pour relire les audits existants ;
+   * les nouvelles entités portent ces données dans l'élément lui-même.
+   */
+  Localisations?: Record<string, PlanLocation>;
+  PhotosSections?: Record<string, AssetRef[]>;
+
+  /**
+   * Les autres clés sont celles du schéma (`audit-schema.ts`) : un tableau
+   * d'éléments pour une entité listée, un objet unique pour une entité
+   * `single` comme le compteur général.
+   */
+  [key: string]: unknown;
 }
 
 export interface AppData {
@@ -38,22 +107,11 @@ export interface AppData {
   Info?: string | null;
   Date?: string | null;
   Auditeur?: string | null;
+  /** Plans du bâtiment chargés depuis l'accueil, communs à tout l'audit. */
+  Plans?: AssetRef[];
+  /** Galerie générale de l'audit, indépendante des éléments techniques. */
+  Photos?: AssetRef[];
   Qge?: Record<string, unknown>;
   Qte?: QteData;
   Qus?: Record<string, unknown>;
 }
-
-/** Liste ordonnée des sections QTE avec leur clé interne et leur libellé d'affichage. */
-export const QTE_SECTIONS: { key: string; label: string; isCrud?: boolean }[] = [
-  { key: 'releve_compteur_general',    label: 'Relevé compteur général' },
-  { key: 'sous_compteurs',             label: 'Sous-compteurs' },
-  { key: 'reducteurs_de_pression',     label: 'Réducteurs de pression' },
-  { key: 'robinets',                   label: 'Robinets', isCrud: true },
-  { key: 'douches_baignoires',         label: 'Douches / Baignoires' },
-  { key: 'wc',                         label: 'WC' },
-  { key: 'reseaux_eau_chaude_sanitaire', label: "Réseaux d'Eau Chaude Sanitaire" },
-  { key: 'espace_vert_exterieur',      label: 'Espace vert / Extérieur' },
-  { key: 'appareils_nettoyage_lavage', label: 'Appareils de nettoyage / lavage' },
-  { key: 'ventilation_batiment',       label: 'Ventilation du bâtiment' },
-  { key: 'potentiel_optimisation',     label: "Potentiel d'optimisation" },
-];

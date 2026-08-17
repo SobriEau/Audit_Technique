@@ -47,6 +47,27 @@
               ],
               "outputHashing": "all"
             },
+            "standalone": {
+              "outputHashing": "all",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "4mb",
+                  "maximumError": "6mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kb",
+                  "maximumError": "10kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/app/core/services/pdf-lib-loader.ts",
+                  "with": "src/app/core/services/pdf-lib-loader.standalone.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,

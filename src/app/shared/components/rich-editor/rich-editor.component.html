@@ -1,4 +1,4 @@
-<div class="toolbar">
+<div class="editor-toolbar">
   <button type="button" (mousedown)="exec($event, 'bold')"><b>B</b></button>
   <button type="button" (mousedown)="exec($event, 'italic')"><i>I</i></button>
   <button type="button" (mousedown)="exec($event, 'underline')"><u>U</u></button>
@@ -15,6 +15,67 @@
       <option value="5">Grand</option>
     </select>
   </label>
+
+  <span class="toolbar-sep" aria-hidden="true"></span>
+
+  <!-- ── Dictée vocale ──────────────────────────────────────────── -->
+  @switch (micState) {
+    @case ('unsupported') {
+      <button
+        type="button"
+        class="mic-btn"
+        disabled
+        title="Dictée indisponible : ce navigateur ne gère pas la reconnaissance vocale (utilisez Chrome ou Edge)."
+        aria-label="Dictée indisponible"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+          <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-6 11a6 6 0 0 0 12 0h2a8 8 0 0 1-7 7.93V22h-2v-2.07A8 8 0 0 1 4 12h2z"/>
+        </svg>
+      </button>
+    }
+
+    @case ('idle') {
+      <button
+        type="button"
+        class="mic-btn"
+        (mousedown)="toggleMic($event)"
+        title="Dicter en français"
+        aria-label="Démarrer la dictée"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+          <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-6 11a6 6 0 0 0 12 0h2a8 8 0 0 1-7 7.93V22h-2v-2.07A8 8 0 0 1 4 12h2z"/>
+        </svg>
+      </button>
+    }
+
+    @case ('listening') {
+      <button
+        type="button"
+        class="mic-btn listening"
+        (mousedown)="toggleMic($event)"
+        title="Arrêter la dictée"
+        aria-label="Arrêter la dictée"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+          <rect x="6" y="6" width="12" height="12" rx="2"/>
+        </svg>
+      </button>
+      @if (interimText) {
+        <span class="interim-text" aria-live="polite">{{ interimText }}</span>
+      }
+    }
+
+    @case ('error') {
+      <button
+        type="button"
+        class="mic-btn mic-error"
+        (mousedown)="retry($event)"
+        [title]="errorMessage ?? 'Réessayer'"
+      >
+        ⚠ Réessayer
+      </button>
+    }
+  }
 </div>
 
 <div
@@ -24,3 +85,7 @@
   (input)="onContentInput()"
   (blur)="onTouchedFn()"
 ></div>
+
+@if (micState === 'error' && errorMessage) {
+  <p class="mic-error-text" role="alert">{{ errorMessage }}</p>
+}

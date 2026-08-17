@@ -1,0 +1,52 @@
+<input
+  #fileInput
+  type="file"
+  accept="image/*,application/pdf,.pdf"
+  multiple
+  hidden
+  (change)="onFilesSelected($event)"
+/>
+
+<div class="actions actions--top">
+  <button type="button" class="ghost" [disabled]="busy" (click)="triggerPicker()">
+    {{ busy ? (progress || 'Chargement…') : '+ Charger un plan (image ou PDF)' }}
+  </button>
+</div>
+
+@if (plans.length === 0) {
+  <p class="muted empty">
+    Aucun plan chargé. Ajoutez les plans du bâtiment pour pouvoir y localiser
+    les éléments depuis les pages d'audit.
+  </p>
+} @else {
+  <ul class="plan-list">
+    @for (plan of plans; track plan.id; let i = $index) {
+      <li class="plan-item">
+        @if (urls[plan.id]) {
+          <img [src]="urls[plan.id]" [alt]="plan.name" class="plan-thumb" />
+        } @else {
+          <span class="plan-thumb plan-thumb--missing">?</span>
+        }
+
+        <input
+          type="text"
+          class="plan-name"
+          [(ngModel)]="plan.name"
+          (change)="rename()"
+          placeholder="Nom du plan"
+          [attr.aria-label]="'Nom du plan ' + (i + 1)"
+        />
+
+        <button
+          type="button"
+          class="ghost btn-delete"
+          (click)="remove(i)"
+          title="Supprimer ce plan"
+          [attr.aria-label]="'Supprimer ' + plan.name"
+        >
+          ✕
+        </button>
+      </li>
+    }
+  </ul>
+}

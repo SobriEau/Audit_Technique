@@ -1,0 +1,164 @@
+.no-plans {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sm);
+}
+
+/* ── Plan avec punaise ───────────────────────────────────────────────── */
+
+.plan-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--c-surface-alt);
+  line-height: 0;
+}
+
+.plan-frame img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.plan-frame--clickable {
+  cursor: crosshair;
+}
+
+.pin {
+  position: absolute;
+  /* La pointe de la punaise tombe exactement sur le point enregistré. */
+  transform: translate(-50%, -100%);
+  font-size: 26px;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+/* ── Bloc « localisation » sous le formulaire ────────────────────────── */
+
+.located {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--c-border);
+}
+
+.located-title {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-base);
+  color: var(--c-primary);
+}
+
+/* ── Boîte de dialogue ───────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 63, 79, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3);
+  z-index: 100;
+}
+
+.dialog {
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-head,
+.dialog-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.dialog-head {
+  border-bottom: 1px solid var(--c-border);
+}
+
+.dialog-head h3 {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-lg);
+  color: var(--c-primary);
+}
+
+.dialog-body {
+  padding: var(--sp-4);
+  overflow: auto;
+  flex: 1;
+}
+
+.dialog-foot {
+  border-top: 1px solid var(--c-border);
+  flex-wrap: wrap;
+}
+
+.dialog-foot .spacer {
+  flex: 1;
+}
+
+.hint {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+/* ── Grille de choix du plan ─────────────────────────────────────────── */
+
+.plan-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--sp-3);
+}
+
+.plan-choice {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  color: var(--c-primary);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.plan-choice:hover {
+  background: var(--c-surface-hover);
+  opacity: 1;
+}
+
+.plan-choice img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-border);
+}
+
+@media (max-width: 640px) {
+  .dialog-body {
+    padding: var(--sp-3);
+  }
+
+  .plan-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}

@@ -1,18 +1,12 @@
-<app-page-header [showExport]="true" />
+<app-page-header pageTitle="Questionnaire gestionnaire" />
 
-<div class="page-header">
-  <button class="ghost" (click)="router.navigate(['/home'])">Accueil</button>
-  <h2>Questionnaire gestionnaire</h2>
-  <button class="ghost" (click)="back()">← Retour</button>
-</div>
-
-<p>
+<p class="muted">
   Éditez la structure JSON de <strong>Qge</strong>.
   Sauvegarde dans le localStorage via DataService.
 </p>
 
-<textarea [(ngModel)]="jsonText" rows="25"></textarea>
+<textarea class="json-editor" [(ngModel)]="jsonText"></textarea>
 
-<p class="actions">
+<div class="actions">
   <button class="primary" (click)="save()">Enregistrer</button>
-</p>
+</div>

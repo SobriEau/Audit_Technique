@@ -1,21 +1,20 @@
-<app-page-header [showExport]="true" />
+<app-page-header pageTitle="Audit Technique" />
 
-<div class="page-header">
-  <button class="ghost" (click)="router.navigate(['/home'])">Accueil</button>
-  <h2>Audit Technique</h2>
-  <button class="ghost" (click)="router.navigate(['/home'])">← Retour</button>
-</div>
-
-<div class="section">
+<div class="panel">
   <label>Info</label>
   <app-rich-editor [(ngModel)]="info" (ngModelChange)="saveInfo()" />
 </div>
 
-<div class="section">
+<div class="panel">
   <h2>Sections</h2>
   <div class="grid">
     @for (s of sections; track s.key) {
-      <div class="card-btn" (click)="navigate(s)">{{ s.label }}</div>
+      <button type="button" class="card-btn" (click)="navigate(s)">
+        <span>{{ s.plural }}</span>
+        @if (count(s) !== null) {
+          <span class="count">{{ count(s) }}</span>
+        }
+      </button>
     }
   </div>
 </div>

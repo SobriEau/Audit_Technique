@@ -1,0 +1,109 @@
+<div class="actions">
+  <button type="button" class="ghost" [disabled]="!hasPlans" (click)="openDialog()">
+    📍 {{ location ? 'Modifier la localisation' : 'Localiser sur le plan' }}
+  </button>
+</div>
+
+@if (!hasPlans) {
+  <p class="muted no-plans">
+    Aucun plan disponible. Chargez d'abord les plans du bâtiment depuis l'accueil.
+  </p>
+}
+
+<!-- ── 3. Localisation enregistrée, affichée en bas de page ──────────── -->
+@if (location && currentPlan) {
+  <section class="located">
+    <h3 class="located-title">Localisation — {{ currentPlan.name }}</h3>
+
+    @if (urls[location.planId]) {
+      <div class="plan-frame">
+        <img [src]="urls[location.planId]" [alt]="'Plan ' + currentPlan.name" />
+        <span class="pin" [style]="pinStyle(location)" aria-label="Emplacement de l'élément">
+          📍
+        </span>
+      </div>
+    } @else {
+      <p class="muted">Image du plan introuvable.</p>
+    }
+  </section>
+} @else if (location && !currentPlan) {
+  <p class="muted no-plans">
+    Le plan associé à cet élément a été supprimé.
+  </p>
+}
+
+<!-- ── Boîte de dialogue ─────────────────────────────────────────────── -->
+@if (open) {
+  <div class="overlay" (click)="close()">
+    <div
+      class="dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Localiser sur le plan"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="dialog-head">
+        <h3>
+          @if (step === 'plan') {
+            1. Choisir le plan
+          } @else {
+            2. Cliquer l'emplacement — {{ draftPlan?.name }}
+          }
+        </h3>
+        <button type="button" class="ghost" (click)="close()" aria-label="Fermer">✕</button>
+      </header>
+
+      <div class="dialog-body">
+        <!-- Étape 1 : sélection du plan -->
+        @if (step === 'plan') {
+          <ul class="plan-grid">
+            @for (plan of plans; track plan.id) {
+              <li>
+                <button type="button" class="plan-choice" (click)="choosePlan(plan)">
+                  @if (urls[plan.id]) {
+                    <img [src]="urls[plan.id]" [alt]="plan.name" />
+                  }
+                  <span>{{ plan.name }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <!-- Étape 2 : pose de la punaise -->
+        @if (step === 'point' && draftPlan) {
+          <p class="muted hint">Cliquez sur le plan pour placer la punaise.</p>
+
+          @if (urls[draftPlan.id]) {
+            <div class="plan-frame plan-frame--clickable" (click)="placePin($event)">
+              <img [src]="urls[draftPlan.id]" [alt]="'Plan ' + draftPlan.name" />
+              @if (draftX !== null && draftY !== null) {
+                <span class="pin" [style]="pinStyle({ planId: draftPlan.id, x: draftX, y: draftY })">
+                  📍
+                </span>
+              }
+            </div>
+          } @else {
+            <p class="muted">Image du plan introuvable.</p>
+          }
+        }
+      </div>
+
+      <footer class="dialog-foot">
+        @if (step === 'point') {
+          <button type="button" class="ghost" (click)="backToPlans()">← Changer de plan</button>
+        }
+        @if (location) {
+          <button type="button" class="ghost btn-delete" (click)="clearLocation()">
+            Retirer la localisation
+          </button>
+        }
+        <span class="spacer"></span>
+        <button type="button" class="ghost" (click)="close()">Annuler</button>
+        <button type="button" class="primary" [disabled]="!canConfirm" (click)="confirm()">
+          Valider
+        </button>
+      </footer>
+    </div>
+  </div>
+}

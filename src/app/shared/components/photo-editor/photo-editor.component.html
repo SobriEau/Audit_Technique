@@ -1,0 +1,50 @@
+<div class="photo-editor">
+  <input
+    #fileInput
+    type="file"
+    accept="image/*"
+    multiple
+    hidden
+    (change)="onFilesSelected($event)"
+  />
+
+  <div class="actions actions--top">
+    <button type="button" class="ghost" [disabled]="busy" (click)="triggerPicker()">
+      {{ busy ? 'Ajout en cours…' : '+ Ajouter des photos' }}
+    </button>
+  </div>
+
+  @if (photos.length === 0) {
+    <p class="muted empty">Aucune photo.</p>
+  } @else {
+    <ul class="photo-list">
+      @for (photo of photos; track photo.id; let i = $index) {
+        <li class="photo-item">
+          @if (urls[photo.id]) {
+            <img
+              [src]="urls[photo.id]"
+              [alt]="photo.name"
+              class="photo-thumb"
+              (click)="openPhoto(photo)"
+              title="Ouvrir en grand"
+            />
+          } @else {
+            <span class="photo-thumb photo-thumb--missing" title="Image introuvable">?</span>
+          }
+
+          <span class="photo-name" [title]="photo.name">{{ photo.name }}</span>
+
+          <button
+            type="button"
+            class="ghost btn-delete remove-btn"
+            (click)="removePhoto(i)"
+            [attr.aria-label]="'Supprimer ' + photo.name"
+            title="Supprimer"
+          >
+            ✕
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

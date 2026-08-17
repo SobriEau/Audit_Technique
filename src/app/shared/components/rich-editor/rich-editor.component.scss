@@ -1,74 +1,165 @@
-.toolbar {
+.editor-toolbar {
   display: flex;
   flex-wrap: nowrap;
-  gap: 8px;
-  padding: 8px 10px;
-  background: linear-gradient(180deg, #eef9fb, #e6f4f7);
-  border: 1px solid #d6e6ea;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: linear-gradient(180deg, var(--c-surface-alt), var(--c-surface-hover));
+  border: 1px solid var(--c-border);
   border-bottom: none;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--r-md) var(--r-md) 0 0;
   align-items: center;
   overflow-x: auto;
+}
 
-  button {
-    background: transparent;
-    border: 1px solid transparent;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 700;
-    color: #074e58;
-    white-space: nowrap;
-    font-size: 14px;
+.editor-toolbar button {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--c-primary);
+  white-space: nowrap;
+  font-size: var(--fs-base);
+}
 
-    &:hover {
-      background: rgba(7, 78, 88, 0.06);
-      border-color: rgba(7, 78, 88, 0.08);
-      opacity: 1;
-    }
+.editor-toolbar button:hover {
+  background: var(--c-surface-hover);
+  border-color: var(--c-border);
+  opacity: 1;
+}
+
+.editor-toolbar input[type='color'] {
+  width: 34px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.editor-toolbar label {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-weight: normal;
+  color: var(--c-primary);
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+
+.editor-toolbar select {
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-border);
+  width: auto;
+  font-size: var(--fs-sm);
+}
+
+/* ── Dictée vocale ──────────────────────────────────────────────── */
+
+.toolbar-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 var(--sp-1);
+  background: var(--c-border);
+  flex-shrink: 0;
+}
+
+.editor-toolbar .mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: var(--c-primary);
+  transition: background var(--transition), box-shadow var(--transition),
+    color var(--transition);
+}
+
+.editor-toolbar .mic-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.editor-toolbar .mic-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Dictée active : carré rouge pulsant */
+.editor-toolbar .mic-btn.listening {
+  color: var(--c-danger);
+  background: var(--c-danger-bg);
+  border-color: var(--c-danger-border);
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+
+.editor-toolbar .mic-btn.mic-error {
+  width: auto;
+  border-radius: var(--r-sm);
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--c-danger);
+  border: 1px dashed var(--c-danger-border);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.editor-toolbar .mic-btn.mic-error:hover {
+  background: var(--c-danger-bg);
+  opacity: 1;
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(185, 64, 64, 0.35);
   }
-
-  input[type='color'] {
-    width: 34px;
-    height: 26px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  label {
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: normal;
-    color: #074e58;
-    margin: 0;
-    font-size: 13px;
-  }
-
-  select {
-    padding: 4px 6px;
-    border-radius: 6px;
-    border: 1px solid #d6e6ea;
-    width: auto;
-    font-size: 13px;
+  50% {
+    box-shadow: 0 0 0 6px rgba(185, 64, 64, 0);
   }
 }
 
+/* Texte provisoire, avant que la phrase soit finalisée */
+.interim-text {
+  font-size: var(--fs-sm);
+  font-style: italic;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.mic-error-text {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}
+
+/* ── Zone d'édition ─────────────────────────────────────────────── */
+
 .editable {
   min-height: 90px;
-  border: 1px solid #d6e6ea;
-  border-radius: 0 0 8px 8px;
-  padding: 12px;
-  background: #fff;
+  border: 1px solid var(--c-border);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  padding: var(--sp-3);
+  background: var(--c-surface);
   outline: none;
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.5;
+}
 
-  &:empty::before {
-    content: '(cliquez pour éditer...)';
-    color: #9aaeb4;
-  }
+.editable:focus-visible {
+  border-color: var(--c-primary-light);
+}
+
+.editable:empty::before {
+  content: '(cliquez pour éditer...)';
+  color: var(--c-text-faint);
 }

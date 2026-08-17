@@ -33,9 +33,11 @@ REM Utiliser Angular CLI local (node_modules\.bin\ng.cmd)
 set NG=node_modules\.bin\ng.cmd
 
 REM Build Angular avec le CLI local
+REM La configuration "standalone" inline PDF.js au lieu de le decouper en
+REM chunks : un chunk separe ne peut pas etre charge depuis file://
 echo.
 echo Build Angular en cours...
-call %NG% build
+call %NG% build --configuration standalone
 if %ERRORLEVEL% neq 0 (
   echo ERREUR lors du build Angular.
   pause
