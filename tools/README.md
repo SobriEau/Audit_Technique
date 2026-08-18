@@ -47,3 +47,39 @@ Remove-Item "$dst\book.zip"
   `gen-schema.js` : des audits existent avec ces clés, les changer les casserait.
 - Les quatre onglets ECS ne portent aucune note ; leurs champs sont déduits de
   la seule disposition des cellules et méritent une relecture attentive.
+
+---
+
+## Intégration Google Drive — ce qui a été mesuré
+
+Deux inconnues bloquaient la synchronisation depuis le fichier autonome. Les
+deux sont levées ; les résultats sont consignés ici pour ne pas refaire le
+travail.
+
+### CORS depuis une page `file://` (origine `null`)
+
+| Cible | Résultat |
+|---|---|
+| Google `device/code`, `token`, `revoke` | passent |
+| Google Drive : lecture, création, **dépôt de fichier** | passent |
+| Microsoft `devicecode`, GitHub `login/device/code` | **bloqués** |
+
+Contrairement à une intuition répandue, Google renvoie les en-têtes CORS pour
+l'origine nulle. Le réseau n'est donc pas un obstacle depuis un fichier local.
+
+### Portées acceptées par le device flow
+
+Le client doit être de type **« Téléviseurs et périphériques d'entrée
+limités »** ; un client *Application Web* est refusé d'emblée.
+
+| Portée | Résultat |
+|---|---|
+| `drive.file` | **acceptée** |
+| `drive` (accès complet) | `invalid_scope` |
+| `drive.appdata` | `invalid_scope` |
+
+**Conséquence de conception :** `drive.file` ne donne accès qu'aux fichiers
+**créés par l'application**. C'est suffisant — et souhaitable — pour déposer et
+relire des audits SobriEau, avec le moindre privilège et un écran de
+consentement peu inquiétant. Mais l'application ne pourra **pas** voir un
+fichier déposé à la main sur le Drive par l'auditeur : seuls les siens.

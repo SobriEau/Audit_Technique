@@ -1,14 +1,14 @@
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService } from '../../../core/services/data.service';
 import { LOGO_AGROPARISTECH, LOGO_CEREMA, LOGO_SOBRIEAU } from '../../logos';
+import { DriveActionsComponent } from '../drive-actions/drive-actions.component';
 
 /**
  * Composant partagé : en-tête SobriEau.
  *
  * Rend deux bandeaux :
- *  1. la barre de marque (titre applicatif + import/export JSON), toujours
- *     présente ;
+ *  1. la barre de marque — logotype, partenaires, et les actions
+ *     d'enregistrement, de chargement et de compte — toujours présente ;
  *  2. la barre de navigation de page (Accueil / titre de page / Retour),
  *     rendue uniquement si [pageTitle] est fourni.
  *
@@ -16,12 +16,13 @@ import { LOGO_AGROPARISTECH, LOGO_CEREMA, LOGO_SOBRIEAU } from '../../logos';
  * [pageTitle], puisqu'il n'a pas de page parente vers laquelle revenir.
  *
  * Usage :
- *   <app-page-header [showImport]="true" />                     (accueil)
+ *   <app-page-header />                                        (accueil)
  *   <app-page-header pageTitle="Robinets" [backTo]="['/qte']" />  (autres)
  */
 @Component({
   selector: 'app-page-header',
   standalone: true,
+  imports: [DriveActionsComponent],
   templateUrl: './page-header.component.html',
   styleUrl: './page-header.component.scss',
 })
@@ -36,10 +37,7 @@ export class PageHeaderComponent {
   /** Cible du bouton « Retour ». Par défaut, la page parente est l'accueil. */
   @Input() backTo: string[] = ['/home'];
 
-  @Input() showImport = false;
-  @Input() showExport = true;
-
-  constructor(private dataService: DataService, private router: Router) {}
+  constructor(private router: Router) {}
 
   goHome(): void {
     this.router.navigate(['/home']);
@@ -49,50 +47,4 @@ export class PageHeaderComponent {
     this.router.navigate(this.backTo);
   }
 
-  /** Vrai pendant l'encodage des images, qui peut durer sur un gros audit. */
-  busy = false;
-
-  async onExport(): Promise<void> {
-    if (this.busy) return;
-    this.busy = true;
-    try {
-      const stamp = new Date().toISOString().slice(0, 10);
-      await this.dataService.exportJson(`sobrieau-${stamp}`);
-    } catch (err: unknown) {
-      alert(
-        "Erreur lors de l'export : " + (err instanceof Error ? err.message : String(err))
-      );
-    } finally {
-      this.busy = false;
-    }
-  }
-
-  async handleFile(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) return;
-
-    if (
-      !confirm(
-        "L'import remplace l'audit en cours, photos et plans compris.\nContinuer ?"
-      )
-    ) {
-      return;
-    }
-
-    this.busy = true;
-    try {
-      await this.dataService.importJson(file);
-      alert('Données importées avec succès.');
-      // Rechargement : les pages déjà affichées tiennent une copie locale.
-      window.location.reload();
-    } catch (err: unknown) {
-      alert(
-        "Erreur lors de l'import : " + (err instanceof Error ? err.message : String(err))
-      );
-    } finally {
-      this.busy = false;
-    }
-  }
 }

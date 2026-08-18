@@ -14,3 +14,7 @@ __pycache__/
 
 # Cache de transcription du classeur (regenerable)
 tools/.cache/
+
+# Identifiants OAuth : ne jamais versionner
+client_secret_*.json
+*.client_secret.json

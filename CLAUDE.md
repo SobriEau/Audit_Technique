@@ -305,7 +305,51 @@ Le filtrage ignore casse et accents : sur le terrain, personne ne tape
   « hors liste ». Les énumérations du classeur ne sont pas arbitrées ; les faire
   évoluer ne doit jamais effacer en silence une saisie faite sur le terrain.
 
-## 9. Charte graphique
+## 9. Synchronisation Google Drive
+
+Facultative : tant que `drive-config.ts` n'est pas renseigné, l'application
+signale « non configurée » et tout le reste fonctionne.
+
+| Fichier | Rôle |
+|---|---|
+| `drive-config.ts` | Identifiants et portées. **Vides par défaut**, volontairement. |
+| `google-auth.service.ts` | Device flow, jeton, rafraîchissement, révocation |
+| `drive-sync.service.ts` | Dépôt, liste, récupération, suppression |
+| `drive-actions` | Enregistrer / Charger / pastille de compte, dans l'en-tête |
+
+### Ce qui a été mesuré, et qu'il ne faut pas re-supposer
+
+- **Google accepte l'origine `null`** — device flow, jeton, révocation, API
+  Drive et dépôt de fichier. Microsoft et GitHub, non. Une synchronisation
+  depuis le fichier autonome est donc possible, contrairement à l'intuition.
+- **Le client doit être de type « Téléviseurs et périphériques d'entrée
+  limités »** ; un client Web est refusé d'emblée.
+- **`drive.file` est la seule portée Drive acceptée** sur ce flux (`drive` et
+  `drive.appdata` sont refusés). `openid email profile` passe en supplément,
+  d'où les initiales dans la pastille.
+
+### Conséquences à connaître
+
+`drive.file` ne donne accès **qu'aux fichiers créés par l'application** : un
+fichier déposé à la main sur le Drive lui restera invisible. L'accès est par
+**compte Google**, donc un auditeur retrouve ses audits d'un poste à l'autre,
+mais pas ceux de ses collègues.
+
+La récupération crée **un nouvel audit local** au lieu d'écraser celui ouvert :
+perdre une saisie de terrain non encore envoyée serait bien pire qu'un doublon.
+
+La déconnexion **révoque** le jeton chez Google, elle ne l'oublie pas seulement.
+Sur un poste partagé, l'effacer localement ne suffirait pas.
+
+### Le secret et le dépôt
+
+`drive-config.ts` est commité **avec des valeurs vides**, pour qu'aucun
+identifiant ne parte dans git sans décision. Les renseigner avant
+`npm run build` les fait entrer dans `index.html`, lui-même commité. Google
+considère que le secret d'un client installé n'est pas confidentiel, mais c'est
+un choix à assumer. `.gitignore` couvre par ailleurs `client_secret_*.json`.
+
+## 10. Charte graphique
 
 Toutes les valeurs (couleurs, rayons, espacements, typographie, ombres) sont des
 variables CSS définies dans [styles.scss](src/styles.scss).
@@ -349,7 +393,7 @@ la sémantique.
 
 ---
 
-## 10. Vérifier son travail
+## 11. Vérifier son travail
 
 La compilation ne prouve presque rien ici : l'essentiel du comportement est
 interactif et dépend du stockage.
@@ -372,7 +416,7 @@ Points de contrôle qui ont déjà révélé des régressions :
 
 ---
 
-## 11. À savoir
+## 12. À savoir
 
 - **`.github/copilot-instructions.md` est obsolète et trompeur.** Il décrit
   l'architecture Python supprimée (`fusionner_v2.py`, dossier `site/`,

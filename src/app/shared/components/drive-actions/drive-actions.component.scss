@@ -1,0 +1,182 @@
+:host {
+  display: contents;
+}
+
+.barre {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* Le menu se positionne sous son bouton : le groupe sert de repère. */
+.groupe {
+  position: relative;
+}
+
+.barre button {
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+/* ── Pastille du compte ─────────────────────────────────────────────── */
+
+.pastille {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: var(--c-text-on-primary);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.pastille:hover {
+  opacity: 1;
+  background: var(--c-primary);
+}
+
+/* ── Menus déroulants ───────────────────────────────────────────────── */
+
+.menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 240px;
+  padding: var(--sp-1);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Le menu du compte est à l'extrémité droite : il s'aligne sur ce bord,
+   faute de quoi il déborderait de la fenêtre. */
+.menu--droite {
+  left: auto;
+  right: 0;
+}
+
+.menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  text-align: left;
+  white-space: normal;
+}
+
+.menu button:hover {
+  background: var(--c-surface-hover);
+  opacity: 1;
+}
+
+.menu button strong {
+  color: var(--c-primary);
+  font-size: var(--fs-base);
+}
+
+.menu .muted {
+  font-size: var(--fs-sm);
+}
+
+.identite {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 2px;
+}
+
+.identite strong {
+  color: var(--c-primary);
+}
+
+.identite .muted {
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Retours d'état ─────────────────────────────────────────────────── */
+
+.etat {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+  text-align: right;
+}
+
+.etat--erreur {
+  color: var(--c-danger);
+}
+
+.erreur {
+  color: var(--c-danger);
+  margin: var(--sp-2) 0 0;
+}
+
+/* ── Code de connexion ──────────────────────────────────────────────── */
+
+.code {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--c-primary);
+  /* Sélectionnable d'un geste : l'auditeur le recopie souvent à la main. */
+  user-select: all;
+}
+
+/* ── Audits présents sur le Drive ───────────────────────────────────── */
+
+.distants {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.distants li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+}
+
+.infos {
+  flex: 1 1 240px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.nom {
+  font-weight: 700;
+  color: var(--c-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boutons {
+  display: flex;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}

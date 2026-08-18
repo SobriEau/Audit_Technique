@@ -244,6 +244,71 @@ label {
   font-size: var(--fs-sm);
 }
 
+/* ── Boîtes de dialogue ───────────────────────────────────── */
+/* Partagées par le localisateur de plan et les actions Drive : un seul jeu de
+   styles, pour que toutes les modales se ressemblent. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 63, 79, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3);
+  z-index: 100;
+}
+
+.dialog {
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog--etroit {
+  max-width: 520px;
+}
+
+.dialog-head,
+.dialog-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.dialog-head {
+  border-bottom: 1px solid var(--c-border);
+}
+
+.dialog-head h3 {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-lg);
+  color: var(--c-primary);
+}
+
+.dialog-body {
+  padding: var(--sp-4);
+  overflow: auto;
+  flex: 1;
+}
+
+.dialog-foot {
+  border-top: 1px solid var(--c-border);
+  flex-wrap: wrap;
+}
+
+.dialog-foot .spacer,
+.dialog .spacer {
+  flex: 1;
+}
+
 /* ── Texte discret ────────────────────────────────────────── */
 
 .muted {

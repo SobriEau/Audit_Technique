@@ -15,25 +15,7 @@
     <img [src]="logoAgro" alt="AgroParisTech Innovation" />
   </div>
 
-  <div class="data-tools">
-    @if (showImport) {
-      <button class="secondary" type="button" [disabled]="busy" (click)="fileInput.click()">
-        Importer JSON
-      </button>
-      <input
-        #fileInput
-        type="file"
-        accept=".json"
-        hidden
-        (change)="handleFile($event)"
-      />
-    }
-    @if (showExport) {
-      <button class="primary" type="button" [disabled]="busy" (click)="onExport()">
-        {{ busy ? 'En cours…' : 'Exporter JSON' }}
-      </button>
-    }
-  </div>
+  <app-drive-actions />
 </header>
 </div>
 
