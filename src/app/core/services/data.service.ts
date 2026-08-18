@@ -354,7 +354,13 @@ export class DataService {
 
   // ── Import / Export JSON ─────────────────────────────────────────────────
 
-  /** Rassemble les identifiants d'images référencés par l'audit. */
+  /**
+   * Rassemble les identifiants d'images référencés par l'audit.
+   *
+   * Parcourt **toutes les entités du schéma**, et pas seulement les robinets :
+   * chaque élément listé comme chaque fiche unique peut porter ses propres
+   * photos. Un parcours partiel les omettrait de l'export sans rien signaler.
+   */
   private collectAssetIds(data: AppData): string[] {
     const ids = new Set<string>();
     const add = (refs?: AssetRef[]) =>
@@ -364,7 +370,20 @@ export class DataService {
 
     add(data.Plans);
     add(data.Photos);
-    data.Qte?.robinets?.forEach((r) => add(r.Photos));
+
+    for (const value of Object.values((data.Qte ?? {}) as Record<string, unknown>)) {
+      if (Array.isArray(value)) {
+        // Entité listée : robinets, WC, piscines…
+        for (const item of value as Array<Record<string, unknown>>) {
+          if (item && typeof item === 'object') add(item['Photos'] as AssetRef[] | undefined);
+        }
+      } else if (value && typeof value === 'object') {
+        // Entité unique : compteur général, collecte d'eau de pluie.
+        add((value as Record<string, unknown>)['Photos'] as AssetRef[] | undefined);
+      }
+    }
+
+    // Table héritée de l'époque des sections en JSON brut.
     Object.values(data.Qte?.PhotosSections ?? {}).forEach(add);
 
     return [...ids];
@@ -378,16 +397,22 @@ export class DataService {
    * le fichier est téléchargé, il n'est pas soumis au quota du navigateur, et
    * la portabilité prime pour transmettre un audit.
    */
-  async exportJson(filename?: string): Promise<void> {
-    const name = filename ?? `sobrieau_${new Date().toISOString().slice(0, 10)}`;
-
+  /**
+   * Contenu exportable de l'audit ouvert, images comprises.
+   * Partagé par le téléchargement et par la synchronisation Drive.
+   */
+  async buildExportPayload(): Promise<AppData & { __assets: Record<string, { name: string; data: string }> }> {
     const embedded: Record<string, { name: string; data: string }> = {};
     for (const id of this.collectAssetIds(this._data)) {
       const asset = await this.assets.toDataUrl(id);
       if (asset) embedded[id] = asset;
     }
+    return { ...this._data, __assets: embedded };
+  }
 
-    const payload = { ...this._data, __assets: embedded };
+  async exportJson(filename?: string): Promise<void> {
+    const name = filename ?? `sobrieau_${new Date().toISOString().slice(0, 10)}`;
+    const payload = await this.buildExportPayload();
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json',
     });
@@ -414,11 +439,16 @@ export class DataService {
    * @returns la fiche de l'audit créé.
    */
   async importJson(file: File): Promise<AuditSummary> {
-    const text = await file.text();
-    const parsed = JSON.parse(text) as AppData & {
-      __assets?: Record<string, { name: string; data: string }>;
-    };
+    return this.importPayload(JSON.parse(await file.text()));
+  }
 
+  /**
+   * Intègre un audit exporté — depuis un fichier ou depuis le Drive — dans un
+   * nouvel audit.
+   */
+  async importPayload(
+    parsed: AppData & { __assets?: Record<string, { name: string; data: string }> }
+  ): Promise<AuditSummary> {
     const embedded = parsed.__assets ?? {};
     delete parsed.__assets;
 
@@ -478,6 +508,9 @@ export class DataService {
         for (const item of value as Array<Record<string, unknown>>) {
           if (item && typeof item === 'object') fixLoc(item['Localisation'] as PlanLocation | null);
         }
+      } else if (value && typeof value === 'object') {
+        // Une fiche unique peut elle aussi être localisée sur un plan.
+        fixLoc((value as Record<string, unknown>)['Localisation'] as PlanLocation | null);
       }
     }
   }
