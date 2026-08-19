@@ -35,6 +35,34 @@ Remove-Item "$dst\book.zip"
 | `gen-docs.js` | Un Markdown par onglet : champs attendus, listes, règles de navigation. |
 | `gen-referentiel.js` | Confronte les deux sources de listes de valeurs et signale leurs divergences. |
 | `check-coverage.js` | **Contrôle** : ce que le classeur contient et que le schéma n'a pas retenu. Déterministe, chaque signalement porte sa cellule d'origine. À lancer après toute régénération. |
+| `check-extract.js` | **Contrôle** : le fichier autonome sait-il encore se reproduire à l'identique ? À lancer après tout `npm run build`. Voir ci-dessous. |
+
+## `check-extract.js` — le fichier doit rester reproductible
+
+La page `#/telecharger` produit une copie propre du fichier autonome. Comme une
+page ouverte en `file://` ne peut pas relire son propre contenu, elle
+**re-sérialise son DOM** en y réinjectant le `<app-root>` d'origine, mis de côté
+au démarrage, et en écartant ce que l'exécution a ajouté.
+
+Cela ne peut donner le fichier exact que si celui-ci est déjà écrit sous la forme
+que le navigateur produit en le re-sérialisant — d'où la normalisation à la fin
+de `inline-build.js`. Trois écarts en dépendent : les attributs sans valeur, qui
+reçoivent une valeur vide ; l'espace entre `<html>` et `<head>`, supprimé ; et
+celui qui suit `</body>`, déplacé à l'intérieur.
+
+```bash
+node tools/check-extract.js            # sur index.html à la racine
+node tools/check-extract.js chemin.html
+```
+
+Le contrôle ouvre `#/telecharger` dans Chrome et compare **l'empreinte que la
+page annonce** à celle du fichier sur le disque. Passer par l'affichage éprouve
+le vrai chemin de code plutôt qu'une reconstitution parallèle qui pourrait
+diverger sans qu'on le voie. En cas d'écart, il refait la reconstitution
+lui-même pour situer la divergence au caractère près.
+
+Aucune dépendance : `--dump-dom` évite de piloter le navigateur. Chrome est
+cherché aux emplacements usuels, sinon renseigner `CHROME_PATH`.
 
 ## Points de vigilance
 

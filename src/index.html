@@ -58,6 +58,30 @@
     </div>
   </app-root>
 
+  <!--
+    Photographie du document d'origine, pour la page « Télécharger
+    l'application » : un fichier ouvert en file:// ne peut pas relire son propre
+    contenu, elle re-sérialise donc le DOM et doit savoir ce qui s'y trouvait
+    avant qu'Angular n'y touche.
+
+    Ce script est un module, et c'est essentiel : les modules sont différés,
+    donc exécutés une fois le document entièrement analysé — les balises de
+    script qui suivent sont déjà là — mais avant le module d'Angular, placé
+    plus bas. Un script classique, lui, s'exécuterait trop tôt : il ne verrait
+    pas les scripts suivants et les prendrait pour des ajouts d'exécution.
+  -->
+  <script type="module">
+    try {
+      window.__sobrieauAppRoot = document.querySelector('app-root').outerHTML;
+      // Tout nœud ajouté ensuite — une feuille de style injectée à la volée,
+      // par exemple — est du rendu et non de la source : il sera écarté.
+      window.__sobrieauHead = Array.prototype.slice.call(document.head.children);
+      window.__sobrieauBody = Array.prototype.slice.call(document.body.children);
+    } catch (e) {
+      /* sans photographie, la page de téléchargement se déclarera indisponible */
+    }
+  </script>
+
   <script>
     // Enrichit le message quand les scripts fonctionnent. S'ils sont bloqués,
     // le message reste affiché tel quel — ce qui est déjà le diagnostic.

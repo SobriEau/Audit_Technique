@@ -60,6 +60,28 @@ html = html.replace(
 // Supprimer <base href="/"> pour compatibilite file://
 html = html.replace(/<base href="\/">/i, '<base href="">');
 
+// ── Forme canonique ────────────────────────────────────────────────────────
+// La page sait se re-produire elle-meme (route #/telecharger) : un fichier
+// ouvert en file:// ne peut pas relire son propre contenu, elle re-serialise
+// donc son DOM. Le navigateur normalise deux choses en analysant le document —
+// les attributs sans valeur prennent une valeur vide, et l'espace situe apres
+// </body> est deplace a l'interieur. En ecrivant d'emblee le fichier sous cette
+// forme, l'aller-retour devient sans perte et l'empreinte du fichier telecharge
+// est celle du livrable. Verifie par tools/check-extract.js.
+
+// 1. <html lang="fr" data-critters-container>\n<head>  ->  attributs values,
+//    et plus d'espace avant <head>.
+html = html.replace(
+  /<html([^>]*)>\s*<head>/i,
+  (_m, attrs) => `<html${attrs.replace(/(\s[a-zA-Z][\w-]*)(?=[\s>]|$)/g, '$1=""')}><head>`
+);
+
+// 2. ...</body>\n</html>\n  ->  ...\n\n</body></html>
+html = html.replace(/([\s\S]*?)\s*<\/body>\s*<\/html>\s*$/i, (m, avant) => {
+  const espaces = m.slice(avant.length).replace(/<\/?(body|html)>/gi, '');
+  return `${avant}${espaces}</body></html>`;
+});
+
 fs.writeFileSync(outputFile, html, 'utf8');
 
 const sizeKo = Math.round(fs.statSync(outputFile).size / 1024);

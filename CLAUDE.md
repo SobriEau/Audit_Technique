@@ -26,6 +26,37 @@ souvent hors connexion, puis exporte un JSON.
 que les auditeurs ouvrent ne correspond plus aux sources. Ce décalage s'est déjà
 produit.
 
+### Le fichier sait se reproduire — et doit le rester
+
+La page `#/telecharger` produit une copie propre du fichier autonome, pour la
+transmettre à un collègue sans passer par le gestionnaire de fichiers. Une page
+ouverte en `file://` ne pouvant pas relire son propre contenu (`fetch` y est
+refusé), elle **re-sérialise son DOM** : elle y réinjecte le `<app-root>`
+d'origine et écarte ce que l'exécution a ajouté — Angular injecte des feuilles
+de style au fil des pages visitées.
+
+Trois points portent tout le montage :
+
+- **La photographie du document est prise par un `<script type="module">`** dans
+  [index.html](src/index.html). Les modules sont différés : il s'exécute donc
+  quand le document est entièrement analysé, mais avant le module d'Angular,
+  placé plus bas. Un script classique s'exécuterait trop tôt — il ne verrait pas
+  les balises de script qui le suivent et les prendrait pour des ajouts
+  d'exécution. *Vérifié en le cassant : la copie tombait à 14 Ko, sans le
+  moindre script.*
+- **`inline-build.js` écrit le fichier sous forme canonique**, c'est-à-dire
+  telle que le navigateur la reproduit en re-sérialisant : attributs sans valeur
+  explicitée, espace supprimé entre `<html>` et `<head>`, espace suivant
+  `</body>` déplacé à l'intérieur. Sans cela l'aller-retour perd trois
+  caractères, et la copie n'est plus le livrable.
+- **La page refuse de produire une copie** si le document charge des fichiers
+  séparés. Cela protège la version hébergée, et sert de témoin si une ressource
+  échappait un jour à l'inlinage.
+
+`node tools/check-extract.js` compare l'empreinte que la page annonce à celle du
+fichier sur le disque. **À lancer après tout `npm run build`** : les trois points
+ci-dessus se cassent en silence.
+
 ---
 
 ## 2. Contraintes du mode `file://` — l'origine de la plupart des pièges
@@ -460,6 +491,7 @@ interactif et dépend du stockage.
 ```bash
 npm start                     # développement
 npm run build                 # fichier autonome, puis ouvrir index.html
+npm run check:extract         # le fichier sait-il encore se reproduire ?
 ```
 
 Points de contrôle qui ont déjà révélé des régressions :
@@ -472,6 +504,8 @@ Points de contrôle qui ont déjà révélé des régressions :
    Penser à vider **aussi les cookies**, sinon le repli les repeuple et le test
    ment.
 5. Supprimer un plan localisé : aucun élément ne doit rester sur un plan absent.
+6. `node tools/check-extract.js` après chaque build : la copie que produit
+   `#/telecharger` doit avoir l'empreinte du livrable.
 
 ---
 

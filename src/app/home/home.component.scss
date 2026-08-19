@@ -44,6 +44,22 @@ footer {
   font-size: var(--fs-sm);
 }
 
+// Un bouton qui se lit comme un lien : cette page est utile mais secondaire,
+// elle n'a pas à concurrencer les trois questionnaires.
+.lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.lien:hover {
+  color: var(--c-primary-dark);
+}
+
 /* ── Sélecteur d'audit ──────────────────────────────────────────────── */
 
 .audit-bar {

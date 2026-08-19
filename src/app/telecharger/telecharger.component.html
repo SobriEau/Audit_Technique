@@ -1,0 +1,60 @@
+<app-page-header pageTitle="Télécharger l'application" />
+
+<div class="panel">
+  @if (etat.possible) {
+    <p>
+      Cette page produit une copie complète de l'application, dans un fichier
+      <code>index.html</code> unique qui fonctionne hors connexion, par simple
+      double-clic. C'est le fichier à transmettre à un collègue auditeur.
+    </p>
+
+    <p class="muted">
+      La copie ne contient <strong>aucune donnée d'audit</strong> : les audits, les
+      photos et les plans vivent dans le stockage du navigateur, jamais dans le
+      fichier. C'est aussi pourquoi remplacer votre <code>index.html</code> actuel
+      par une version plus récente <strong>conserve vos audits en cours</strong>.
+    </p>
+
+    <dl class="fiche">
+      <dt>Fichier</dt>
+      <dd><code>index.html</code>{{ taille ? ' — ' + taille + ' Ko' : '' }}</dd>
+      @if (somme) {
+        <dt>Empreinte SHA-256</dt>
+        <dd><code class="somme">{{ somme }}</code></dd>
+      }
+    </dl>
+
+    <div class="actions">
+      <button class="primary" [disabled]="occupe" (click)="telecharger()">
+        {{ occupe ? 'Préparation…' : 'Télécharger index.html' }}
+      </button>
+    </div>
+
+    <p class="muted note">
+      Selon le navigateur, le fichier peut arriver sous le nom
+      <code>index (1).html</code> si un <code>index.html</code> existe déjà dans le
+      dossier de téléchargement. Renommez-le, ou remplacez l'ancien.
+    </p>
+  } @else {
+    <p class="alerte">{{ etat.raison }}</p>
+
+    @if (etat.externes.length) {
+      <p class="muted">Ressources chargées séparément :</p>
+      <ul class="externes">
+        @for (r of etat.externes; track r) {
+          <li><code>{{ r }}</code></li>
+        }
+      </ul>
+    }
+
+    <p class="muted">
+      Le fichier autonome se fabrique depuis les sources avec
+      <code>npm run build</code>. La version hébergée, elle, se compose de plusieurs
+      fichiers : elle ne peut pas se réduire à une page unique.
+    </p>
+  }
+
+  @if (erreur) {
+    <p class="alerte">{{ erreur }}</p>
+  }
+</div>

@@ -6,7 +6,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --configuration standalone && node inline-build.js",
-    "build:hosted": "ng build --configuration production"
+    "build:hosted": "ng build --configuration production",
+    "check:extract": "node tools/check-extract.js"
   },
   "dependencies": {
     "@angular/animations": "^18.2.0",

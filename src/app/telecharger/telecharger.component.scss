@@ -1,0 +1,35 @@
+.fiche {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-1) var(--sp-3);
+  margin: var(--sp-4) 0;
+}
+
+.fiche dt {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.fiche dd {
+  margin: 0;
+}
+
+// L'empreinte fait 64 caractères : elle doit pouvoir se replier sur téléphone
+// plutôt qu'élargir la page.
+.somme {
+  word-break: break-all;
+  font-size: var(--fs-sm);
+}
+
+.note {
+  font-size: var(--fs-sm);
+}
+
+.externes {
+  margin: 0 0 var(--sp-3);
+  padding-left: var(--sp-4);
+}
+
+.alerte {
+  color: var(--c-danger);
+}

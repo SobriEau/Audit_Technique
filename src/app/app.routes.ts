@@ -5,6 +5,7 @@ import { QusComponent } from './qus/qus.component';
 import { QteIndexComponent } from './qte/qte-index/qte-index.component';
 import { EntityListComponent } from './qte/entity-list/entity-list.component';
 import { EntityFormComponent } from './qte/entity-form/entity-form.component';
+import { TelechargerComponent } from './telecharger/telecharger.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -19,6 +20,9 @@ export const routes: Routes = [
   { path: 'qte/:entity', component: EntityListComponent },
   // Fiche d'un élément, adressée par identité stable et jamais par index.
   { path: 'qte/:entity/:id', component: EntityFormComponent },
+
+  // Copie propre du fichier autonome, produite par la page elle-même.
+  { path: 'telecharger', component: TelechargerComponent },
 
   { path: '**', redirectTo: 'home' },
 ];
