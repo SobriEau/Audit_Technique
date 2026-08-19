@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AppData, AuditSummary } from '../../models/data.models';
 import { addressKey, htmlToText } from '../utils/address-key';
 import { uid } from '../utils/uid';
+import { safeStorage } from '../utils/safe-storage';
 
 const INDEX_KEY = 'sobrieau.index';
 const CURRENT_KEY = 'sobrieau.current';
@@ -35,7 +36,7 @@ export class AuditRegistryService {
 
   list(): AuditSummary[] {
     try {
-      const raw = localStorage.getItem(INDEX_KEY);
+      const raw = safeStorage.getItem(INDEX_KEY);
       const parsed = raw ? (JSON.parse(raw) as AuditSummary[]) : [];
       return Array.isArray(parsed) ? parsed : [];
     } catch {
@@ -44,7 +45,7 @@ export class AuditRegistryService {
   }
 
   private writeIndex(list: AuditSummary[]): void {
-    localStorage.setItem(INDEX_KEY, JSON.stringify(list));
+    safeStorage.setItem(INDEX_KEY, JSON.stringify(list));
   }
 
   /** Audits du plus récemment modifié au plus ancien. */
@@ -65,28 +66,28 @@ export class AuditRegistryService {
   // ── Audit courant ────────────────────────────────────────────────────────
 
   get currentId(): string {
-    const id = localStorage.getItem(CURRENT_KEY);
+    const id = safeStorage.getItem(CURRENT_KEY);
     if (id && this.find(id)) return id;
 
     // Registre vide ou pointeur cassé : on repart sur le plus récent, sinon
     // on crée un audit vierge — l'application doit toujours en avoir un.
     const first = this.listByRecency()[0];
     if (first) {
-      localStorage.setItem(CURRENT_KEY, first.Id);
+      safeStorage.setItem(CURRENT_KEY, first.Id);
       return first.Id;
     }
     return this.create().Id;
   }
 
   setCurrent(id: string): void {
-    if (this.find(id)) localStorage.setItem(CURRENT_KEY, id);
+    if (this.find(id)) safeStorage.setItem(CURRENT_KEY, id);
   }
 
   // ── Lecture / écriture d'un audit ────────────────────────────────────────
 
   load(id: string): AppData {
     try {
-      const raw = localStorage.getItem(AUDIT_PREFIX + id);
+      const raw = safeStorage.getItem(AUDIT_PREFIX + id);
       const parsed = raw ? (JSON.parse(raw) as AppData) : null;
       if (parsed && typeof parsed === 'object') {
         parsed.Id = id;
@@ -105,7 +106,7 @@ export class AuditRegistryService {
 
     const adresse = htmlToText(data.Adresse);
     data.AdresseKey = addressKey(adresse);
-    localStorage.setItem(AUDIT_PREFIX + id, JSON.stringify(data));
+    safeStorage.setItem(AUDIT_PREFIX + id, JSON.stringify(data));
 
     const list = this.list();
     const summary: AuditSummary = {
@@ -134,11 +135,11 @@ export class AuditRegistryService {
     const list = this.list();
     list.push(summary);
     this.writeIndex(list);
-    localStorage.setItem(
+    safeStorage.setItem(
       AUDIT_PREFIX + summary.Id,
       JSON.stringify({ Id: summary.Id, Adresse: adresse } as AppData)
     );
-    localStorage.setItem(CURRENT_KEY, summary.Id);
+    safeStorage.setItem(CURRENT_KEY, summary.Id);
     return summary;
   }
 
@@ -148,9 +149,9 @@ export class AuditRegistryService {
    * personne pour les référencer.
    */
   remove(id: string): void {
-    localStorage.removeItem(AUDIT_PREFIX + id);
+    safeStorage.removeItem(AUDIT_PREFIX + id);
     this.writeIndex(this.list().filter((a) => a.Id !== id));
-    if (localStorage.getItem(CURRENT_KEY) === id) localStorage.removeItem(CURRENT_KEY);
+    if (safeStorage.getItem(CURRENT_KEY) === id) safeStorage.removeItem(CURRENT_KEY);
   }
 
   /** Un audit sans aucune donnée saisie peut être renommé sans rien demander. */
@@ -183,9 +184,9 @@ export class AuditRegistryService {
    * s'avérait fautive, les données restent récupérables.
    */
   private migrateLegacy(): void {
-    if (localStorage.getItem(INDEX_KEY)) return;
+    if (safeStorage.getItem(INDEX_KEY)) return;
 
-    const raw = localStorage.getItem(LEGACY_KEY);
+    const raw = safeStorage.getItem(LEGACY_KEY);
     if (!raw) return;
 
     try {
@@ -198,7 +199,7 @@ export class AuditRegistryService {
       data.Adresse = adresse;
       data.AdresseKey = addressKey(adresse);
 
-      localStorage.setItem(AUDIT_PREFIX + data.Id, JSON.stringify(data));
+      safeStorage.setItem(AUDIT_PREFIX + data.Id, JSON.stringify(data));
       this.writeIndex([
         {
           Id: data.Id,
@@ -209,10 +210,10 @@ export class AuditRegistryService {
           UpdatedAt: new Date().toISOString(),
         },
       ]);
-      localStorage.setItem(CURRENT_KEY, data.Id);
+      safeStorage.setItem(CURRENT_KEY, data.Id);
 
-      localStorage.setItem(LEGACY_BACKUP_KEY, raw);
-      localStorage.removeItem(LEGACY_KEY);
+      safeStorage.setItem(LEGACY_BACKUP_KEY, raw);
+      safeStorage.removeItem(LEGACY_KEY);
     } catch {
       /* illisible : on laisse l'ancienne clé en place et on repart à vide */
     }

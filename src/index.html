@@ -5,8 +5,83 @@
   <title>SobriEau</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /*
+      Le message ci-dessous est visible PAR DÉFAUT, et disparaît parce
+      qu'Angular remplace le contenu de <app-root> en démarrant.
+
+      Il est révélé par une animation CSS, sans JavaScript : si le poste bloque
+      les scripts, le message s'affiche quand même — c'est précisément le cas
+      qu'il doit couvrir. Le délai évite qu'il n'apparaisse le temps qu'un gros
+      fichier s'analyse sur une machine lente.
+    */
+    #demarrage-echec {
+      opacity: 0;
+      animation: apparait 0s linear 8s forwards;
+      font-family: Arial, Helvetica, sans-serif;
+      max-width: 640px; margin: 60px auto; padding: 24px;
+      border: 1px solid #d6e6ea; border-radius: 12px;
+      background: #fff; color: #222; line-height: 1.5;
+    }
+    @keyframes apparait { to { opacity: 1; } }
+    #demarrage-echec h1 { margin: 0 0 12px; font-size: 20px; color: #0b566b; }
+    #demarrage-echec code, #demarrage-echec pre {
+      background: #f6f9fb; border: 1px solid #d6e6ea; border-radius: 6px;
+      padding: 2px 6px; font-size: 13px;
+    }
+    #demarrage-echec pre { padding: 10px; white-space: pre-wrap; }
+  </style>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div id="demarrage-echec">
+      <h1>SobriEau n'a pas pu démarrer</h1>
+      <p>Ce poste empêche l'application de s'exécuter. Trois causes fréquentes :</p>
+      <ol>
+        <li>
+          <strong>Le fichier est bloqué par Windows.</strong> Clic droit sur
+          <code>index.html</code> → <em>Propriétés</em> → cocher
+          <strong>Débloquer</strong> en bas → Appliquer, puis rouvrir.
+        </li>
+        <li>
+          <strong>Le navigateur est trop ancien.</strong> Ouvrir avec une
+          version récente de Chrome ou Edge.
+        </li>
+        <li>
+          <strong>Une stratégie d'entreprise interdit les pages locales</strong>
+          ou les scripts. Il faut alors passer par la version hébergée.
+        </li>
+      </ol>
+      <p>Pour le support, appuyez sur <strong>F12</strong> puis onglet
+      <em>Console</em>, et transmettez ce qui s'y affiche avec la ligne suivante :</p>
+      <pre id="demarrage-detail">Navigateur : (script non exécuté — c'est déjà une information)</pre>
+    </div>
+  </app-root>
+
+  <script>
+    // Enrichit le message quand les scripts fonctionnent. S'ils sont bloqués,
+    // le message reste affiché tel quel — ce qui est déjà le diagnostic.
+    (function () {
+      var messages = [];
+      window.addEventListener('error', function (e) {
+        messages.push((e.message || 'erreur') + ' — ' + String(e.filename || '').split('/').pop());
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        messages.push('promesse rejetée : ' + (r && r.message ? r.message : r));
+      });
+
+      setTimeout(function () {
+        var bloc = document.getElementById('demarrage-detail');
+        if (!bloc || !bloc.isConnected) return; // Angular a pris la main
+        try { window.localStorage.getItem('x'); }
+        catch (e) { messages.unshift('Accès au stockage refusé : ' + e.name); }
+        bloc.textContent =
+          'Navigateur : ' + navigator.userAgent + '\n' +
+          'Origine : ' + window.origin + '\n' +
+          (messages.length ? messages.join('\n') : 'Scripts exécutés, mais Angular n’a pas démarré.');
+      }, 7500);
+    })();
+  </script>
 </body>
 </html>

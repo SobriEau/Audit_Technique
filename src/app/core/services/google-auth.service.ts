@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { DRIVE_CONFIG, driveIsConfigured } from './drive-config';
+import { safeStorage } from '../utils/safe-storage';
 
 const TOKEN_KEY = 'sobrieau.drive.token';
 
@@ -278,12 +279,12 @@ export class GoogleAuthService {
 
   private store(t: StoredToken): void {
     this.token = t;
-    localStorage.setItem(TOKEN_KEY, JSON.stringify(t));
+    safeStorage.setItem(TOKEN_KEY, JSON.stringify(t));
   }
 
   private forget(): void {
     this.token = null;
-    localStorage.removeItem(TOKEN_KEY);
+    safeStorage.removeItem(TOKEN_KEY);
     this.challenge$.next(null);
     this.profile$.next(null);
     this.state$.next(driveIsConfigured() ? 'disconnected' : 'unconfigured');
@@ -291,7 +292,7 @@ export class GoogleAuthService {
 
   private readToken(): StoredToken | null {
     try {
-      const raw = localStorage.getItem(TOKEN_KEY);
+      const raw = safeStorage.getItem(TOKEN_KEY);
       const t = raw ? (JSON.parse(raw) as StoredToken) : null;
       return t?.refreshToken ? t : null;
     } catch {

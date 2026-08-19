@@ -89,6 +89,21 @@
   font-size: var(--fs-sm);
 }
 
+/* Avertissement de stockage : volontairement dans l'en-tête collant, pour
+   rester visible quelle que soit la page et le défilement. */
+.bar--alerte {
+  background: var(--c-danger-bg);
+  border-top: 1px solid var(--c-danger-border);
+}
+
+.bar--alerte p {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+  padding: var(--sp-2) var(--sp-5);
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}
+
 /* ── Barre de navigation de page ────────────────────────────────────── */
 
 .page-nav {

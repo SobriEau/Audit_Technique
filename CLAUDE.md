@@ -42,8 +42,35 @@ Le fichier autonome s'ouvre par double-clic, sans serveur. Il en découle :
 - **Pas de requête réseau** dans le chemin nominal. Aucune police, aucun script,
   aucune image externe : `inline-build.js` inline tout, et une ressource restée
   externe casse le mode hors ligne sans erreur visible en développement.
-- **Origine `null`.** Beaucoup d'API à « contexte sécurisé » se comportent
-  différemment. C'est le cas de la dictée vocale (§7).
+- **Origine `null`, et on ne peut pas lui en donner une.** L'origine opaque
+  d'un `file://` est une invariante du navigateur, pas un réglage : ni `<base>`,
+  ni un indicateur de lancement n'y changent rien. Obtenir une vraie origine
+  suppose de changer de mode de diffusion — hébergement, application installée
+  (PWA), ou extension.
+- **Toutes les pages `file://` d'un même profil partagent le stockage** (mesuré :
+  deux fichiers dans des dossiers différents lisent le même `localStorage`).
+  Heureuse conséquence : remplacer `index.html` par une version plus récente
+  conserve les audits de l'auditeur. Revers : une autre page locale ouverte dans
+  le même navigateur peut les lire.
+
+### Le stockage peut être refusé — et faisait tomber l'application
+
+Sur certains postes (politique d'entreprise, blocage des données de site), la
+simple lecture de `localStorage` **lève une exception**. Les services la
+lisaient dans leur constructeur, donc pendant l'amorçage : Angular ne démarrait
+pas, l'auditeur voyait une **page blanche** et l'URL restait bloquée sur `#/`
+au lieu de `#/home`. Aucun message, ni à l'écran ni ailleurs.
+
+Deux garde-fous, à ne pas retirer :
+
+- Tout passe par [safe-storage.ts](src/app/core/utils/safe-storage.ts), qui
+  absorbe l'échec et bascule sur une mémoire vive. L'application reste
+  utilisable pour la journée, et un bandeau rouge prévient que rien ne sera
+  conservé — perdre un audit sans avertissement serait pire que tout.
+- [index.html](src/index.html) contient un **repli statique** dans `<app-root>`,
+  remplacé par Angular au démarrage. S'il reste affiché, c'est que l'amorçage a
+  échoué : il explique quoi faire (débloquer le fichier) et affiche le détail
+  technique pour le support. Une page blanche ne dit rien à personne.
 
 Une modification qui fonctionne sous `npm start` peut être cassée en `file://`.
 **Tester le fichier autonome avant de conclure.**

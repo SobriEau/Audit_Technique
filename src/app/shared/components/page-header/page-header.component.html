@@ -28,3 +28,13 @@
     </nav>
   </div>
 }
+
+@if (stockageIndisponible) {
+  <div class="bar bar--alerte">
+    <p role="alert">
+      <strong>Ce poste n'autorise pas l'enregistrement local.</strong>
+      La saisie fonctionne, mais elle sera perdue à la fermeture —
+      pensez à enregistrer le fichier ou à l'envoyer sur le Drive avant de quitter.
+    </p>
+  </div>
+}

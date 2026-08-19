@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { LOGO_AGROPARISTECH, LOGO_CEREMA, LOGO_SOBRIEAU } from '../../logos';
 import { DriveActionsComponent } from '../drive-actions/drive-actions.component';
+import { storageAvailable } from '../../../core/utils/safe-storage';
 
 /**
  * Composant partagé : en-tête SobriEau.
@@ -36,6 +37,13 @@ export class PageHeaderComponent {
 
   /** Cible du bouton « Retour ». Par défaut, la page parente est l'accueil. */
   @Input() backTo: string[] = ['/home'];
+
+  /**
+   * Certains postes refusent l'accès au stockage. L'application reste
+   * utilisable, mais rien ne survit à la fermeture : il faut le dire avant que
+   * l'auditeur ne remplisse un audit entier.
+   */
+  readonly stockageIndisponible = !storageAvailable();
 
   constructor(private router: Router) {}
 
