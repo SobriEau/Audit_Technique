@@ -12,6 +12,7 @@ import { AssetRef } from '../../../models/data.models';
 import { photoMode, nomDeFichier } from '../../../core/utils/photo-mode';
 import { uid } from '../../../core/utils/uid';
 import { PhotoSyncService } from '../../../core/services/photo-sync.service';
+import { CameraCaptureComponent } from '../camera-capture/camera-capture.component';
 
 /**
  * Composant partagé : galerie de photos.
@@ -31,6 +32,7 @@ import { PhotoSyncService } from '../../../core/services/photo-sync.service';
 @Component({
   selector: 'app-photo-editor',
   standalone: true,
+  imports: [CameraCaptureComponent],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -61,6 +63,9 @@ export class PhotoEditorComponent implements ControlValueAccessor {
 
   busy = false;
 
+  /** Dialogue de prise de vue affiché. */
+  cameraOuverte = false;
+
   onChangeFn: (v: AssetRef[]) => void = () => {};
   onTouchedFn: () => void = () => {};
 
@@ -87,15 +92,47 @@ export class PhotoEditorComponent implements ControlValueAccessor {
     this.fileInputRef.nativeElement.click();
   }
 
-  /** Ouvre directement l'appareil photo sur mobile. */
+  /**
+   * Prise de vue.
+   *
+   * `capture="environment"` n'ouvre l'appareil photo que sur mobile : sur
+   * ordinateur l'attribut est ignoré et le sélecteur de fichiers s'affiche, ce
+   * qui donnait un bouton trompeur. On passe donc par `getUserMedia` — vérifié
+   * utilisable depuis le fichier autonome — et l'on ne retombe sur le champ
+   * natif que si l'API manque.
+   */
   triggerCamera(): void {
+    // Le test porte sur le type : les définitions DOM déclarent `mediaDevices`
+    // comme toujours présent, alors qu'il manque hors contexte sûr.
+    if (typeof navigator.mediaDevices?.getUserMedia === 'function') {
+      this.cameraOuverte = true;
+      this.cdr.markForCheck();
+      return;
+    }
     this.cameraRef.nativeElement.click();
+  }
+
+  /** Photo validée dans le dialogue : elle suit le chemin d'un fichier choisi. */
+  async onCaptured(file: File): Promise<void> {
+    this.cameraOuverte = false;
+    await this.ajouterFichiers([file]);
+  }
+
+  /** Le dialogue renvoie vers le sélecteur : caméra refusée, ou absente. */
+  onCameraRepli(): void {
+    this.cameraOuverte = false;
+    this.cdr.markForCheck();
+    this.fileInputRef.nativeElement.click();
   }
 
   async onFilesSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
     input.value = ''; // permet de re-choisir le même fichier
+    await this.ajouterFichiers(files);
+  }
+
+  private async ajouterFichiers(files: File[]): Promise<void> {
     if (files.length === 0) return;
 
     this.busy = true;

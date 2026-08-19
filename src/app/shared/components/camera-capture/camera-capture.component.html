@@ -1,0 +1,78 @@
+<div class="overlay" (click)="fermer()">
+  <div class="dialog dialog--camera" (click)="$event.stopPropagation()">
+    <div class="dialog-head">
+      <h3>Prendre une photo</h3>
+      @if (cameras.length > 1 && !apercu) {
+        <select
+          class="choix-camera"
+          [value]="choisie"
+          (change)="changerCamera($any($event.target).value)"
+          aria-label="Choisir la caméra"
+        >
+          @for (c of cameras; track c.deviceId; let i = $index) {
+            <option [value]="c.deviceId">{{ nomCamera(c, i) }}</option>
+          }
+        </select>
+      }
+      <button type="button" class="ghost" (click)="fermer()" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="dialog-body">
+      @if (erreur) {
+        <div class="camera-erreur">
+          <p class="alerte">{{ erreur }}</p>
+          <div class="actions">
+            <button type="button" class="primary" (click)="reessayer()">Réessayer</button>
+            <button type="button" class="ghost" (click)="choisirFichier()">
+              Choisir un fichier
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="scene">
+          <!-- Toujours présent : le flux lui est affecté dès qu'il arrive. -->
+          <video
+            #video
+            class="flux"
+            [hidden]="!!apercu"
+            autoplay
+            playsinline
+            muted
+            aria-label="Aperçu de la caméra"
+          ></video>
+
+          @if (apercu) {
+            <img class="flux" [src]="apercu" alt="Photo prise, en attente de validation" />
+          }
+
+          @if (demarrage) {
+            <p class="muted attente">Ouverture de la caméra…</p>
+          }
+        </div>
+      }
+    </div>
+
+    @if (!erreur) {
+      <div class="dialog-foot">
+        @if (apercu) {
+          <button type="button" class="ghost" (click)="reprendre()">Reprendre</button>
+          <span class="spacer"></span>
+          <button type="button" class="primary" (click)="valider()">Utiliser cette photo</button>
+        } @else {
+          <button type="button" class="ghost" (click)="choisirFichier()">
+            Choisir un fichier
+          </button>
+          <span class="spacer"></span>
+          <button
+            type="button"
+            class="primary declencheur"
+            [disabled]="demarrage"
+            (click)="declencher()"
+          >
+            Déclencher
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>

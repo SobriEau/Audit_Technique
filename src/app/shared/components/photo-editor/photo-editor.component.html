@@ -8,8 +8,8 @@
     (change)="onFilesSelected($event)"
   />
 
-  <!-- `capture` ouvre directement l'appareil photo sur mobile ; sur ordinateur
-       l'attribut est ignoré et le sélecteur de fichiers s'ouvre. -->
+  <!-- Repli pour les navigateurs sans `getUserMedia` : sur mobile `capture`
+       ouvre l'appareil photo, ailleurs le sélecteur de fichiers. -->
   <input
     #cameraInput
     type="file"
@@ -18,6 +18,14 @@
     hidden
     (change)="onFilesSelected($event)"
   />
+
+  @if (cameraOuverte) {
+    <app-camera-capture
+      (captured)="onCaptured($event)"
+      (closed)="cameraOuverte = false"
+      (replier)="onCameraRepli()"
+    />
+  }
 
   <div class="actions actions--top">
     <button type="button" class="primary" [disabled]="busy" (click)="triggerCamera()">

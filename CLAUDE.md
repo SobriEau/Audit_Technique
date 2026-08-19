@@ -199,6 +199,38 @@ celles de l'audit supprimé. L'import réattribue de nouveaux identifiants
 d'images, sinon deux audits importés de la même source les partageraient — et
 supprimer l'un effacerait les images de l'autre.
 
+### Prise de vue — pourquoi `capture` ne suffit pas
+
+`capture="environment"` sur un `<input type="file">` n'ouvre l'appareil photo
+**que sur mobile**. Sur ordinateur l'attribut est silencieusement ignoré et le
+sélecteur de fichiers s'affiche : le bouton « Prendre une photo » ne prenait
+donc aucune photo, sans le moindre signe d'échec. La webcam suppose
+`getUserMedia`, et rien d'autre.
+
+Mesuré depuis le fichier autonome ouvert en `file://` :
+
+- `window.isSecureContext` vaut **`true`** — Chrome tient le schéma `file` pour
+  digne de confiance, contrairement à ce que l'origine `null` laisse craindre.
+- L'invite d'autorisation s'affiche et le flux arrive ; la chaîne
+  flux → `<video>` → canvas → JPEG a été vérifiée de bout en bout à cette
+  origine, punaise comprise dans la galerie après rechargement.
+- **L'autorisation n'est pas mémorisée** d'un lancement à l'autre : une origine
+  opaque n'a pas de fiche de permissions. L'auditeur devra l'accorder à chaque
+  ouverture du fichier. C'est écrit à l'écran, pas laissé deviner.
+
+[camera-capture](src/app/shared/components/camera-capture/camera-capture.component.ts)
+porte le dialogue. Trois choses à ne pas défaire :
+
+- **La photo est réduite à 1600 px de côté** (JPEG 0,85) au moment du
+  déclenchement. Une image de capteur pèse plusieurs mégaoctets ; un audit peut
+  compter plus de cent photos, et l'export les recopie en base64.
+- **Les pistes sont arrêtées** à la validation, à la fermeture et à la
+  destruction du composant. Une piste oubliée laisse le témoin de la caméra
+  allumé — vérifié : `readyState === 'ended'` après fermeture en cours de flux.
+- **Le repli reste branché** : si `getUserMedia` manque, le bouton retombe sur
+  le champ natif. Refus d'autorisation, caméra absente ou déjà occupée donnent
+  un message qui dit quoi faire, et un bouton « Choisir un fichier ».
+
 ---
 
 ## 5. Export / import — contrat de fichier

@@ -1,0 +1,62 @@
+// Le dialogue de prise de vue est plus haut que large sur téléphone : le flux
+// doit occuper la place, pas les bordures.
+.dialog--camera {
+  max-width: 760px;
+}
+
+.dialog-body {
+  padding: 0;
+  background: var(--c-primary-dark);
+}
+
+.scene {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+}
+
+// `contain` plutôt que `cover` : recadrer une photo d'équipement ferait perdre
+// le détail que l'auditeur vise justement.
+.flux {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  background: var(--c-primary-dark);
+}
+
+.attente {
+  position: absolute;
+  color: var(--c-text-on-primary);
+}
+
+.choix-camera {
+  max-width: 14rem;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--fs-sm);
+}
+
+.camera-erreur {
+  padding: var(--sp-4);
+  background: var(--c-surface);
+}
+
+// `.alerte` est défini par composant : l'encapsulation Angular ne le fait pas
+// traverser depuis la galerie de photos.
+.camera-erreur .alerte {
+  margin-top: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}
+
+// Cible large : on déclenche souvent d'une main, l'autre tenant une lampe.
+.declencheur {
+  min-width: 11rem;
+}
