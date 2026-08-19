@@ -34,6 +34,7 @@ Remove-Item "$dst\book.zip"
 | `gen-schema.js` | Produit le schéma des entités : champs, types, unités, listes de valeurs, et **la disposition** (les champs d'une même ligne du tableau restent alignés). |
 | `gen-docs.js` | Un Markdown par onglet : champs attendus, listes, règles de navigation. |
 | `gen-referentiel.js` | Confronte les deux sources de listes de valeurs et signale leurs divergences. |
+| `check-coverage.js` | **Contrôle** : ce que le classeur contient et que le schéma n'a pas retenu. Déterministe, chaque signalement porte sa cellule d'origine. À lancer après toute régénération. |
 
 ## Points de vigilance
 
