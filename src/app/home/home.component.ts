@@ -7,6 +7,7 @@ import { RichEditorComponent } from '../shared/components/rich-editor/rich-edito
 import { PlanManagerComponent } from '../shared/components/plan-manager/plan-manager.component';
 import { PhotoEditorComponent } from '../shared/components/photo-editor/photo-editor.component';
 import { AssetRef, AuditSummary } from '../models/data.models';
+import { PhotoMode, photoMode, setPhotoMode } from '../core/utils/photo-mode';
 
 /** Question posée à l'auditeur quand un changement d'adresse est ambigu. */
 type Arbitrage =
@@ -37,6 +38,9 @@ export class HomeComponent implements OnInit {
 
   /** Non nul tant que l'auditeur n'a pas tranché un changement d'adresse. */
   arbitrage: Arbitrage | null = null;
+
+  /** Où ranger les photos ajoutées. Voir `photo-mode.ts`. */
+  mode: PhotoMode = photoMode();
 
   constructor(private dataService: DataService, private router: Router) {}
 
@@ -158,6 +162,11 @@ export class HomeComponent implements OnInit {
     d.Auditeur = this.auditeur || null;
     this.dataService.save();
     this.audits = this.dataService.listAudits();
+  }
+
+  changerMode(m: string): void {
+    this.mode = m === 'fichiers' ? 'fichiers' : 'indexeddb';
+    setPhotoMode(this.mode);
   }
 
   /** La galerie générale est enregistrée dès qu'une photo est ajoutée ou retirée. */

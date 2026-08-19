@@ -8,10 +8,45 @@
     (change)="onFilesSelected($event)"
   />
 
+  <!-- `capture` ouvre directement l'appareil photo sur mobile ; sur ordinateur
+       l'attribut est ignoré et le sélecteur de fichiers s'ouvre. -->
+  <input
+    #cameraInput
+    type="file"
+    accept="image/*"
+    capture="environment"
+    hidden
+    (change)="onFilesSelected($event)"
+  />
+
   <div class="actions actions--top">
-    <button type="button" class="ghost" [disabled]="busy" (click)="triggerPicker()">
-      {{ busy ? 'Ajout en cours…' : '+ Ajouter des photos' }}
+    <button type="button" class="primary" [disabled]="busy" (click)="triggerCamera()">
+      Prendre une photo
     </button>
+    <button type="button" class="ghost" [disabled]="busy" (click)="triggerPicker()">
+      {{ busy ? 'Ajout en cours…' : 'Choisir des fichiers' }}
+    </button>
+
+    @if (photos.length) {
+      <span
+        class="etat-sync"
+        [class.complet]="nbSurDrive === photos.length"
+        [title]="connecte
+          ? nbSurDrive + ' photo(s) sur ' + photos.length + ' déposée(s) sur le Drive'
+          : 'Non connecté : les photos restent sur ce poste'"
+      >
+        @if (!connecte) {
+          local uniquement
+        } @else if (nbSurDrive === photos.length) {
+          ✓ sur Drive
+        } @else {
+          {{ nbSurDrive }}/{{ photos.length }} sur Drive
+        }
+      </span>
+    }
+    @if (modeFichiers) {
+      <span class="mode">fichiers voisins</span>
+    }
   </div>
 
   @if (photos.length === 0) {
@@ -19,27 +54,50 @@
   } @else {
     <ul class="photo-list">
       @for (photo of photos; track photo.id; let i = $index) {
-        <li class="photo-item">
-          @if (urls[photo.id]) {
+        <li class="photo-item" [class.en-echec]="echecs[photo.id]">
+          @if (source(photo) && !echecs[photo.id]) {
             <img
-              [src]="urls[photo.id]"
+              [src]="source(photo)"
               [alt]="photo.name"
               class="photo-thumb"
               (click)="openPhoto(photo)"
+              (error)="onImageError(photo)"
+              (load)="onImageLoad(photo)"
               title="Ouvrir en grand"
             />
           } @else {
-            <span class="photo-thumb photo-thumb--missing" title="Image introuvable">?</span>
+            <span class="photo-thumb photo-thumb--missing" title="Image introuvable">!</span>
           }
 
-          <span class="photo-name" [title]="photo.name">{{ photo.name }}</span>
+          <div class="infos">
+            <span class="photo-name" [title]="photo.name">{{ photo.name }}</span>
+            <span class="muted chemin">
+              @if (photo.path) { {{ photo.path }} }
+              @if (photo.driveId) {
+                <span class="badge" title="Également déposée sur Google Drive">☁ Drive</span>
+              } @else {
+                <span class="badge badge--local" title="Présente uniquement sur ce poste">
+                  ⌂ local
+                </span>
+              }
+            </span>
+            @if (echecs[photo.id]) {
+              <span class="alerte">
+                Fichier introuvable — le téléchargement a-t-il abouti, et la page
+                est-elle dans le même dossier ?
+              </span>
+            }
+          </div>
 
+          @if (echecs[photo.id]) {
+            <button type="button" class="ghost" (click)="reessayer(photo)">Réessayer</button>
+          }
           <button
             type="button"
             class="ghost btn-delete remove-btn"
             (click)="removePhoto(i)"
-            [attr.aria-label]="'Supprimer ' + photo.name"
-            title="Supprimer"
+            [attr.aria-label]="'Retirer ' + photo.name"
+            title="Retirer de l'audit"
           >
             ✕
           </button>

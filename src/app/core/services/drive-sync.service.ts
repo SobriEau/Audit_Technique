@@ -85,6 +85,77 @@ export class DriveSyncService {
     return this.folderId;
   }
 
+  /**
+   * Sous-dossier propre à un audit, créé au besoin.
+   *
+   * Ranger les photos d'un bâtiment ensemble plutôt qu'en vrac : l'auditeur
+   * retrouve ses fichiers depuis le Drive lui-même, sans passer par
+   * l'application.
+   */
+  async ensureAuditFolder(auditId: string, libelle: string): Promise<string> {
+    const parent = await this.ensureFolder();
+    const nom = this.nomDeDossier(libelle);
+
+    const q = encodeURIComponent(
+      `mimeType='application/vnd.google-apps.folder' and trashed=false ` +
+        `and '${parent}' in parents and appProperties has { key='${TAG}' and value='${auditId}' }`
+    );
+    const trouve = await (await this.call(`${FILES}?q=${q}&fields=files(id)`)).json();
+    if (trouve.files?.length) return trouve.files[0].id as string;
+
+    const cree = await (
+      await this.call(FILES, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: nom,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [parent],
+          appProperties: { [TAG]: auditId },
+        }),
+      })
+    ).json();
+    return cree.id as string;
+  }
+
+  /** Dépose une image dans le dossier de l'audit et renvoie son identifiant. */
+  async uploadPhoto(blob: Blob, nom: string, dossierId: string): Promise<string> {
+    const limite = '-------sobrieau' + Date.now();
+    const metadonnees = { name: nom, parents: [dossierId] };
+
+    // Le corps multipart doit être binaire : une image passée en texte serait
+    // corrompue. On assemble donc des Blob plutôt que des chaînes.
+    // Les frontières multipart exigent des CRLF. Un littéral de gabarit
+    // normalisant ses fins de ligne en LF, il faut les écrire échappés.
+    const CRLF = '\r\n';
+    const corps = new Blob([
+      `--${limite}${CRLF}Content-Type: application/json; charset=UTF-8${CRLF}${CRLF}`,
+      JSON.stringify(metadonnees),
+      `${CRLF}--${limite}${CRLF}Content-Type: ${blob.type || 'image/jpeg'}${CRLF}${CRLF}`,
+      blob,
+      `${CRLF}--${limite}--`,
+    ]);
+
+    const r = await (
+      await this.call(`${UPLOAD}?uploadType=multipart&fields=id`, {
+        method: 'POST',
+        headers: { 'Content-Type': `multipart/related; boundary=${limite}` },
+        body: corps,
+      })
+    ).json();
+    return r.id as string;
+  }
+
+  /** Contenu d'un fichier Drive, pour l'afficher quand le local a disparu. */
+  async downloadBlob(fileId: string): Promise<Blob> {
+    return (await this.call(`${FILES}/${fileId}?alt=media`)).blob();
+  }
+
+  private nomDeDossier(libelle: string): string {
+    const base = (libelle || '').trim().replace(/[\/:*?"<>|]/g, ' ').slice(0, 70);
+    return base || 'Audit sans adresse';
+  }
+
   // ── Dépôt ────────────────────────────────────────────────────────────────
 
   /**

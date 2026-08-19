@@ -43,7 +43,6 @@
 }
 
 .photo-name {
-  flex: 1;
   min-width: 0;
   font-size: var(--fs-sm);
   color: var(--c-text);
@@ -55,4 +54,77 @@
 .remove-btn {
   flex-shrink: 0;
   padding: var(--sp-1) var(--sp-2);
+}
+
+/* ── Mode « fichiers voisins » ──────────────────────────────────────── */
+
+.mode {
+  align-self: center;
+  padding: 2px var(--sp-2);
+  border-radius: 999px;
+  background: var(--c-surface-hover);
+  color: var(--c-primary);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.infos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chemin {
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Une vignette en échec doit se voir : c'est le signal que le fichier n'a pas
+   été écrit, ou qu'il porte un autre nom que celui enregistré. */
+.photo-item.en-echec {
+  border-color: var(--c-danger-border);
+  background: var(--c-danger-bg);
+}
+
+.alerte {
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}
+
+/* ── État de synchronisation ────────────────────────────────────────── */
+
+.etat-sync {
+  align-self: center;
+  padding: 2px var(--sp-2);
+  border-radius: 999px;
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.etat-sync.complet {
+  background: var(--c-surface-hover);
+  color: var(--c-primary);
+}
+
+.badge {
+  margin-left: var(--sp-2);
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--c-surface-hover);
+  color: var(--c-primary);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Une photo qui n'existe que sur ce poste doit se remarquer : c'est elle qu'un
+   effacement du dossier ou une panne de disque ferait disparaître. */
+.badge--local {
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
 }

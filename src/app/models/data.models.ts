@@ -10,6 +10,22 @@
 export interface AssetRef {
   id: string;
   name: string;
+  /**
+   * Chemin relatif du fichier, en mode « fichiers voisins ».
+   *
+   * Renseigné uniquement lorsque la photo a été téléchargée à côté de la page.
+   * Quand il est présent, il sert de première source d'affichage.
+   */
+  path?: string;
+
+  /**
+   * Identifiant du fichier déposé sur Drive, s'il l'a été.
+   *
+   * Sert de **secours d'affichage** quand le fichier local est introuvable —
+   * déplacé, renommé, ou nettoyé du dossier de téléchargement — et de preuve
+   * que la photo ne repose plus uniquement sur ce poste.
+   */
+  driveId?: string;
 }
 
 /**

@@ -107,7 +107,33 @@
 
 <div class="panel">
   <h2>Photos de l'audit</h2>
-  <app-photo-editor [(ngModel)]="photos" (ngModelChange)="onPhotosChange()" />
+
+  <label for="photoMode">Rangement des photos</label>
+  <select id="photoMode" [value]="mode" (change)="changerMode($any($event.target).value)">
+    <option value="indexeddb">Dans le navigateur (recommandé)</option>
+    <option value="fichiers">Fichiers à côté de la page (à évaluer)</option>
+  </select>
+  <p class="muted mode-aide">
+    @if (mode === 'indexeddb') {
+      Les photos sont conservées par le navigateur. Fonctionne hors connexion,
+      mais l'export les recopie toutes : au-delà d'une trentaine, il peut échouer.
+    } @else {
+      Chaque photo est <strong>téléchargée à côté de cette page</strong> ; l'audit
+      ne garde qu'un chemin relatif. Suppose que la page se trouve dans le dossier
+      de téléchargement et que le navigateur accepte d'y écrire. Une vignette
+      signalée en rouge indique que le fichier n'a pas pu être relu.
+      <br />
+      <strong>À penser :</strong> l'application ne peut pas effacer ces fichiers.
+      Une fois l'audit transmis, il revient à l'auditeur de faire le ménage dans
+      son dossier de téléchargement.
+    }
+  </p>
+
+  <app-photo-editor
+    [(ngModel)]="photos"
+    (ngModelChange)="onPhotosChange()"
+    contexte="galerie"
+  />
 </div>
 
 <div class="panel">
