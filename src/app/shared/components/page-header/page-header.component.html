@@ -10,21 +10,34 @@
     />
   </h1>
 
-  <div class="partners" aria-label="Partenaires">
-    <img [src]="logoCerema" alt="République Française — Cerema, climat et territoires de demain" />
-    <img [src]="logoAgro" alt="AgroParisTech Innovation" />
-  </div>
-
-  <app-drive-actions />
+  <app-drive-actions [showCharger]="showCharger" />
 </header>
 </div>
 
 @if (pageTitle) {
   <div class="bar bar--nav">
     <nav class="page-nav">
-      <button class="ghost" type="button" (click)="goHome()">Accueil</button>
-      <h2>{{ pageTitle }}</h2>
+      <!-- Retour en premier (haut à gauche) : c'est le geste le plus fréquent. -->
       <button class="ghost" type="button" (click)="goBack()">← Retour</button>
+
+      @if (crumbs.length) {
+        <ol class="breadcrumb">
+          <li><a (click)="goHome()">Accueil</a></li>
+          <li><a (click)="goProject()">{{ projectLabel }}</a></li>
+          @for (c of crumbs; track c.label; let last = $last) {
+            <li [class.current]="last">
+              @if (c.link && !last) {
+                <a (click)="goCrumb(c.link)">{{ c.label }}</a>
+              } @else {
+                <span>{{ c.label }}</span>
+              }
+            </li>
+          }
+        </ol>
+      } @else {
+        <button class="ghost" type="button" (click)="goHome()">Accueil</button>
+        <h2>{{ pageTitle }}</h2>
+      }
     </nav>
   </div>
 }

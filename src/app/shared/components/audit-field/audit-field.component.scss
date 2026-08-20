@@ -3,9 +3,30 @@
   min-width: 0;
 }
 
-.unit {
+.priority {
+  display: inline-block;
+  margin-left: var(--sp-2);
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
   font-weight: normal;
-  color: var(--c-text-muted);
+  vertical-align: middle;
+  text-transform: none;
+}
+
+.priority--basse {
+  background: var(--c-priority-basse-bg);
+  color: var(--c-priority-basse-text);
+}
+
+.priority--moyenne {
+  background: var(--c-priority-moyenne-bg);
+  color: var(--c-priority-moyenne-text);
+}
+
+.priority--haute {
+  background: var(--c-priority-haute-bg);
+  color: var(--c-priority-haute-text);
 }
 
 .field-help {

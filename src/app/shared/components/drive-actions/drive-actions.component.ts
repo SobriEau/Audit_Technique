@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { DataService } from '../../../core/services/data.service';
 import {
@@ -26,6 +26,9 @@ type Menu = 'save' | 'load' | 'account' | null;
   styleUrl: './drive-actions.component.scss',
 })
 export class DriveActionsComponent implements OnInit, OnDestroy {
+  /** N'a de sens que sur l'accueil général : ailleurs il remplacerait l'audit ouvert. */
+  @Input() showCharger = false;
+
   etat: AuthState = 'disconnected';
   profil: GoogleProfile | null = null;
   code: DeviceChallenge | null = null;
@@ -137,7 +140,9 @@ export class DriveActionsComponent implements OnInit, OnDestroy {
     await this.executer('Lecture du fichier…', async () => {
       const s = await this.data.importJson(file);
       this.message = `Audit chargé : ${s.Adresse || 'sans adresse'}`;
-      // Les pages affichées tiennent une copie locale des données.
+      // Les pages affichées tiennent une copie locale des données ; on recharge
+      // en pointant directement sur l'accueil du projet importé.
+      window.location.hash = '/home';
       window.location.reload();
     });
   }
@@ -166,6 +171,7 @@ export class DriveActionsComponent implements OnInit, OnDestroy {
     await this.executer('Récupération…', async () => {
       await this.drive.pull(r.fileId);
       this.pickerOuvert = false;
+      window.location.hash = '/home';
       window.location.reload();
     });
   }

@@ -145,6 +145,13 @@ export class PlanLocatorComponent implements OnInit, OnChanges {
     this.open = false;
   }
 
+  /** Ouvre l'image du plan associé en grand, dans un nouvel onglet. */
+  openPlan(): void {
+    if (!this.location) return;
+    const url = this.urls[this.location.planId];
+    if (url) window.open(url, '_blank');
+  }
+
   clearLocation(): void {
     if (!confirm('Retirer la localisation de cet élément ?')) return;
     this.locationChange.emit(null);

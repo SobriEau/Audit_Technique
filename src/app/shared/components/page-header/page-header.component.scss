@@ -55,27 +55,10 @@
   width: auto;
 }
 
-/* Logos partenaires : présents mais discrets, ils ne doivent pas concurrencer
-   la marque ni les actions. */
-.partners {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
+/* Seul le logotype SobriEau reste dans le bandeau : les partenaires sont
+   affichés en bas de l'accueil général, pas ici sur chaque page. */
+app-drive-actions {
   margin-left: auto;
-  padding-right: var(--sp-4);
-  border-right: 1px solid var(--c-border);
-}
-
-.partners img {
-  display: block;
-  height: 38px;
-  width: auto;
-  opacity: 0.85;
-  transition: opacity var(--transition);
-}
-
-.partners img:hover {
-  opacity: 1;
 }
 
 .data-tools {
@@ -121,6 +104,46 @@
   text-align: center;
 }
 
+/* ── Fil d'Ariane ───────────────────────────────────────────────────── */
+
+.breadcrumb {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.breadcrumb li:not(:first-child)::before {
+  content: '›';
+  color: var(--c-text-faint);
+}
+
+.breadcrumb a {
+  color: var(--c-primary);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb li.current span {
+  color: var(--c-text-muted);
+  font-weight: 700;
+}
+
 .page-nav button {
   flex: 0 0 auto;
   font-size: var(--fs-sm);
@@ -131,12 +154,6 @@
 /* ── Écrans étroits ─────────────────────────────────────────────────── */
 
 @media (max-width: 980px) {
-  /* Les logos partenaires sont les premiers sacrifiés : ils informent, ils
-     n'agissent pas. */
-  .partners {
-    display: none;
-  }
-
   .data-tools {
     margin-left: auto;
   }

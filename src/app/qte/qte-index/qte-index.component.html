@@ -1,20 +1,17 @@
-<app-page-header pageTitle="Audit Technique" />
+<app-page-header pageTitle="Audit Technique" [crumbs]="[{ label: 'Audit technique' }]" />
 
-<div class="panel">
-  <label>Info</label>
-  <app-rich-editor [(ngModel)]="info" (ngModelChange)="saveInfo()" />
-</div>
-
-<div class="panel">
-  <h2>Sections</h2>
-  <div class="grid">
-    @for (s of sections; track s.key) {
-      <button type="button" class="card-btn" (click)="navigate(s)">
-        <span>{{ s.plural }}</span>
-        @if (count(s) !== null) {
-          <span class="count">{{ count(s) }}</span>
-        }
-      </button>
-    }
+@for (group of groups; track group.label) {
+  <div class="panel">
+    <h2>{{ group.label }}</h2>
+    <div class="grid">
+      @for (s of group.sections; track s.key) {
+        <button type="button" class="card-btn" (click)="navigate(s)">
+          <span>{{ s.plural }}</span>
+          @if (count(s) !== null) {
+            <span class="count">{{ count(s) }}</span>
+          }
+        </button>
+      }
+    </div>
   </div>
-</div>
+}

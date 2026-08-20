@@ -5,6 +5,16 @@ import { DataService } from '../../../core/services/data.service';
 import { AuditEntity } from '../../../models/data.models';
 import { RichEditorComponent } from '../rich-editor/rich-editor.component';
 import { PhotoEditorComponent } from '../photo-editor/photo-editor.component';
+import { FIELD_PRIORITY, Priority } from '../../../models/field-priority';
+
+/**
+ * Aide affichée quand le classeur n'en porte pas, pour un champ générique
+ * partagé par (presque) toutes les entités. Écrit ici plutôt que répété dans
+ * `audit_technique.xlsx` pour une quinzaine d'onglets.
+ */
+const GENERIC_HELP: Record<string, string> = {
+  Emplacement: 'Reprendre le nom de la pièce indiqué sur le plan.',
+};
 
 /** Un choix possible, quel que soit le type sous-jacent du champ. */
 export interface Choice {
@@ -70,6 +80,16 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
   refOptions: AuditEntity[] = [];
 
   readonly uid = `af-${++uniqueId}`;
+
+  /** Aide effective : celle du classeur, sinon celle d'un champ générique connu. */
+  get effectiveHelp(): string | null {
+    return this.def.help ?? GENERIC_HELP[this.def.key] ?? null;
+  }
+
+  /** Priorité de remplissage, si ce champ en porte une. */
+  get priority(): Priority | null {
+    return FIELD_PRIORITY[this.def.key] ?? null;
+  }
 
   // ── État de la liste filtrable ───────────────────────────────────────────
   comboOpen = false;

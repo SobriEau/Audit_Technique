@@ -115,6 +115,7 @@ export class AuditRegistryService {
       AdresseKey: data.AdresseKey,
       Auditeur: data.Auditeur ?? null,
       Date: data.Date ?? null,
+      NomProjet: data.NomProjet ?? null,
       UpdatedAt: new Date().toISOString(),
     };
 
@@ -169,6 +170,8 @@ export class AuditRegistryService {
       !data.Info &&
       !data.Auditeur &&
       !data.Date &&
+      !data.NomProjet &&
+      !data.NomSite &&
       !(data.Plans ?? []).length &&
       !(data.Photos ?? []).length &&
       !Object.keys(data.Qge ?? {}).length &&

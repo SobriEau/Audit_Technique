@@ -1,0 +1,60 @@
+.audit-list {
+  list-style: none;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.audit-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+}
+
+.audit-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--sp-3);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--r-md);
+}
+
+.audit-open:hover {
+  background: var(--c-surface-hover);
+}
+
+.audit-item button.btn-delete {
+  flex-shrink: 0;
+  margin-right: var(--sp-2);
+}
+
+/* ── Logos des financeurs, en bas de l'accueil général ──────────────── */
+
+.financeurs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-border);
+}
+
+.financeurs img {
+  display: block;
+  height: 38px;
+  width: auto;
+  opacity: 0.85;
+}

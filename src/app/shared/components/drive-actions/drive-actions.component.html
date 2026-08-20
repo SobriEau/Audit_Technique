@@ -4,7 +4,7 @@
   <!-- ── Enregistrer ─────────────────────────────────────────────── -->
   <div class="groupe">
     <button type="button" class="primary" [disabled]="!!occupe" (click)="enregistrer()">
-      Enregistrer
+      Sauvegarder l'audit
     </button>
     @if (menu === 'save') {
       <div class="menu" role="menu">
@@ -21,23 +21,25 @@
   </div>
 
   <!-- ── Charger ─────────────────────────────────────────────────── -->
-  <div class="groupe">
-    <button type="button" class="secondary" [disabled]="!!occupe" (click)="charger(fichier)">
-      Charger
-    </button>
-    @if (menu === 'load') {
-      <div class="menu" role="menu">
-        <button type="button" role="menuitem" (click)="depuisAppareil(fichier)">
-          <strong>Depuis cet appareil</strong>
-          <span class="muted">Choisir un fichier JSON</span>
-        </button>
-        <button type="button" role="menuitem" (click)="depuisDrive()">
-          <strong>Depuis Google Drive</strong>
-          <span class="muted">Parmi vos audits déposés</span>
-        </button>
-      </div>
-    }
-  </div>
+  @if (showCharger) {
+    <div class="groupe">
+      <button type="button" class="secondary" [disabled]="!!occupe" (click)="charger(fichier)">
+        Charger
+      </button>
+      @if (menu === 'load') {
+        <div class="menu" role="menu">
+          <button type="button" role="menuitem" (click)="depuisAppareil(fichier)">
+            <strong>Depuis cet appareil</strong>
+            <span class="muted">Choisir un fichier JSON</span>
+          </button>
+          <button type="button" role="menuitem" (click)="depuisDrive()">
+            <strong>Depuis Google Drive</strong>
+            <span class="muted">Parmi vos audits déposés</span>
+          </button>
+        </div>
+      }
+    </div>
+  }
 
   <!-- ── Compte ──────────────────────────────────────────────────── -->
   @if (configure) {

@@ -2,6 +2,11 @@
   <button type="button" class="ghost" [disabled]="!hasPlans" (click)="openDialog()">
     📍 {{ location ? 'Modifier la localisation' : 'Localiser sur le plan' }}
   </button>
+  @if (location && currentPlan) {
+    <button type="button" class="ghost" (click)="openPlan()">
+      Ouvrir le plan
+    </button>
+  }
 </div>
 
 @if (!hasPlans) {

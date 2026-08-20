@@ -40,6 +40,16 @@
   --c-danger-border: #f0d6d6;
   --c-danger-bg: #fff0f0;
 
+  /* ── Priorité de champ (dégradé d'orange, jamais rouge/vert :
+     un badge de priorité ne doit pas se confondre avec un état
+     d'erreur ou de validation) ────────────────────────────── */
+  --c-priority-basse-bg: #fff3e0;
+  --c-priority-basse-text: #a15c00;
+  --c-priority-moyenne-bg: #ffe0b2;
+  --c-priority-moyenne-text: #8a4a00;
+  --c-priority-haute-bg: #ffb74d;
+  --c-priority-haute-text: #5c2e00;
+
   /* ── Rayons ─────────────────────────────────────────────── */
   --r-sm: 6px;
   --r-md: 8px;
@@ -230,6 +240,34 @@ label {
 .actions--top {
   margin-top: 0;
   margin-bottom: var(--sp-3);
+}
+
+/**
+ * Barre d'actions fixée en bas de l'écran (fiches d'élément) : Valider doit
+ * rester un point de passage obligatoire, visible sans avoir à défiler,
+ * symétrique de l'en-tête `sticky` en haut de page.
+ *
+ * `position: fixed` échappe d'elle-même à la largeur de `body` (colonne
+ * centrée) : pas besoin des marges négatives en `vw` qu'utilise l'en-tête.
+ */
+.actions--fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  margin: 0;
+  justify-content: center;
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border);
+  box-shadow: 0 -2px 10px rgba(11, 86, 107, 0.07);
+}
+
+/* Réserve la place occupée par `.actions--fixed`, pour qu'elle ne recouvre
+   pas le dernier bloc de la page. */
+.actions-spacer {
+  height: 76px;
 }
 
 /* ── Éditeur JSON (Qge, Qus, sections QTE génériques) ─────── */

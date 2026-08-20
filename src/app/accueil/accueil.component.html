@@ -1,0 +1,39 @@
+<app-page-header [showCharger]="true" />
+
+<div class="panel">
+  <h2>Vos audits</h2>
+
+  @if (audits.length === 0) {
+    <p class="muted">Aucun audit enregistré sur ce poste pour l'instant.</p>
+  } @else {
+    <ul class="audit-list">
+      @for (a of audits; track a.Id) {
+        <li class="audit-item">
+          <button type="button" class="audit-open" (click)="ouvrir(a.Id)">
+            <strong>{{ libelle(a) }}</strong>
+            @if (a.Adresse && a.NomProjet) {
+              <span class="muted">{{ a.Adresse }}</span>
+            }
+          </button>
+          <button
+            type="button"
+            class="ghost btn-delete"
+            (click)="supprimer(a, $event)"
+            [attr.aria-label]="'Supprimer ' + libelle(a)"
+          >
+            Supprimer
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="actions actions--top">
+    <button type="button" class="primary" (click)="nouveau()">+ Nouvel audit</button>
+  </div>
+</div>
+
+<footer class="financeurs">
+  <img [src]="logoCerema" alt="République Française — Cerema, climat et territoires de demain" />
+  <img [src]="logoAgro" alt="AgroParisTech Innovation" />
+</footer>

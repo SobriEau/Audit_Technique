@@ -1,8 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { LOGO_AGROPARISTECH, LOGO_CEREMA, LOGO_SOBRIEAU } from '../../logos';
+import { LOGO_SOBRIEAU } from '../../logos';
 import { DriveActionsComponent } from '../drive-actions/drive-actions.component';
 import { storageAvailable } from '../../../core/utils/safe-storage';
+import { DataService } from '../../../core/services/data.service';
+
+/** Un maillon du fil d'Ariane, au-delà de « Accueil » et du projet (fournis d'office). */
+export interface Crumb {
+  label: string;
+  link?: string[];
+}
 
 /**
  * Composant partagé : en-tête SobriEau.
@@ -29,14 +36,27 @@ import { storageAvailable } from '../../../core/utils/safe-storage';
 })
 export class PageHeaderComponent {
   readonly logoSobrieau = LOGO_SOBRIEAU;
-  readonly logoCerema = LOGO_CEREMA;
-  readonly logoAgro = LOGO_AGROPARISTECH;
 
   /** Titre de la page. S'il est absent, la barre de navigation n'est pas rendue. */
   @Input() pageTitle?: string;
 
-  /** Cible du bouton « Retour ». Par défaut, la page parente est l'accueil. */
+  /** Cible du bouton « Retour ». Par défaut, la page parente est l'accueil du projet. */
   @Input() backTo: string[] = ['/home'];
+
+  /**
+   * Fil d'Ariane au-delà de « Accueil » et du projet en cours, fournis
+   * automatiquement par ce composant. Vide : la barre affiche le titre simple
+   * (Accueil / titre / Retour) ; renseigné : elle affiche le fil complet
+   * jusqu'à cinq niveaux (Accueil > Projet > Section > … > page courante).
+   */
+  @Input() crumbs: Crumb[] = [];
+
+  /**
+   * Le bouton « Charger » n'a de sens que sur l'accueil général : ailleurs, il
+   * remplacerait l'audit ouvert sans qu'on l'ait demandé. Seul l'accueil
+   * général le passe à `true`.
+   */
+  @Input() showCharger = false;
 
   /**
    * Certains postes refusent l'accès au stockage. L'application reste
@@ -45,14 +65,29 @@ export class PageHeaderComponent {
    */
   readonly stockageIndisponible = !storageAvailable();
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private data: DataService) {}
 
+  /** Nom affiché pour le projet en cours dans le fil d'Ariane. */
+  get projectLabel(): string {
+    const d = this.data.data;
+    return d.NomProjet?.trim() || d.Adresse?.trim() || 'Projet';
+  }
+
+  /** Accueil général : choix du projet. */
   goHome(): void {
+    this.router.navigate(['/accueil']);
+  }
+
+  /** Accueil du projet ouvert. */
+  goProject(): void {
     this.router.navigate(['/home']);
+  }
+
+  goCrumb(link: string[]): void {
+    this.router.navigate(link);
   }
 
   goBack(): void {
     this.router.navigate(this.backTo);
   }
-
 }

@@ -5,7 +5,11 @@
 }
 
 @if (def && !def.single) {
-  <app-page-header [pageTitle]="def.plural" [backTo]="['/qte']" />
+  <app-page-header
+    [pageTitle]="def.plural"
+    [backTo]="['/qte']"
+    [crumbs]="[{ label: 'Audit technique', link: ['/qte'] }, { label: def.plural }]"
+  />
 
   <p class="muted">
     Liste des éléments saisis. Cliquez sur une ligne pour ouvrir sa fiche.

@@ -50,6 +50,13 @@ export class PhotoEditorComponent implements ControlValueAccessor {
   /** Sert à composer un nom de fichier lisible en mode « fichiers voisins ». */
   @Input() contexte = 'audit';
 
+  /**
+   * Consultation seule : masque l'ajout et la suppression. Sert à l'accueil du
+   * projet, dont la galerie ne fait que rassembler les photos déjà prises dans
+   * les fiches techniques (KAPT, 260818).
+   */
+  @Input() readonly = false;
+
   photos: AssetRef[] = [];
 
   /** URL d'affichage par identifiant, résolue depuis IndexedDB. */

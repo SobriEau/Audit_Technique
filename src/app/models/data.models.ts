@@ -26,6 +26,9 @@ export interface AssetRef {
    * que la photo ne repose plus uniquement sur ce poste.
    */
   driveId?: string;
+
+  /** Date du plan (ex. date du relevé), au format `input[type=date]`. Facultative. */
+  date?: string | null;
 }
 
 /**
@@ -133,6 +136,8 @@ export interface AuditSummary {
   AdresseKey: string;
   Auditeur?: string | null;
   Date?: string | null;
+  /** Nom libre donné au projet, pour l'identifier dans la liste des audits. */
+  NomProjet?: string | null;
   /** Horodatage ISO de la dernière écriture, pour trier du plus récent. */
   UpdatedAt: string;
 }
@@ -143,6 +148,10 @@ export interface AppData {
   Adresse?: string | null;
   /** Forme normalisée de `Adresse`, recalculée à chaque enregistrement. */
   AdresseKey?: string;
+  /** Nom libre donné au projet (n'importe pas pour le rapprochement, voir Adresse). */
+  NomProjet?: string | null;
+  /** Nom du site audité (site et bâtiment), distinct de l'adresse postale. */
+  NomSite?: string | null;
   Info?: string | null;
   Date?: string | null;
   Auditeur?: string | null;

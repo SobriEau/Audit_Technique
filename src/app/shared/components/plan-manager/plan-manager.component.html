@@ -28,14 +28,31 @@
           <span class="plan-thumb plan-thumb--missing">?</span>
         }
 
-        <input
-          type="text"
-          class="plan-name"
-          [(ngModel)]="plan.name"
-          (change)="rename()"
-          placeholder="Nom du plan"
-          [attr.aria-label]="'Nom du plan ' + (i + 1)"
-        />
+        <div class="plan-fields">
+          <label [attr.for]="'plan-titre-' + i">Titre du plan</label>
+          <input
+            [id]="'plan-titre-' + i"
+            type="text"
+            class="plan-name"
+            [(ngModel)]="plan.name"
+            (change)="rename()"
+            placeholder="Nom du plan"
+            [attr.aria-label]="'Nom du plan ' + (i + 1)"
+          />
+          <p class="muted field-help">
+            Un nom représentatif (étage, bâtiment…) aide à s'y retrouver depuis les fiches.
+          </p>
+
+          <label [attr.for]="'plan-date-' + i">Date du plan</label>
+          <input
+            [id]="'plan-date-' + i"
+            type="date"
+            class="plan-date"
+            [(ngModel)]="plan.date"
+            (change)="rename()"
+            [attr.aria-label]="'Date du plan ' + (i + 1)"
+          />
+        </div>
 
         <button
           type="button"
@@ -44,7 +61,7 @@
           title="Supprimer ce plan"
           [attr.aria-label]="'Supprimer ' + plan.name"
         >
-          ✕
+          🗑
         </button>
       </li>
     }

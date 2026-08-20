@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DataService } from '../../core/services/data.service';
-import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { PageHeaderComponent, Crumb } from '../../shared/components/page-header/page-header.component';
 import { AuditFieldComponent } from '../../shared/components/audit-field/audit-field.component';
 import { PlanLocatorComponent } from '../../shared/components/plan-locator/plan-locator.component';
 import { PhotoEditorComponent } from '../../shared/components/photo-editor/photo-editor.component';
@@ -118,6 +118,37 @@ export class EntityFormComponent implements OnInit {
     return this.def.single ? ['/qte'] : ['/qte', this.def.route];
   }
 
+  get crumbs(): Crumb[] {
+    if (!this.def) return [];
+    if (this.def.single) {
+      return [{ label: 'Audit technique', link: ['/qte'] }, { label: this.title }];
+    }
+    return [
+      { label: 'Audit technique', link: ['/qte'] },
+      { label: this.def.plural, link: ['/qte', this.def.route] },
+      { label: this.title },
+    ];
+  }
+
+  /**
+   * Lignes du classeur jusqu'à celle d'Emplacement incluse, et le reste.
+   * Sépare le point d'insertion du bloc de localisation, qui doit apparaître
+   * juste après ce champ plutôt qu'en fin de fiche.
+   */
+  private get locationRowIndex(): number {
+    return this.formRows.findIndex((row) => row.some((f) => f.key === 'Emplacement'));
+  }
+
+  get rowsBeforeLocation(): FieldDef[][] {
+    const i = this.locationRowIndex;
+    return i === -1 ? [] : this.formRows.slice(0, i + 1);
+  }
+
+  get rowsAfterLocation(): FieldDef[][] {
+    const i = this.locationRowIndex;
+    return i === -1 ? this.formRows : this.formRows.slice(i + 1);
+  }
+
   get photos(): AssetRef[] {
     return (this.item['Photos'] as AssetRef[]) ?? [];
   }
@@ -159,6 +190,29 @@ export class EntityFormComponent implements OnInit {
   save(): void {
     this.persist();
     this.router.navigate(this.backTo);
+  }
+
+  /** Quitte la fiche sans enregistrer les changements en cours. */
+  annuler(): void {
+    this.router.navigate(this.backTo);
+  }
+
+  /**
+   * Crée un nouvel élément reprenant tous les champs de la fiche courante.
+   *
+   * Ni l'`Id` (attribué une fois pour toutes, `createEntity` s'en charge), ni
+   * les photos ne sont recopiés : deux éléments partageant les mêmes
+   * références d'images se supprimeraient l'une l'autre au premier ménage
+   * (voir `DataService.deleteEntity`).
+   */
+  duplicate(): void {
+    if (this.def.single) return;
+    this.persist();
+
+    const created = this.data.createEntity(this.def.key);
+    const clone: Record_ = { ...this.item, Id: created.Id, Numero: created.Numero, Photos: [] };
+    this.data.updateEntity(this.def.key, clone as never);
+    this.router.navigate(['/qte', this.def.route, created.Id]);
   }
 
   async remove(): Promise<void> {

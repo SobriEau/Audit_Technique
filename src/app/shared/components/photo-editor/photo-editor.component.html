@@ -28,12 +28,14 @@
   }
 
   <div class="actions actions--top">
-    <button type="button" class="primary" [disabled]="busy" (click)="triggerCamera()">
-      Prendre une photo
-    </button>
-    <button type="button" class="ghost" [disabled]="busy" (click)="triggerPicker()">
-      {{ busy ? 'Ajout en cours…' : 'Choisir des fichiers' }}
-    </button>
+    @if (!readonly) {
+      <button type="button" class="primary" [disabled]="busy" (click)="triggerCamera()">
+        Prendre une photo
+      </button>
+      <button type="button" class="ghost" [disabled]="busy" (click)="triggerPicker()">
+        {{ busy ? 'Ajout en cours…' : 'Choisir des fichiers' }}
+      </button>
+    }
 
     @if (photos.length) {
       <span
@@ -97,18 +99,20 @@
             }
           </div>
 
-          @if (echecs[photo.id]) {
-            <button type="button" class="ghost" (click)="reessayer(photo)">Réessayer</button>
+          @if (!readonly) {
+            @if (echecs[photo.id]) {
+              <button type="button" class="ghost" (click)="reessayer(photo)">Réessayer</button>
+            }
+            <button
+              type="button"
+              class="ghost btn-delete remove-btn"
+              (click)="removePhoto(i)"
+              [attr.aria-label]="'Retirer ' + photo.name"
+              title="Retirer de l'audit"
+            >
+              ✕
+            </button>
           }
-          <button
-            type="button"
-            class="ghost btn-delete remove-btn"
-            (click)="removePhoto(i)"
-            [attr.aria-label]="'Retirer ' + photo.name"
-            title="Retirer de l'audit"
-          >
-            ✕
-          </button>
         </li>
       }
     </ul>

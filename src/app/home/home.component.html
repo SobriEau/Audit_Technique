@@ -1,37 +1,27 @@
-<app-page-header />
+<app-page-header pageTitle="Projet" [backTo]="['/accueil']" />
 
 <div class="panel">
   <h2>Audit</h2>
 
-  <div class="audit-bar">
-    <div class="audit-pick">
-      <label for="auditSel">Audit ouvert</label>
-      <select
-        id="auditSel"
-        [value]="auditCourantId"
-        (change)="ouvrirAudit($any($event.target).value)"
-      >
-        @for (a of audits; track a.Id) {
-          <option [value]="a.Id">{{ libelle(a) }}</option>
-        }
-      </select>
-    </div>
+  <label for="nomProjet">Nom du projet</label>
+  <input
+    id="nomProjet"
+    type="text"
+    placeholder="Ex. Rénovation groupe scolaire Jean Moulin"
+    [(ngModel)]="nomProjet"
+    (blur)="autoSave()"
+  />
+  <p class="muted field-help">Facultatif : sert à identifier le projet dans la liste des audits.</p>
 
-    <div class="audit-actions">
-      <button type="button" class="ghost" (click)="nouvelAudit()">+ Nouvel audit</button>
-      <button type="button" class="ghost btn-delete" (click)="supprimerAudit()">
-        Supprimer
-      </button>
-    </div>
-  </div>
+  <label for="nomSite">Nom du site audité</label>
+  <input
+    id="nomSite"
+    type="text"
+    placeholder="Ex. École Jean Moulin, bâtiment B"
+    [(ngModel)]="nomSite"
+    (blur)="autoSave()"
+  />
 
-  <p class="muted audit-hint">
-    {{ audits.length }} audit(s) conservé(s) sur ce poste. Changer d'adresse propose
-    d'ouvrir l'audit correspondant ou d'en commencer un nouveau.
-  </p>
-</div>
-
-<div class="panel">
   <label for="adresse">Adresse</label>
   <input
     id="adresse"
@@ -41,6 +31,7 @@
     [(ngModel)]="adresse"
     (blur)="onAdresseBlur()"
   />
+  <p class="muted field-help">Voie et numéro, code postal, commune.</p>
   <!-- Les adresses déjà saisies sont proposées : on choisit au lieu de retaper,
        ce qui évite les quasi-doublons que la normalisation ne rapproche pas. -->
   <datalist id="adresses-connues">
@@ -84,20 +75,26 @@
     </div>
   }
 
-  <label>Info</label>
+  <label>Informations complémentaires</label>
+  <p class="muted field-help">Toute information utile à la compréhension de l'audit.</p>
   <app-rich-editor [(ngModel)]="info" (ngModelChange)="autoSave()" />
 
-  <label for="date">Date</label>
+  <label for="date">Date de début de la visite terrain</label>
   <input id="date" type="date" [(ngModel)]="date" (change)="autoSave()" />
 
-  <label for="auditeur">Auditeur</label>
+  <label for="auditeur">Nom, prénom de l'auditeur</label>
   <input
     id="auditeur"
     type="text"
     [(ngModel)]="auditeur"
-    placeholder="Nom de l'auditeur"
+    placeholder="Jean Dupont"
     (blur)="autoSave()"
   />
+
+  <p class="muted rappel-enregistrer">
+    Pensez à enregistrer ou exporter régulièrement l'audit : sans cela, une
+    fermeture accidentelle du poste peut faire perdre la saisie en cours.
+  </p>
 </div>
 
 <div class="panel">
@@ -107,6 +104,10 @@
 
 <div class="panel">
   <h2>Photos de l'audit</h2>
+  <p class="muted">
+    Galerie des photos déjà prises dans les fiches techniques. Pour en ajouter,
+    ouvrez la fiche de l'élément concerné.
+  </p>
 
   <label for="photoMode">Rangement des photos</label>
   <select id="photoMode" [value]="mode" (change)="changerMode($any($event.target).value)">
@@ -133,25 +134,19 @@
     [(ngModel)]="photos"
     (ngModelChange)="onPhotosChange()"
     contexte="galerie"
+    [readonly]="true"
   />
 </div>
 
 <div class="panel">
   <div class="buttons">
-    <button class="nav-btn nav-btn--qge" (click)="nav('qge')">
-      Questionnaire gestionnaire
-    </button>
-    <button class="nav-btn nav-btn--qus" (click)="nav('qus')">
-      Questionnaire usager
-    </button>
     <button class="nav-btn nav-btn--qte" (click)="nav('qte')">
-      Audit Technique
+      Démarrer l'audit technique
     </button>
   </div>
 </div>
 
 <footer class="muted">
-  Les données sont sauvegardées automatiquement dans le localStorage.
   <button type="button" class="lien" (click)="nav('telecharger')">
     Télécharger l'application
   </button>

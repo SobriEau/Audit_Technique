@@ -14,6 +14,13 @@ type Arbitrage =
   | { genre: 'existe'; adresse: string; cible: AuditSummary }
   | { genre: 'inedite'; adresse: string };
 
+/**
+ * Accueil du projet ouvert : identité de l'audit (adresse, nom, auditeur…),
+ * plans et photos. Le choix du projet lui-même (reprendre / créer / charger)
+ * vit désormais sur l'accueil général (`AccueilComponent`, route `/accueil`) —
+ * les deux étaient mélangés ici avant la scission (retours KAPT, Victor,
+ * Sacha — réunion du 260818).
+ */
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -29,11 +36,14 @@ type Arbitrage =
 })
 export class HomeComponent implements OnInit {
   adresse = '';
+  nomProjet = '';
+  nomSite = '';
   info = '';
   date = '';
   auditeur = '';
   photos: AssetRef[] = [];
 
+  /** Sert uniquement à proposer les adresses déjà connues (datalist) ci-dessous. */
   audits: AuditSummary[] = [];
 
   /** Non nul tant que l'auditeur n'a pas tranché un changement d'adresse. */
@@ -51,42 +61,14 @@ export class HomeComponent implements OnInit {
   private recharger(): void {
     const d = this.dataService.data;
     this.adresse = d.Adresse ?? '';
+    this.nomProjet = d.NomProjet ?? '';
+    this.nomSite = d.NomSite ?? '';
     this.info = d.Info ?? '';
     this.date = d.Date ?? '';
     this.auditeur = d.Auditeur ?? '';
     this.photos = d.Photos ?? [];
     this.audits = this.dataService.listAudits();
     this.arbitrage = null;
-  }
-
-  get auditCourantId(): string {
-    return this.dataService.currentAuditId;
-  }
-
-  /** Libellé d'un audit dans la liste : l'adresse, ou un repère à défaut. */
-  libelle(a: AuditSummary): string {
-    return a.Adresse?.trim() || `Audit sans adresse (${a.Date ?? a.UpdatedAt.slice(0, 10)})`;
-  }
-
-  // ── Changement d'audit ───────────────────────────────────────────────────
-
-  ouvrirAudit(id: string): void {
-    if (!id || id === this.auditCourantId) return;
-    this.dataService.openAudit(id);
-    this.recharger();
-  }
-
-  nouvelAudit(): void {
-    this.dataService.newAudit();
-    this.recharger();
-  }
-
-  async supprimerAudit(): Promise<void> {
-    const nom = this.adresse.trim() || 'cet audit';
-    if (!confirm(`Supprimer définitivement « ${nom} », photos et plans compris ?`)) return;
-
-    await this.dataService.deleteAudit(this.auditCourantId);
-    this.recharger();
   }
 
   // ── Adresse ──────────────────────────────────────────────────────────────
@@ -107,7 +89,6 @@ export class HomeComponent implements OnInit {
 
     if (this.dataService.isSameAddress(saisie)) {
       this.dataService.renameCurrentAudit(saisie);
-      this.audits = this.dataService.listAudits();
       return;
     }
 
@@ -119,7 +100,6 @@ export class HomeComponent implements OnInit {
 
     if (this.dataService.currentIsEmpty) {
       this.dataService.renameCurrentAudit(saisie);
-      this.audits = this.dataService.listAudits();
       return;
     }
 
@@ -157,11 +137,12 @@ export class HomeComponent implements OnInit {
 
   autoSave(): void {
     const d = this.dataService.data;
+    d.NomProjet = this.nomProjet || null;
+    d.NomSite = this.nomSite || null;
     d.Info = this.info || null;
     d.Date = this.date || null;
     d.Auditeur = this.auditeur || null;
     this.dataService.save();
-    this.audits = this.dataService.listAudits();
   }
 
   changerMode(m: string): void {

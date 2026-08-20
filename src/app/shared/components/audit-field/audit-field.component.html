@@ -3,7 +3,10 @@
        qu'une étiquette, puisqu'aucun contrôle unique ne la porte. -->
   <fieldset class="radio-field">
     <legend>
-      {{ def.label }}@if (def.unit) {<span class="unit">&nbsp;({{ def.unit }})</span>}
+      {{ def.label }}
+      @if (priority) {
+        <span class="priority" [class]="'priority--' + priority">Priorité : {{ priority }}</span>
+      }
     </legend>
 
     <div class="radio-group">
@@ -29,7 +32,10 @@
   </fieldset>
 } @else {
   <label [attr.for]="uid">
-    {{ def.label }}@if (def.unit) {<span class="unit">&nbsp;({{ def.unit }})</span>}
+    {{ def.label }}
+    @if (priority) {
+      <span class="priority" [class]="'priority--' + priority">Priorité : {{ priority }}</span>
+    }
   </label>
 
   @switch (def.kind) {
@@ -147,8 +153,11 @@
   }
 }
 
-@if (def.help) {
-  <p class="muted field-help">{{ def.help }}</p>
+@if (effectiveHelp) {
+  <p class="muted field-help">{{ effectiveHelp }}</p>
+}
+@if (def.unit) {
+  <p class="muted field-help">Unité : {{ def.unit }}</p>
 }
 @if (def.warn) {
   <p class="field-warn" title="Point à arbitrer, issu du classeur de spécification">

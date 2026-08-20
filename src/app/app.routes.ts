@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AccueilComponent } from './accueil/accueil.component';
 import { HomeComponent } from './home/home.component';
 import { QgeComponent } from './qge/qge.component';
 import { QusComponent } from './qus/qus.component';
@@ -8,7 +9,10 @@ import { EntityFormComponent } from './qte/entity-form/entity-form.component';
 import { TelechargerComponent } from './telecharger/telecharger.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '', redirectTo: 'accueil', pathMatch: 'full' },
+  // Accueil général : choix du projet (reprendre, créer, charger).
+  { path: 'accueil', component: AccueilComponent },
+  // Accueil du projet ouvert : adresse, informations, plans, photos.
   { path: 'home', component: HomeComponent },
   { path: 'qge', component: QgeComponent },
   { path: 'qus', component: QusComponent },
