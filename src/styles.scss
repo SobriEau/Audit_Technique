@@ -261,17 +261,34 @@ label {
   bottom: 0;
   z-index: 45;
   margin: 0;
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
   padding: var(--sp-3) var(--sp-5);
   background: var(--c-surface);
   border-top: 1px solid var(--c-border);
   box-shadow: 0 -2px 10px rgba(11, 86, 107, 0.07);
 }
 
+.actions-fixed-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+.annuler-note {
+  margin: 0;
+  max-width: 640px;
+  text-align: center;
+  font-size: var(--fs-sm);
+}
+
 /* Réserve la place occupée par `.actions--fixed`, pour qu'elle ne recouvre
    pas le dernier bloc de la page. */
 .actions-spacer {
-  height: 76px;
+  height: 108px;
 }
 
 /* ── Éditeur JSON (Qge, Qus, sections QTE génériques) ─────── */

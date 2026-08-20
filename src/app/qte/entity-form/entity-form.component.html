@@ -43,10 +43,18 @@
   </div>
 
   <div class="actions actions--fixed">
-    <button class="primary" (click)="save()">Valider</button>
-    @if (!def.single) {
-      <button class="ghost btn-delete" (click)="remove()">Supprimer</button>
-    }
+    <div class="actions-fixed-row">
+      <button class="primary" (click)="save()">Valider</button>
+      <button class="ghost" (click)="annuler()">Annuler</button>
+      @if (!def.single) {
+        <button class="ghost btn-delete" (click)="remove()">Supprimer</button>
+      }
+    </div>
+    <p class="muted annuler-note">
+      Annuler abandonne les champs de cette fiche non validés, mais pas les
+      photos ni la localisation déjà posée : celles-ci sont enregistrées
+      immédiatement.
+    </p>
   </div>
 
   <!-- Pousse le contenu au-dessus de la barre d'actions fixe. -->

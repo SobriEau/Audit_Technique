@@ -192,6 +192,17 @@ export class EntityFormComponent implements OnInit {
     this.router.navigate(this.backTo);
   }
 
+  /**
+   * Quitte la fiche sans enregistrer les champs texte en cours.
+   *
+   * Les photos et la localisation ne sont pas concernées : elles sont déjà
+   * enregistrées (voir `onPhotosChange`/`onLocationChange`), Annuler ne les
+   * retire donc pas — c'est signalé à l'écran plutôt que laissé deviner.
+   */
+  annuler(): void {
+    this.router.navigate(this.backTo);
+  }
+
   async remove(): Promise<void> {
     if (this.def.single) return;
     if (!confirm('Supprimer cet élément ?')) return;
