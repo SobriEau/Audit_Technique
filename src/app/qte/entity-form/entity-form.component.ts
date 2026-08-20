@@ -192,11 +192,6 @@ export class EntityFormComponent implements OnInit {
     this.router.navigate(this.backTo);
   }
 
-  /** Quitte la fiche sans enregistrer les changements en cours. */
-  annuler(): void {
-    this.router.navigate(this.backTo);
-  }
-
   async remove(): Promise<void> {
     if (this.def.single) return;
     if (!confirm('Supprimer cet élément ?')) return;
