@@ -43,7 +43,10 @@
             Un nom représentatif (étage, bâtiment…) aide à s'y retrouver depuis les fiches.
           </p>
 
-          <label [attr.for]="'plan-date-' + i">Date du plan</label>
+          <label [attr.for]="'plan-date-' + i">
+            Date du plan
+            <span class="badge-neutre">Facultatif</span>
+          </label>
           <input
             [id]="'plan-date-' + i"
             type="date"

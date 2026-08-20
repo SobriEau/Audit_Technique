@@ -99,3 +99,50 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+
+/* ── Prévisualisation zoomable ────────────────────────────────────────── */
+
+.preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.preview-name {
+  font-weight: 700;
+  color: var(--c-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zoom-level {
+  min-width: 4ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-muted);
+}
+
+/* `overflow: auto` permet de se déplacer par défilement une fois zoomé ;
+   pas de geste de glisser-déposer à gérer en plus. */
+.preview-viewport {
+  overflow: auto;
+  max-height: 70vh;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-alt);
+}
+
+.preview-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  transform-origin: top left;
+  transition: transform var(--transition);
+}
+
+.preview-hint {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sm);
+}

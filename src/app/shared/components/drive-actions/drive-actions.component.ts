@@ -10,14 +10,22 @@ import {
 import { DriveSyncService, RemoteAudit } from '../../../core/services/drive-sync.service';
 
 /** Menu ouvert sous un bouton, quand deux destinations sont possibles. */
-type Menu = 'save' | 'load' | 'account' | null;
+type Menu = 'save' | 'account' | null;
 
 /**
- * Enregistrement, chargement et compte Google, dans l'en-tête.
+ * Enregistrement, chargement et compte Google.
  *
- * Hors connexion, « Enregistrer » et « Charger » agissent directement sur
- * l'appareil : inutile de demander à choisir quand il n'y a qu'une possibilité.
- * Une fois connecté, chaque bouton propose l'appareil ou le Drive.
+ * Deux présentations, choisies par `layout` :
+ *  - `'header'` (par défaut) : Enregistrer et Connexion, dans l'en-tête de
+ *    chaque page. Charger n'y figure plus : il remplacerait l'audit ouvert
+ *    sans qu'on l'ait demandé, et n'a de sens que sur l'accueil général.
+ *  - `'accueil'` : les deux façons de charger un projet (fichier, Google
+ *    Drive), en boutons directement visibles dans la page — pas de menu à
+ *    dérouler, puisque c'est tout ce que fait l'accueil général.
+ *
+ * Hors connexion, « Enregistrer » agit directement sur l'appareil : inutile
+ * de demander à choisir quand il n'y a qu'une possibilité. Une fois
+ * connecté, il propose l'appareil ou le Drive.
  */
 @Component({
   selector: 'app-drive-actions',
@@ -26,8 +34,7 @@ type Menu = 'save' | 'load' | 'account' | null;
   styleUrl: './drive-actions.component.scss',
 })
 export class DriveActionsComponent implements OnInit, OnDestroy {
-  /** N'a de sens que sur l'accueil général : ailleurs il remplacerait l'audit ouvert. */
-  @Input() showCharger = false;
+  @Input() layout: 'header' | 'accueil' = 'header';
 
   etat: AuthState = 'disconnected';
   profil: GoogleProfile | null = null;
@@ -119,16 +126,19 @@ export class DriveActionsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Charger ──────────────────────────────────────────────────────────────
-
-  charger(saisie: HTMLInputElement): void {
-    if (!this.connecte) return saisie.click();
-    this.basculer('load');
-  }
+  // ── Charger (accueil général uniquement) ──────────────────────────────────
 
   depuisAppareil(saisie: HTMLInputElement): void {
-    this.fermerMenu();
     saisie.click();
+  }
+
+  /** Sans connexion, on l'ouvre d'abord : pas de liste à proposer sans elle. */
+  async chargerDepuisDrive(): Promise<void> {
+    if (!this.connecte) {
+      await this.connecter();
+      return;
+    }
+    await this.depuisDrive();
   }
 
   async fichierChoisi(event: Event): Promise<void> {

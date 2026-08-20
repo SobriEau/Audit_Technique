@@ -1,76 +1,69 @@
 <input #fichier type="file" accept=".json" hidden (change)="fichierChoisi($event)" />
 
-<div class="barre">
-  <!-- ── Enregistrer ─────────────────────────────────────────────── -->
-  <div class="groupe">
-    <button type="button" class="primary" [disabled]="!!occupe" (click)="enregistrer()">
-      Sauvegarder l'audit
-    </button>
-    @if (menu === 'save') {
-      <div class="menu" role="menu">
-        <button type="button" role="menuitem" (click)="versAppareil()">
-          <strong>Sur cet appareil</strong>
-          <span class="muted">Télécharger le fichier JSON</span>
-        </button>
-        <button type="button" role="menuitem" (click)="versDrive()">
-          <strong>Sur Google Drive</strong>
-          <span class="muted">Met à jour l'audit s'il y est déjà</span>
-        </button>
-      </div>
-    }
-  </div>
-
-  <!-- ── Charger ─────────────────────────────────────────────────── -->
-  @if (showCharger) {
+@if (layout === 'header') {
+  <div class="barre">
+    <!-- ── Enregistrer ───────────────────────────────────────────── -->
     <div class="groupe">
-      <button type="button" class="secondary" [disabled]="!!occupe" (click)="charger(fichier)">
-        Charger
+      <button type="button" class="primary" [disabled]="!!occupe" (click)="enregistrer()">
+        Sauvegarder l'audit
       </button>
-      @if (menu === 'load') {
+      @if (menu === 'save') {
         <div class="menu" role="menu">
-          <button type="button" role="menuitem" (click)="depuisAppareil(fichier)">
-            <strong>Depuis cet appareil</strong>
-            <span class="muted">Choisir un fichier JSON</span>
+          <button type="button" role="menuitem" (click)="versAppareil()">
+            <strong>Sur cet appareil</strong>
+            <span class="muted">Télécharger le fichier JSON</span>
           </button>
-          <button type="button" role="menuitem" (click)="depuisDrive()">
-            <strong>Depuis Google Drive</strong>
-            <span class="muted">Parmi vos audits déposés</span>
+          <button type="button" role="menuitem" (click)="versDrive()">
+            <strong>Sur Google Drive</strong>
+            <span class="muted">Met à jour l'audit s'il y est déjà</span>
           </button>
         </div>
       }
     </div>
-  }
 
-  <!-- ── Compte ──────────────────────────────────────────────────── -->
-  @if (configure) {
-    <div class="groupe">
-      @if (connecte) {
-        <button
-          type="button"
-          class="pastille"
-          [title]="profil?.email || 'Compte Google'"
-          (click)="basculer('account')"
-        >
-          {{ profil?.initials || '··' }}
-        </button>
-        @if (menu === 'account') {
-          <div class="menu menu--droite" role="menu">
-            <div class="identite">
-              <strong>{{ profil?.name || 'Compte Google' }}</strong>
-              <span class="muted">{{ profil?.email }}</span>
+    <!-- ── Compte ────────────────────────────────────────────────── -->
+    @if (configure) {
+      <div class="groupe">
+        @if (connecte) {
+          <button
+            type="button"
+            class="pastille"
+            [title]="profil?.email || 'Compte Google'"
+            (click)="basculer('account')"
+          >
+            {{ profil?.initials || '··' }}
+          </button>
+          @if (menu === 'account') {
+            <div class="menu menu--droite" role="menu">
+              <div class="identite">
+                <strong>{{ profil?.name || 'Compte Google' }}</strong>
+                <span class="muted">{{ profil?.email }}</span>
+              </div>
+              <button type="button" role="menuitem" (click)="deconnecter()">
+                <strong>Se déconnecter</strong>
+                <span class="muted">Révoque l'accès au Drive</span>
+              </button>
             </div>
-            <button type="button" role="menuitem" (click)="deconnecter()">
-              <strong>Se déconnecter</strong>
-              <span class="muted">Révoque l'accès au Drive</span>
-            </button>
-          </div>
+          }
+        } @else {
+          <button type="button" class="ghost" (click)="connecter()">Connexion</button>
         }
-      } @else {
-        <button type="button" class="ghost" (click)="connecter()">Connexion</button>
-      }
-    </div>
-  }
-</div>
+      </div>
+    }
+  </div>
+} @else {
+  <!-- ── Charger, sur l'accueil général uniquement ──────────────────── -->
+  <div class="barre barre--accueil">
+    <button type="button" class="primary" [disabled]="!!occupe" (click)="depuisAppareil(fichier)">
+      📂 Charger depuis un fichier
+    </button>
+    @if (configure) {
+      <button type="button" class="secondary" [disabled]="!!occupe" (click)="chargerDepuisDrive()">
+        ☁ Charger depuis Google Drive
+      </button>
+    }
+  </div>
+}
 
 @if (occupe || message || erreur) {
   <p class="etat" [class.etat--erreur]="erreur">
@@ -79,7 +72,7 @@
 }
 
 <!-- ── Code à saisir sur un autre appareil ───────────────────────── -->
-@if (etat === 'pending' && code) {
+@if (layout === 'header' && etat === 'pending' && code) {
   <div class="overlay" (click)="annulerConnexion()">
     <div class="dialog dialog--etroit" (click)="$event.stopPropagation()">
       <header class="dialog-head"><h3>Connexion à Google Drive</h3></header>
@@ -102,7 +95,7 @@
   </div>
 }
 
-@if (etat === 'error' && erreurAuth) {
+@if (layout === 'header' && etat === 'error' && erreurAuth) {
   <div class="overlay" (click)="fermerMenu()">
     <div class="dialog dialog--etroit" (click)="$event.stopPropagation()">
       <header class="dialog-head"><h3>Connexion impossible</h3></header>

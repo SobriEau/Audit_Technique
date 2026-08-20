@@ -2,11 +2,9 @@
   <button type="button" class="ghost" [disabled]="!hasPlans" (click)="openDialog()">
     📍 {{ location ? 'Modifier la localisation' : 'Localiser sur le plan' }}
   </button>
-  @if (location && currentPlan) {
-    <button type="button" class="ghost" (click)="openPlan()">
-      Ouvrir le plan
-    </button>
-  }
+  <button type="button" class="ghost" [disabled]="!hasPlans" (click)="openPreview()">
+    🔍 Prévisualisation des plans
+  </button>
 </div>
 
 @if (!hasPlans) {
@@ -109,6 +107,66 @@
           Valider
         </button>
       </footer>
+    </div>
+  </div>
+}
+
+<!-- ── Prévisualisation zoomable des plans ────────────────────────────── -->
+@if (previewOpen) {
+  <div class="overlay" (click)="closePreview()">
+    <div
+      class="dialog dialog--large"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Prévisualisation des plans"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="dialog-head">
+        <h3>Prévisualisation des plans</h3>
+        <button type="button" class="ghost" (click)="closePreview()" aria-label="Fermer">✕</button>
+      </header>
+
+      <div class="dialog-body">
+        @if (!previewPlan) {
+          <ul class="plan-grid">
+            @for (plan of plans; track plan.id) {
+              <li>
+                <button type="button" class="plan-choice" (click)="choosePreviewPlan(plan)">
+                  @if (urls[plan.id]) {
+                    <img [src]="urls[plan.id]" [alt]="plan.name" />
+                  }
+                  <span>{{ plan.name }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="preview-toolbar">
+            @if (plans.length > 1) {
+              <button type="button" class="ghost" (click)="previewPlan = null">← Autre plan</button>
+            }
+            <span class="preview-name">{{ previewPlan.name }}</span>
+            <span class="spacer"></span>
+            <button type="button" class="ghost" [disabled]="previewScale <= 1" (click)="zoomOut()" aria-label="Zoom arrière">−</button>
+            <span class="zoom-level">{{ previewPercent }} %</span>
+            <button type="button" class="ghost" [disabled]="previewScale >= 4" (click)="zoomIn()" aria-label="Zoom avant">+</button>
+          </div>
+
+          <div class="preview-viewport" (wheel)="onWheelZoom($event)">
+            @if (urls[previewPlan.id]) {
+              <img
+                [src]="urls[previewPlan.id]"
+                [alt]="previewPlan.name"
+                class="preview-image"
+                [style.transform]="'scale(' + previewScale + ')'"
+              />
+            } @else {
+              <p class="muted">Image du plan introuvable.</p>
+            }
+          </div>
+          <p class="muted preview-hint">Molette pour zoomer, faites défiler pour vous déplacer.</p>
+        }
+      </div>
     </div>
   </div>
 }

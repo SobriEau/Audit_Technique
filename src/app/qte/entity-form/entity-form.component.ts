@@ -197,24 +197,6 @@ export class EntityFormComponent implements OnInit {
     this.router.navigate(this.backTo);
   }
 
-  /**
-   * Crée un nouvel élément reprenant tous les champs de la fiche courante.
-   *
-   * Ni l'`Id` (attribué une fois pour toutes, `createEntity` s'en charge), ni
-   * les photos ne sont recopiés : deux éléments partageant les mêmes
-   * références d'images se supprimeraient l'une l'autre au premier ménage
-   * (voir `DataService.deleteEntity`).
-   */
-  duplicate(): void {
-    if (this.def.single) return;
-    this.persist();
-
-    const created = this.data.createEntity(this.def.key);
-    const clone: Record_ = { ...this.item, Id: created.Id, Numero: created.Numero, Photos: [] };
-    this.data.updateEntity(this.def.key, clone as never);
-    this.router.navigate(['/qte', this.def.route, created.Id]);
-  }
-
   async remove(): Promise<void> {
     if (this.def.single) return;
     if (!confirm('Supprimer cet élément ?')) return;

@@ -50,6 +50,10 @@
   --c-priority-haute-bg: #ffb74d;
   --c-priority-haute-text: #5c2e00;
 
+  /* ── Badge neutre (ex. « Facultatif ») ───────────────────── */
+  --c-badge-neutre-bg: var(--c-surface-alt);
+  --c-badge-neutre-text: var(--c-text-muted);
+
   /* ── Rayons ─────────────────────────────────────────────── */
   --r-sm: 6px;
   --r-md: 8px;
@@ -312,6 +316,12 @@ label {
   max-width: 520px;
 }
 
+/* Prévisualisation zoomable des plans : plus large, pour laisser de la place
+   à l'image agrandie. */
+.dialog--large {
+  max-width: 1200px;
+}
+
 .dialog-head,
 .dialog-foot {
   display: flex;
@@ -352,6 +362,24 @@ label {
 .muted {
   color: var(--c-text-muted);
   font-size: var(--fs-base);
+}
+
+/**
+ * Badge neutre à côté d'un libellé (ex. « Facultatif »), sur le même principe
+ * visuel que les pastilles de priorité (audit-field), mais dans une teinte
+ * neutre : il ne s'agit pas d'un niveau d'importance.
+ */
+.badge-neutre {
+  display: inline-block;
+  margin-left: var(--sp-2);
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: normal;
+  vertical-align: middle;
+  color: var(--c-badge-neutre-text);
+  background: var(--c-badge-neutre-bg);
+  border: 1px solid var(--c-border);
 }
 
 /* ── Adaptation mobile / tablette ─────────────────────────── */

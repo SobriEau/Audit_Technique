@@ -52,13 +52,6 @@ export class PageHeaderComponent {
   @Input() crumbs: Crumb[] = [];
 
   /**
-   * Le bouton « Charger » n'a de sens que sur l'accueil général : ailleurs, il
-   * remplacerait l'audit ouvert sans qu'on l'ait demandé. Seul l'accueil
-   * général le passe à `true`.
-   */
-  @Input() showCharger = false;
-
-  /**
    * Certains postes refusent l'accès au stockage. L'application reste
    * utilisable, mais rien ne survit à la fermeture : il faut le dire avant que
    * l'auditeur ne remplisse un audit entier.

@@ -45,6 +45,15 @@ export class PlanLocatorComponent implements OnInit, OnChanges {
   draftX: number | null = null;
   draftY: number | null = null;
 
+  // ── État de la prévisualisation zoomable ─────────────────────────────────
+  previewOpen = false;
+  previewPlan: AssetRef | null = null;
+  previewScale = 1;
+
+  private static readonly ZOOM_MIN = 1;
+  private static readonly ZOOM_MAX = 4;
+  private static readonly ZOOM_STEP = 0.5;
+
   constructor(
     private data: DataService,
     private assets: AssetStoreService,
@@ -145,11 +154,57 @@ export class PlanLocatorComponent implements OnInit, OnChanges {
     this.open = false;
   }
 
-  /** Ouvre l'image du plan associé en grand, dans un nouvel onglet. */
-  openPlan(): void {
-    if (!this.location) return;
-    const url = this.urls[this.location.planId];
-    if (url) window.open(url, '_blank');
+  // ── Prévisualisation zoomable des plans ───────────────────────────────────
+
+  /**
+   * Ouvre un aperçu des plans, indépendamment de toute localisation : sert
+   * aussi à identifier le nom d'une pièce avant même de poser une punaise.
+   * Part directement sur le plan déjà associé à l'élément s'il y en a un.
+   */
+  openPreview(): void {
+    if (!this.hasPlans) return;
+
+    this.plans = this.data.getPlans();
+    void this.resolveAll();
+
+    const actuel = this.currentPlan;
+    this.previewPlan = actuel ?? (this.plans.length === 1 ? this.plans[0] : null);
+    this.previewScale = 1;
+    this.previewOpen = true;
+  }
+
+  choosePreviewPlan(plan: AssetRef): void {
+    this.previewPlan = plan;
+    this.previewScale = 1;
+  }
+
+  closePreview(): void {
+    this.previewOpen = false;
+  }
+
+  zoomIn(): void {
+    this.previewScale = Math.min(
+      PlanLocatorComponent.ZOOM_MAX,
+      this.previewScale + PlanLocatorComponent.ZOOM_STEP
+    );
+  }
+
+  zoomOut(): void {
+    this.previewScale = Math.max(
+      PlanLocatorComponent.ZOOM_MIN,
+      this.previewScale - PlanLocatorComponent.ZOOM_STEP
+    );
+  }
+
+  /** Molette = zoom, pour rester facile à manier sans viser des boutons. */
+  onWheelZoom(event: WheelEvent): void {
+    event.preventDefault();
+    if (event.deltaY < 0) this.zoomIn();
+    else this.zoomOut();
+  }
+
+  get previewPercent(): number {
+    return Math.round(this.previewScale * 100);
   }
 
   clearLocation(): void {

@@ -18,6 +18,17 @@
   white-space: nowrap;
 }
 
+/* Accueil général : deux boutons de chargement directement visibles, pas de
+   menu à dérouler — c'est tout ce que fait cette page. */
+.barre--accueil {
+  flex-wrap: wrap;
+}
+
+.barre--accueil button {
+  font-size: var(--fs-base);
+  padding: var(--sp-3) var(--sp-4);
+}
+
 /* ── Pastille du compte ─────────────────────────────────────────────── */
 
 .pastille {

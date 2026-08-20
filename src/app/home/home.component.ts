@@ -71,6 +71,11 @@ export class HomeComponent implements OnInit {
     this.arbitrage = null;
   }
 
+  /** Titre affiché dans l'en-tête : le nom du projet plutôt qu'un intitulé générique. */
+  get titre(): string {
+    return this.nomProjet.trim() || this.adresse.trim() || 'Nouveau projet';
+  }
+
   // ── Adresse ──────────────────────────────────────────────────────────────
 
   /**

@@ -1,4 +1,4 @@
-<app-page-header [showCharger]="true" />
+<app-page-header />
 
 <div class="panel">
   <h2>Vos audits</h2>
@@ -31,6 +31,12 @@
   <div class="actions actions--top">
     <button type="button" class="primary" (click)="nouveau()">+ Nouvel audit</button>
   </div>
+</div>
+
+<div class="panel">
+  <h2>Charger un projet</h2>
+  <p class="muted">Depuis un fichier JSON exporté, ou depuis vos audits déposés sur Google Drive.</p>
+  <app-drive-actions layout="accueil" />
 </div>
 
 <footer class="financeurs">

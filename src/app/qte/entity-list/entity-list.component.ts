@@ -82,6 +82,22 @@ export class EntityListComponent implements OnInit {
     this.router.navigate(['/qte', this.def.route, item.Id]);
   }
 
+  /**
+   * Crée un nouvel élément reprenant tous les champs de celui-ci.
+   *
+   * Ni l'`Id` (attribué une fois pour toutes par `createEntity`), ni les
+   * photos ne sont recopiés : deux éléments partageant les mêmes références
+   * d'images se supprimeraient l'une l'autre au premier ménage (voir
+   * `DataService.deleteEntity`).
+   */
+  duplicate(item: AuditEntity, event: MouseEvent): void {
+    event.stopPropagation();
+    const created = this.data.createEntity(this.def.key);
+    const clone = { ...item, Id: created.Id, Numero: created.Numero, Photos: [] };
+    this.data.updateEntity(this.def.key, clone as never);
+    this.reload();
+  }
+
   async remove(item: AuditEntity, event: MouseEvent): Promise<void> {
     event.stopPropagation();
     const label = item.Numero ? `« n° ${item.Numero} »` : 'cet élément';

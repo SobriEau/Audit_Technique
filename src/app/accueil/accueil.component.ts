@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DataService } from '../core/services/data.service';
 import { PageHeaderComponent } from '../shared/components/page-header/page-header.component';
+import { DriveActionsComponent } from '../shared/components/drive-actions/drive-actions.component';
 import { LOGO_AGROPARISTECH, LOGO_CEREMA } from '../shared/logos';
 import { AuditSummary } from '../models/data.models';
 
@@ -17,7 +18,7 @@ import { AuditSummary } from '../models/data.models';
 @Component({
   selector: 'app-accueil',
   standalone: true,
-  imports: [PageHeaderComponent],
+  imports: [PageHeaderComponent, DriveActionsComponent],
   templateUrl: './accueil.component.html',
   styleUrl: './accueil.component.scss',
 })
