@@ -72,10 +72,17 @@ cherché aux emplacements usuels, sinon renseigner `CHROME_PATH`.
 - **`value-lists.ts` est curé à la main.** Le générateur y fait référence quand
   un ensemble d'options correspond exactement à une constante existante ; sinon
   il produit une liste en dur, à reprendre dans le référentiel.
-- **Les clés de stockage des robinets sont figées** par `KEY_OVERRIDES` dans
-  `gen-schema.js` : des audits existent avec ces clés, les changer les casserait.
-- Les quatre onglets ECS ne portent aucune note ; leurs champs sont déduits de
-  la seule disposition des cellules et méritent une relecture attentive.
+- **`KEY_OVERRIDES` dans `gen-schema.js` fige des clés de champ** par
+  [onglet][libellé exact] → clé, pour l'entité et le libellé concernés : dès
+  que de vrais audits circuleront, toute régénération devra y figer les clés
+  des entités déjà utilisées sur le terrain **avant** de relancer ce script —
+  un libellé retouché dans le classeur ferait sinon dériver une nouvelle clé et
+  orphelinerait silencieusement les données déjà saisies. Vide au 2026-08 :
+  aucun audit réel n'était encore en circulation à cette régénération.
+- Certains onglets n'ont pas de note pour chacun de leurs champs (c'était le
+  cas des quatre onglets ECS dans la V1 du classeur) ; leurs champs sont alors
+  déduits de la seule disposition des cellules et méritent une relecture
+  attentive — `check-coverage.js` les signale.
 
 ---
 

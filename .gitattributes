@@ -1,0 +1,12 @@
+# Force des fins de ligne LF pour les fichiers texte, quel que soit le
+# réglage `core.autocrlf` du poste. Sans ce fichier, un checkout Windows avec
+# `core.autocrlf=true` réintroduit des CRLF dans `src/index.html`, que
+# `inline-build.js` recopie tel quel dans le livrable — cassant la
+# reproductibilité que `tools/check-extract.js` vérifie (le navigateur, lui,
+# normalise toujours en LF en réanalysant le document).
+* text=auto eol=lf
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.xlsx binary

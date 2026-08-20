@@ -1,7 +1,7 @@
 # Liste Robinets
 
 > Spécification extraite de `audit_technique.xlsx`, onglet « Liste Robinets ».
-> 9 cellules, 5 notes.
+> 9 cellules, 6 notes.
 
 ## Rôle de la page
 
@@ -20,7 +20,8 @@ Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, 
 - `A1` Bouton Home pour retour à la page d'accueil - Message avertissement enregistrement
 - `G5` **Liste des Robinets** — Retour à la page "Partie Technique"  / - Message avertissement enregistrement
 - `B8` **Numéro** — Données reprises sur les pages "Robinet"  / - nombre de ligne à incrémenter au fur et à mesure  / - si on clique sur la ligne on revient à la page du robinet en question
-- `F34` **Enregistrer** — Ajout d'une page pour un réducteur de pression / - Ajouter  un message de confirmation / - Message avertissement enregistrement ?
+- `C33` **Enregistrer** — Enregistrement des données
+- `F34` **Enregistrer** — Ajout d'une page pour un robinet / - Ajouter  un message de confirmation / - Message avertissement enregistrement ?
 
 ## Contenu de l'onglet
 

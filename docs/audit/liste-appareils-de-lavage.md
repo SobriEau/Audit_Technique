@@ -1,6 +1,6 @@
-# Liste WC
+# Liste appareils de lavage
 
-> Spécification extraite de `audit_technique.xlsx`, onglet « Liste WC ».
+> Spécification extraite de `audit_technique.xlsx`, onglet « Liste appareils de lavage ».
 > 9 cellules, 6 notes.
 
 ## Rôle de la page
@@ -18,10 +18,10 @@ Page **index** : elle récapitule les éléments saisis et sert de point d'entr�
 Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, d'enregistrement ou une question laissée ouverte par les auteurs.
 
 - `A1` Bouton Home pour retour à la page d'accueil - Message avertissement enregistrement
-- `G5` **Liste des WC** — Retour à la page "Partie Technique"  / - Message avertissement enregistrement
-- `B8` **Numéro** — Données reprises sur les pages "WC"  / - nombre de ligne à incrémenter au fur et à mesure  / - si on clique sur la ligne on revient à la page du robinet en question
+- `G5` **Liste des Appareils de lavage** — Retour à la page "Partie Technique"  / - Message avertissement enregistrement
+- `B8` **Numéro** — Données reprises sur les pages "Appareil de lavage"  / - nombre de ligne à incrémenter au fur et à mesure  / - si on clique sur la ligne on revient à la page du robinet en question
 - `C33` **Enregistrer** — Enregistrement des données
-- `F34` **Enregistrer** — Ajout d'une page pour un WC / - Ajouter  un message de confirmation / - Message avertissement enregistrement ?
+- `F34` **Enregistrer** — Ajout d'une page pour un appareils de lavage / - Ajouter  un message de confirmation / - Message avertissement enregistrement ?
 
 ## Contenu de l'onglet
 
@@ -30,11 +30,11 @@ Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, 
 | Cellule | Contenu |
 |---|---|
 | `B1` | Audit SOBRIEAU   PARTIE TECHNIQUE |
-| `C4` | Liste des WC |
+| `C4` | Liste des Appareils de lavage |
 | `B7` | Numéro |
-| `C7` | Type de toilettes |
-| `D7` | Emplacement |
-| `F7` | Nombre d'équipements identiques |
+| `C7` | Emplacement |
+| `E7` | Type |
+| `F7` | Nombre identique d'équipement |
 | `G7` | Remarques |
 | `B29` | Remarques |
 | `C33` | Enregistrer |

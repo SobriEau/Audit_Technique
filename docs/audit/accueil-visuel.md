@@ -1,7 +1,7 @@
 #  Accueil (Visuel)
 
 > Spécification extraite de `audit_technique.xlsx`, onglet «  Accueil (Visuel) ».
-> 12 cellules, 8 notes.
+> 10 cellules, 9 notes.
 
 ## Rôle de la page
 
@@ -11,19 +11,20 @@ Page de **saisie** : formulaire décrivant un élément de l'audit.
 
 | Cellule | Libellé | Type attendu | Valeurs |
 |---|---|---|---|
-| `B7` | Adresse | Texte libre | — |
-| `B12` | Info | Texte libre | — |
-| `B17` | Info | Texte libre | — |
-| `C21` | Date | Texte libre | — |
+| `B8` | Nom du bâtiment | Texte libre | — |
+| `B13` | Adresse | Texte libre | — |
+| `B18` | Info supplémentaire (saisons, horaires d'ouverture, fréquentation) | Texte libre | — |
 | `C22` | Date | Texte libre | — |
+| `C24` | Auditeur | Texte libre | — |
+| `C26` | Nom et fonction de l'accompagnant | Texte libre | — |
 
 ## Comportements attendus
 
 Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, d'enregistrement ou une question laissée ouverte par les auteurs.
 
-- `C24` **Questionnaire gestionnaire** — Bouton pour ouvrir la page en question
-- `C28` **Questionnaire usager** — Bouton pour ouvrir la page en question
-- `C32` **Audit Technique** — Bouton pour ouvrir la page en question
+- `G5` **ACCUEIL** — Prise de photo et ajout au dossier
+- `C29` **Liste des documents à collecter** — Bouton pour ouvrir la page en question
+- `C34` **Audit Technique** — Bouton pour ouvrir la page en question
 
 ## Contenu de l'onglet
 
@@ -32,16 +33,14 @@ Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, 
 | Cellule | Contenu |
 |---|---|
 | `A1` | Audit SOBRIEAU   PARTIE TECHNIQUE |
-| `D4` | ACCUEIL |
-| `B6` | Adresse |
-| `K7` | Où est-ce qu'on indique le contenu des menus déroulant ? |
-| `B11` | Info |
-| `B16` | Info |
-| `B21` | Date |
-| `B22` | Auditeur |
-| `K22` | peut être ajouter ici le nom de la personne accompagnant l'auditeur ? |
-| `C24` | Questionnaire gestionnaire |
-| `C28` | Questionnaire usager |
-| `C32` | Audit Technique |
+| `C4` | ACCUEIL |
+| `B7` | Nom du bâtiment |
+| `B12` | Adresse |
+| `B17` | Info supplémentaire (saisons, horaires d'ouverture, fréquentation) |
+| `B22` | Date |
+| `B24` | Auditeur |
+| `B26` | Nom et fonction de l'accompagnant |
+| `C29` | Liste des documents à collecter |
+| `C34` | Audit Technique |
 
 </details>

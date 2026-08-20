@@ -25,7 +25,17 @@ const SCHEMA = path.join(__dirname, '..', 'src', 'app', 'models', 'audit-schema.
 const rowOf = (r) => parseInt(r.match(/\d+$/)[0], 10);
 const colOf = (r) => r.match(/^[A-Z]+/)[0];
 const colNum = (c) => [...c].reduce((a, ch) => a * 26 + (ch.charCodeAt(0) - 64), 0);
-const strip = (n) => n.replace(/^[^:\n]{0,40}:\s*/, '').replace(/\r/g, '').trim();
+/**
+ * Certaines notes ne portent pas de signature d'auteur et commencent
+ * directement par le marqueur de type (« Liste déroulante : ») — voir la
+ * même garde dans gen-schema.js.
+ */
+const NOTE_MARKER_RE = /^(liste\s*d[ée]roulante|champ[s]?\s*libre|oui\s*\/\s*non|o\s*\/\s*n\b)/i;
+const strip = (n) => {
+  const t = n.replace(/\r/g, '').trim();
+  if (NOTE_MARKER_RE.test(t)) return t;
+  return t.replace(/^[^:\n]{0,40}:\s*/, '').trim();
+};
 
 const norm = (s) =>
   (s || '')
@@ -42,20 +52,23 @@ const norm = (s) =>
  */
 const ENTITES = {
   'Compteur général': 'releve_compteur_general',
-  'Sous-compteurs1': 'sous_compteurs',
-  'Réducteur de Pression1': 'reducteurs_de_pression',
-  'Réseau distribution EFS': 'reseaux_efs',
-  'Réseau distribution ECS': 'reseaux_eau_chaude_sanitaire',
-  'Production ECS': 'production_ecs',
-  'Stockage ECS': 'stockage_ecs',
-  'équipements ECS (v0)': 'equipements_ecs',
-  Robinet1: 'robinets',
+  'Sous-compteur1': 'sous_compteurs',
+  'Réducteur de pression1': 'reducteurs_de_pression',
+  Surpresseur1: 'surpresseurs',
+  'Réseaux ECS': 'reseaux_eau_chaude_sanitaire',
+  'Production Stockage ECS': 'production_stockage_ecs',
+  Robinets: 'robinets',
   'Douche-baignoire1': 'douches_baignoires',
   WC1: 'wc',
-  Ventilation: 'ventilation_batiment',
-  Piscine: 'piscines',
-  'Collecte eau de pluie': 'collecte_eau_pluie',
+  'Appareils de lavage': 'appareils_lavage',
+  Structure1: 'structure',
+  Ventilation1: 'ventilation_batiment',
+  Incendie: 'incendie',
+  Toiture1: 'toitures',
+  Bassin1: 'piscines',
   'Extérieur1': 'espace_vert_exterieur',
+  'Opportunités1': 'opportunites',
+  Autre1: 'autre',
 };
 
 /** Libellés retenus par le schéma, par clé d'entité. */
@@ -79,7 +92,7 @@ function libellesDuSchema() {
 const IGNORE = /^(audit sobrieau|enregistrer|num[ée]ro$)/i;
 
 const NOTE_COMPORTEMENT =
-  /retour à la page|bouton home|enregistrement des données|ajout d.un|ajout d.une|suppression de la page|incrémenter à chaque|données reprises|message avertissement|si on clique/i;
+  /retour à la page|bouton home|enregistrement des données|ajout d.un|ajout d.une|suppression de la page|incrémenter à chaque|données reprises|message avertissement|si on clique|prise de photo/i;
 
 const schema = libellesDuSchema();
 const filtre = process.argv[2];
@@ -101,11 +114,14 @@ for (const [onglet, cle] of Object.entries(ENTITES)) {
   const lignesNotees = new Set(Object.keys(s.notes).map(rowOf));
 
   // ── Étiquettes présentes dans la feuille, absentes du schéma ────────────
+  // Plafond aligné sur gen-schema.js (MAX_LABEL_LEN) : un plafond différent
+  // ici masquerait à ce contrôle exactement les oublis que le générateur
+  // fait pour la même raison — les deux doivent voir la même chose.
   const etiquettesOubliees = [];
   for (const [ref, cell] of Object.entries(s.cells)) {
     const v = String(cell.v ?? '').trim();
     const r = rowOf(ref);
-    if (!v || v.length > 70 || r < 6 || IGNORE.test(v)) continue;
+    if (!v || v.length > 250 || r < 6 || IGNORE.test(v)) continue;
     // Une étiquette est suivie d'une cellule de saisie, donc d'une note
     if (!lignesNotees.has(r + 1)) continue;
     if (retenus.has(norm(v))) continue;
@@ -158,7 +174,7 @@ for (const [onglet, cle] of Object.entries(ENTITES)) {
 if (!filtre) {
   const couverts = new Set(Object.keys(ENTITES));
   const ignores = wb.sheets
-    .filter((s) => !couverts.has(s.name) && !/^liste|visuel|^infos/i.test(s.name))
+    .filter((s) => !couverts.has(s.name) && !/^\s*liste|visuel|^\s*infos|^\s*partie technique\s*$/i.test(s.name))
     .filter((s) => s.cellCount > 0);
 
   if (ignores.length) {

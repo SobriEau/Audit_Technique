@@ -1,7 +1,7 @@
 # Liste Extérieur
 
 > Spécification extraite de `audit_technique.xlsx`, onglet « Liste Extérieur ».
-> 16 cellules, 11 notes.
+> 17 cellules, 10 notes.
 
 ## Rôle de la page
 
@@ -11,11 +11,11 @@ Page **index** : elle récapitule les éléments saisis et sert de point d'entr�
 
 | Cellule | Libellé | Type attendu | Valeurs |
 |---|---|---|---|
-| `D8` | Surface Espace extérieur (m2) | Texte libre | — |
-| `F8` | Surface Espace Vert (m2) | Texte libre | — |
-| `D11` | Fonctions de l'eau sur ces espaces | Liste déroulante | arrosage · arrosage et nettoyage · arrosage et autre · nettoyage · nettoyage et autre · autre · arrosage · nettoyage et autre |
-| `F11` | Si autre - Précisez | Texte libre | — |
-| `B30` | Remarques | Texte libre | — |
+| `G8` | Surface Espace extérieur (m2) | Texte libre | — |
+| `J8` | Surface Espace Vert (m2) | Texte libre | — |
+| `G11` | Fonctions de l'eau sur ces espaces | Liste déroulante | arrosage · arrosage et nettoyage · arrosage et autre · nettoyage · nettoyage et autre · autre · arrosage · nettoyage et autre |
+| `J11` | Si autre - Précisez | Texte libre | — |
+| `E30` | Remarques | Texte libre | — |
 
 ### Listes de valeurs
 
@@ -36,12 +36,11 @@ Ces énumérations sont écrites en toutes lettres dans les notes du classeur. E
 
 Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, d'enregistrement ou une question laissée ouverte par les auteurs.
 
-- `A1` Bouton Home pour retour à la page d'accueil - Message avertissement enregistrement
-- `H5` **Espace Vert / Extérieur** — Retour à la page "Liste Robinet"  / - Message avertissement enregistrement
-- `B15` **Numéro** — Données reprises sur les pages "Espace vert/extérieur"  / - nombre de ligne à incrémenter au fur et à mesure  / - si on clique sur la ligne on revient à la page du robinet en question
-- `C33` **Enregistrer** — Enregistrement des données
-- `G34` **Enregistrer** — Ajout d'un page pour espace vert/extérieur / - Ajouter  un message de confirmation / - Message avertissement enregistrement
-- `O37` Mesurer ma témpératire d'eau chaude au robinet  ?
+- `D1` Bouton Home pour retour à la page d'accueil - Message avertissement enregistrement
+- `L5` **Espace Vert / Extérieur** — Retour à la page "Partie Technique"  / - Message avertissement enregistrement
+- `E15` **Numéro** — Données reprises sur les pages "Espace vert/extérieur"  / - nombre de ligne à incrémenter au fur et à mesure  / - si on clique sur la ligne on revient à la page du robinet en question
+- `F33` **Enregistrer** — Enregistrement des données
+- `K34` **Enregistrer** — Ajout d'une page pour espace vert/extérieur / - Ajouter  un message de confirmation / - Message avertissement enregistrement
 
 ## Contenu de l'onglet
 
@@ -49,21 +48,22 @@ Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, 
 
 | Cellule | Contenu |
 |---|---|
-| `B1` | Audit SOBRIEAU   PARTIE TECHNIQUE |
-| `D4` | Espace Vert / Extérieur |
-| `B7` | Surface Espace extérieur (m2) |
-| `F7` | Surface Espace Vert (m2) |
-| `B10` | Fonctions de l'eau sur ces espaces |
-| `F10` | Si autre - Précisez |
-| `B13` | Numéro |
-| `C13` | Emplacement |
-| `F13` | Arrosage |
-| `G13` | Nettoyage |
-| `H13` | Autre |
-| `F14` | Surface à arroser (m2) |
-| `G14` | Usage |
-| `H14` | Usage |
-| `B29` | Remarques |
-| `C33` | Enregistrer |
+| `E1` | Audit SOBRIEAU   PARTIE TECHNIQUE |
+| `G4` | Espace Vert / Extérieur |
+| `E7` | Surface Espace extérieur (m2) |
+| `J7` | Surface Espace Vert (m2) |
+| `E10` | Fonctions de l'eau sur ces espaces |
+| `J10` | Si autre - Précisez |
+| `E13` | Numéro |
+| `F13` | Emplacement |
+| `I13` | Type de gestion des eaux pluviales |
+| `J13` | Arrosage |
+| `K13` | Nettoyage |
+| `L13` | Autre |
+| `J14` | Surface à arroser (m2) |
+| `K14` | Utilisation |
+| `L14` | Utilisation |
+| `E29` | Remarques |
+| `F33` | Enregistrer |
 
 </details>

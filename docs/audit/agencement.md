@@ -1,165 +1,197 @@
 # Agencement des pages et liens entre données
 
-Synthèse de la structure décrite par `audit_technique.xlsx` : comment les pages
-s'enchaînent, et comment les données se référencent entre elles.
+Synthèse de la structure décrite par `audit_technique.xlsx` (V2, 2026-08) :
+comment les pages s'enchaînent, et comment les données se référencent entre
+elles.
+
+> Ce fichier avait pris du retard sur le code même du temps de la V1 du
+> classeur (il décrivait encore `QTE_SECTIONS` et un éditeur JSON brut,
+> remplacés depuis par le moteur générique `entity-list` / `entity-form`).
+> Cette version le remet à jour pour la V2 et pour l'état réel du code.
 
 ---
 
 ## 1. Hiérarchie des pages
 
-Le classeur décrit une arborescence à trois niveaux, parfaitement régulière.
+Le classeur décrit une arborescence à trois niveaux. Dix-sept des dix-huit
+entités suivent le motif liste puis fiche ; seul le compteur général est une
+page unique (pas de « Liste »).
 
 ```
 Accueil (Visuel)
-└── Partie Technique (Visuel)
-    ├── Compteur général                    page unique
-    ├── Liste SS-compteurs        ──▶ Sous-compteurs1
-    ├── Liste Réducteurs de Pression ──▶ Réducteur de Pression1
-    ├── Liste Réseaux EF-EC       ──▶ Réseau distribution EFS
-    │                              ──▶ Réseau distribution ECS
-    │                              ──▶ Production ECS
-    │                              ──▶ Stockage ECS
-    ├── Liste équipement ECS      ──▶ équipements ECS (v0)
-    ├── Liste Robinets            ──▶ Robinet1
-    ├── Liste douches-baignoires  ──▶ Douche-baignoire1
-    ├── Liste WC                  ──▶ WC1
-    ├── Liste Ventilation         ──▶ Ventilation
-    ├── Liste Piscine             ──▶ Piscine
-    ├── Liste Extérieur           ──▶ Extérieur1
-    ├── Collecte eau de pluie              page unique
-    ├── Appareils de nettoyage             onglet vide
-    ├── Optimisation                       onglet vide
-    └── Tableau bord                       synthèse
+└── Partie Technique
+    ├── Compteur général                          page unique
+    ├── Liste SS-compteur          ──▶ Sous-compteur1
+    ├── Liste réducteurs de pression ──▶ Réducteur de pression1
+    ├── Liste Surpresseurs         ──▶ Surpresseur1
+    ├── Liste Réseaux ECS          ──▶ Réseaux ECS
+    ├── Liste Prod Stock ECS       ──▶ Production Stockage ECS
+    ├── Liste Robinets             ──▶ Robinets
+    ├── Liste douches-baignoires   ──▶ Douche-baignoire1
+    ├── Liste WC                   ──▶ WC1
+    ├── Liste appareils de lavage  ──▶ Appareils de lavage
+    ├── Liste Structure            ──▶ Structure1
+    ├── Liste ventilation          ──▶ Ventilation1
+    ├── Liste Incendie             ──▶ Incendie
+    ├── Liste Toiture              ──▶ Toiture1
+    ├── Liste Piscines             ──▶ Bassin1
+    ├── Liste Extérieur            ──▶ Extérieur1
+    ├── Liste Opportunités         ──▶ Opportunités1
+    └── Liste Autre                ──▶ Autre1
 ```
 
-Chaque page porte en `A1` la même note : *« Bouton Home pour retour à la page
-d'accueil — Message avertissement enregistrement »*.
+`Liste des documents à collecter` est une page à part, hors de cette
+arborescence (une checklist, pas une entité d'audit).
+
+### Disparu depuis la V1
+
+Cinq entités de la V1 n'ont plus d'onglet correspondant dans cette V2 :
+**Réseau distribution EFS**, **Production ECS** et **Stockage ECS** (les deux
+derniers fusionnés dans « Production Stockage ECS » ci-dessus, sous une
+nouvelle clé — la fusion ne conserve les données d'aucun des deux anciens),
+**équipements ECS (v0)**, et **Collecte eau de pluie**. Les clés de stockage
+correspondantes (`reseaux_efs`, `production_ecs`, `stockage_ecs`,
+`equipements_ecs`, `collecte_eau_pluie`) ne sont plus déclarées dans
+`audit-schema.ts` : des données saisies sous ces clés resteraient dans le
+JSON de l'audit sans qu'aucun écran ne les affiche plus.
+
+### Apparu avec la V2
+
+Six entités sont entièrement nouvelles : **Surpresseur**, **Appareils de
+lavage**, **Structure**, **Incendie**, **Toiture**, **Opportunités**, et
+**Autre** (sept, en fait — la liste s'allonge). Aucune n'a de clé héritée à
+préserver.
 
 ---
 
 ## 2. Le motif « Liste / Fiche »
 
-C'est le motif structurant, répété à l'identique pour dix entités.
+C'est le motif structurant, répété pour dix-sept entités (le compteur général
+excepté). Rien n'a changé dans ce motif entre la V1 et la V2 :
 
 **Page liste** — index des éléments saisis :
 
 - retour vers « Partie Technique » ;
-- *« Données reprises sur les pages [Fiche] »* : les colonnes sont alimentées
-  par les fiches, ce n'est pas une saisie ;
-- *« nombre de ligne à incrémenter au fur et à mesure »* ;
-- *« si on clique sur la ligne on revient à la page du [élément] en question »* ;
-- un bouton d'ajout, avec message de confirmation.
+- les colonnes sont alimentées par les fiches, ce n'est pas une saisie ;
+- « nombre de ligne à incrémenter au fur et à mesure » ;
+- un clic sur la ligne ramène à la fiche de l'élément ;
+- un bouton d'ajout.
 
 **Page fiche** — formulaire d'un élément :
 
 - retour vers la page liste correspondante ;
-- *« Incrémenter à chaque nouvelle page et l'inverse en cas de suppression »* ;
-- *« Enregistrement des données / bascule des infos dans la page liste »* ;
-- suppression avec confirmation. Pour les robinets, une question ouverte :
-  *« Ajouter l'impossibilité de supprimer la 1ère page ? »*
+- « Incrémenter à chaque nouvelle page et l'inverse en cas de suppression » —
+  voir §4 pour pourquoi ce numéro ne doit **pas** servir de clé ;
+- suppression avec confirmation.
 
 ### Colonnes remontées par entité
 
-| Page liste | Colonnes affichées |
+Choisies parmi les champs que le générateur a effectivement retenus (voir
+`listColumns` dans `audit-schema.ts`) ; « Numéro » est systématique et géré
+hors de cette table (voir §5).
+
+| Entité | Colonnes |
 |---|---|
-| Liste SS-compteurs | Numéro · Emplacement · Année de pose · Télétransmission · Remarques |
-| Liste Réducteurs de Pression | Numéro · Emplacement · Type · Remarques |
-| Liste équipement ECS | Numéro · Système ECS · Emplacement · Espaces alimentés · Classe énergétique · Volume ballon · Température ballon · Bouclage · Remarques |
-| Liste Robinets | Numéro · Emplacement · Type · Débit (l/min) · Remarques |
-| Liste douches-baignoires | Numéro · Type d'équipement · Emplacement · **Robinet correspondant** · Remarques |
-| Liste WC | Numéro · Type d'équipement · Emplacement · Particularité · Remarques |
-| Liste Ventilation | Numéro · Espaces concernés · Type · Débit (m3/h) · Remarques |
-| Liste Piscine | Numéro · Nom · Emplacement · Volume (m3) · Remarques |
-| Liste Extérieur | Numéro · Emplacement · Arrosage · Nettoyage · Autre |
+| Sous-compteur | Emplacement · Année de pose · Télétransmission |
+| Réducteur de pression | Emplacement · Année de pose |
+| Surpresseur | Emplacement · Année de pose |
+| Réseaux ECS | Matériau principal des canalisations · Diamètre des gaines · Bouclage |
+| Production / Stockage ECS | Type de système de production · Systèmes de production |
+| Robinets | Emplacement · Type · Débit |
+| Douche / Baignoire | Type d'équipement · Emplacement |
+| WC | Type de toilette ou urinoir · Emplacement · Nombre d'équipements identiques |
+| Appareils de lavage | Emplacement · Type |
+| Structure | Emplacement · Type de la structure |
+| Ventilation | Système de ventilation · Emplacement du système |
+| Incendie | Emplacement · Précision emplacement |
+| Toiture | Emplacement · Surface de toiture · Toiture accessible |
+| Bassin | Nom · Emplacement · Volume du bassin |
+| Espace extérieur | Emplacement |
+| Opportunités | Emplacement |
+| Autre | Choix · Nom · Emplacement |
 
 ---
 
 ## 3. Liens entre données
 
-Les entités se référencent **par leur numéro**. C'est le premier champ de chaque
-fiche et la première colonne de chaque liste.
+Les entités se référencent par un identifiant stable (`Id`), jamais par leur
+numéro affiché — voir §4. Le générateur ne sait reconnaître qu'**une seule**
+formulation de renvoi vers une autre entité dans les notes du classeur :
+« *avec les choix de la liste des [entité]* » (voir `ENTITY_REF_RE` dans
+`tools/gen-schema.js`) ; c'est ainsi que les champs ci-dessous sont devenus
+des `entity-ref` plutôt que des listes déroulantes à une option absurde.
 
 | Depuis | Champ | Vers | Cardinalité |
 |---|---|---|---|
-| Robinet | `Numéro réseau ECS d'appartenance` (G23) | Réseau ECS | 1 → 1 |
-| Douche / Baignoire | `Numéro robinet correspondant` (B14) | Robinet | 1 → 1 |
-| Piscine | `Numéros des robinets correspondants` (H35) | Robinet | 1 → N |
-| Extérieur | `Numéros des robinets correspondants` (H30, H43, H56) | Robinet | 1 → N, par bloc |
-| Production ECS | `Numéro de réseau associé` (B9) | Réseau | 1 → 1 |
-| Stockage ECS | `Numéro réseau ECS associé` (B10) | Réseau ECS | 1 → 1 |
+| Robinets | `Numéro réseau ECS d'appartenance` | Réseaux ECS | 1 → 1 |
+| Douche / Baignoire | `Numéro réseau ECS d'appartenance` (×2 : douche, baignoire) | Réseaux ECS | 1 → 1 |
 
-### Questions laissées ouvertes par les auteurs
+### Changement structurel : la douche/baignoire n'a plus de robinet distinct
 
-- Robinet `I24` : *« préciser le n° d'équipement d'ECS auquel le robinet est
-  relié ? Même raisonnement pour les compteurs ? »* — deux relations
-  supplémentaires envisagées, non tranchées.
-- Liste Piscine `L29` : *« ou ne pas mettre cet encart ici mais juste un appel
-  aux numéros des feuilles des espaces extérieurs correspondants ? »*
+La V1 référençait un robinet externe (« Numéro robinet correspondant »). La
+V2 **décrit le robinet directement dans la fiche Douche/Baignoire** (sa
+propre section « Robinet », en fin de fiche, avec Type, Temporisation, Débit,
+Diamètre, Matériau, Etat général) : ce n'est plus une relation entre entités
+sur cet écran, mais un sous-formulaire dupliqué.
+
+### Relations que l'application ne sait pas encore représenter
+
+`entity-ref` ne stocke qu'un seul `Id`. Or le classeur demande à plusieurs
+endroits une référence à **plusieurs** robinets à la fois (« à cocher depuis
+la liste des robinets ») :
+
+- Espace extérieur → Robinets, trois fois (« Numéros des robinets
+  correspondants », sections arrosage / nettoyage / autre usage) ;
+- Appareils de lavage → Robinet, pour le remplissage de l'autolaveuse et du
+  matériel de lavage manuel du sol.
+
+Ces notes sont capturées comme un champ texte libre — la donnée n'est pas
+perdue, mais rien n'empêche d'y taper autre chose qu'un numéro de robinet, et
+rien ne la relie réellement à l'`Id` du robinet visé. Introduire une relation
+« un vers plusieurs » suppose un nouveau `FieldKind` et un composant de
+sélection multiple : à arbitrer, pas à contourner dans le générateur.
 
 ---
 
 ## 4. ⚠️ Le numéro ne peut pas servir de clé
 
-La fiche prescrit : *« Incrémenter à chaque nouvelle page et **l'inverse en cas
-de suppression** »*, c'est-à-dire une renumérotation après suppression.
+Inchangé depuis la V1, et toujours vrai en V2 : la fiche prescrit
+d'incrémenter le numéro à l'ajout et de l'inverser à la suppression, alors
+que les relations du §3 pointent sur ce numéro dans le texte des notes.
+Supprimer un élément ferait glisser silencieusement les références vers
+la mauvaise cible.
 
-Or toutes les relations du §3 pointent vers ce même numéro. Supprimer le
-robinet 2 ferait glisser le robinet 3 en position 2, et **toutes les douches,
-piscines et espaces extérieurs qui référençaient le robinet 3 pointeraient
-silencieusement vers le mauvais équipement**.
-
-C'est le même piège que celui déjà rencontré sur la localisation des robinets
-sur plan, où l'index de tableau a été écarté au profit d'un stockage dans
-l'élément.
-
-**Recommandation** : donner à chaque élément un identifiant interne stable,
-jamais renuméroté, et ne traiter le « Numéro » que comme un libellé d'affichage.
-Les relations pointent vers l'identifiant, pas vers le numéro.
-
-> ✅ **Mis en œuvre.** L'interface `AuditEntity` porte désormais un champ `Id`
-> stable, distinct de `Numero`. Les fiches sont adressées par identité
-> (`#/qte/robinet/<Id>`), le type `EntityRef` est prévu pour les relations, et
-> les audits existants reçoivent leurs identifiants au chargement.
-> Voir « Identité des éléments » dans [CLAUDE.md](../../CLAUDE.md).
+> ✅ **Mis en œuvre.** L'interface `AuditEntity` porte un champ `Id` stable,
+> distinct de `Numero`. Les fiches sont adressées par identité
+> (`#/qte/<route>/<Id>`), le type de champ `entity-ref` stocke cet `Id`, et
+> les audits antérieurs reçoivent leurs identifiants au chargement
+> (`ensureEntityIds()`). Voir « Identité des éléments » dans
+> [CLAUDE.md](../../CLAUDE.md).
 
 ---
 
 ## 5. Correspondance avec l'application Angular
 
-Le motif « Liste / Fiche » **est déjà implémenté**, mais une seule fois :
+Le motif « Liste / Fiche » est implémenté **une seule fois**, génériquement,
+et sert les dix-huit entités :
 
-| Classeur | Angular | État |
-|---|---|---|
-| Accueil (Visuel) | `/home` — `HomeComponent` | conforme |
-| Partie Technique (Visuel) | `/qte` — `QteIndexComponent` | conforme |
-| Liste Robinets | `/qte/robinets` — `RobinetsComponent` | conforme |
-| Robinet1 | `/qte/robinet/:idx` — `RobinetComponent` | conforme |
-| **Toutes les autres entités** | `/qte/:section` — `QteEditorComponent` | **éditeur JSON brut** |
+| Classeur | Angular |
+|---|---|
+| Accueil (Visuel) | `/home` |
+| Partie Technique | `/qte` — `QteIndexComponent`, une carte par entité de `AUDIT_SCHEMA` |
+| Liste *(entité)* | `/qte/<route>` — `EntityListComponent`, générique |
+| *(entité)* | `/qte/<route>/<Id>` — `EntityFormComponent`, générique |
+| Compteur général | `/qte/compteur-general` — `EntityFormComponent` direct (`single: true`, pas de liste) |
 
-Autrement dit : l'architecture cible existe et fonctionne pour les robinets ; il
-reste à l'appliquer aux neuf autres entités, qui présentent aujourd'hui à
-l'auditeur un `<textarea>` de JSON.
-
-### Entités du classeur absentes de l'application
-
-`QTE_SECTIONS` ne déclare ni **Piscine**, ni **Collecte eau de pluie**, ni
-**Tableau bord**, alors que ces onglets sont renseignés (27, 27 et 7 cellules).
-
-À l'inverse, l'application déclare `appareils_nettoyage_lavage` et
-`potentiel_optimisation`, dont les onglets sont **vides** : la spécification
-reste à écrire.
+Ajouter un champ ou une entité se fait dans le schéma (régénéré depuis le
+classeur), jamais dans un composant : voir §8 de `CLAUDE.md`.
 
 ---
 
 ## 6. Erreurs de copier-coller dans le classeur
 
-À ne pas reproduire telles quelles — une lecture littérale câblerait une
-navigation fausse :
-
-- `Liste SS-compteurs` B8 et `Liste Réseaux EF-EC` B8 annoncent *« Données
-  reprises sur les pages "Robinet" »* : il faut lire « Sous-compteur » et
-  « Réseau ».
-- `Douche-baignoire1` G5 indique *« Retour à la page "Liste Robinet" »* : il faut
-  lire « Liste douches-baignoires ».
-- `Liste Robinets` F34, `Liste SS-compteurs` F34 et `Liste Réseaux EF-EC` F34
-  parlent toutes d'*« ajout d'une page pour un réducteur de pression »*.
+La V1 en portait plusieurs (listées dans une version antérieure de ce
+fichier, récupérable dans l'historique git). **Cette régénération n'a pas
+repassé chaque onglet de la V2 à la recherche du même défaut** — seuls ceux
+remontés par les relectures par onglet (voir le rapport de régénération) ont
+été vérifiés. Ne pas supposer la V2 indemne sans relecture.

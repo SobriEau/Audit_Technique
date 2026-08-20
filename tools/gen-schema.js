@@ -13,7 +13,19 @@ const wb = require('./.cache/workbook.json');
 const colOf = (r) => r.match(/^[A-Z]+/)[0];
 const rowOf = (r) => parseInt(r.match(/\d+$/)[0], 10);
 const colNum = (c) => [...c].reduce((a, ch) => a * 26 + (ch.charCodeAt(0) - 64), 0);
-const strip = (n) => n.replace(/^[^:\n]{0,40}:\s*/, '').replace(/\r/g, '').trim();
+/**
+ * Certaines notes ne portent pas de signature d'auteur et commencent
+ * directement par le marqueur de type (« Liste déroulante : », « O/N »).
+ * Sans garde, la regexp qui retire la signature avale ce marqueur, et le
+ * champ retombe en texte libre sans ses options — bug constaté sur 11 notes
+ * de « Réseaux ECS » et « Production Stockage ECS » dans la V2 du classeur.
+ */
+const NOTE_MARKER_RE = /^(liste\s*d[ée]roulante|champ[s]?\s*libre|oui\s*\/\s*non|o\s*\/\s*n\b)/i;
+const strip = (n) => {
+  const t = n.replace(/\r/g, '').trim();
+  if (NOTE_MARKER_RE.test(t)) return t;
+  return t.replace(/^[^:\n]{0,40}:\s*/, '').trim();
+};
 
 // ── Correspondance option-set → constante du référentiel ───────────────────
 const L = {
@@ -35,24 +47,22 @@ const L = {
   FONCTIONS_EAU_EXTERIEUR: ['arrosage','arrosage et nettoyage','arrosage et autre','nettoyage','nettoyage et autre','autre','arrosage, nettoyage et autre'],
 };
 const norm = (a) => a.map((s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim()).sort().join('|');
+const normLabel = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 const LOOKUP = new Map(Object.entries(L).map(([k, v]) => [norm(v), k]));
 
-/** Clés historiques des robinets — ne pas les changer, des audits existent. */
-const KEY_OVERRIDES = {
-  Robinet1: {
-    'Emplacement': 'Emplacement',
-    'Précision emplacement': 'PrecisionEmplacement',
-    'Usages': 'Usages',
-    'Type': 'Type',
-    'Débit en sortie du robinet (L/min)': 'Debit',
-    "Présence d'un réducteur de débit": 'PresenceReducteur',
-    'Temps obtention ECS (s)': 'TempsECS',
-    "Numéro réseau ECS d'appartenance": 'NumeroReseauECS',
-    "Nombre d'utlisation/semaine": 'NbUtilisationSemaine',
-    "Nombre d'équipements identiques": 'NbEquipementIdentique',
-    'Remarques': 'Remarques',
-  },
-};
+/**
+ * Clés de champs à figer par [onglet][libellé exact] → clé de stockage.
+ *
+ * Vide pour cette régénération (V2 du classeur, 2026-08) : aucun audit réel
+ * n'est encore en circulation (confirmé avant de régénérer), donc rien ne
+ * dépend encore des clés dérivées. La table reste prête à l'emploi : dès que
+ * de vrais audits circuleront, toute régénération future devra y figer les
+ * clés des entités concernées avant de faire tourner ce script, exactement
+ * comme le faisait l'ancienne entrée `Robinet1` ici même — sans quoi un
+ * libellé retouché dans le classeur ferait dériver une nouvelle clé et
+ * orphelinerait silencieusement les données déjà saisies sous l'ancienne.
+ */
+const KEY_OVERRIDES = {};
 
 /** Clé de stockage dérivée du libellé, stable et lisible. */
 function keyFor(sheet, label) {
@@ -77,18 +87,71 @@ function keyFor(sheet, label) {
  * l'unité : « (chocs, gel) » n'en est pas une, alors qu'un simple `h` accepté
  * n'importe où dans la parenthèse le faisait passer pour tel.
  */
-const UNIT_RE = /\(\s*(l\/min|L\/min|m3\/h|m3|m³|m2|mm|°C|bar|kWh|%|s|L|h)\s*\)/;
+const UNIT_RE = /\(\s*(l\/min|L\/min|l\/s|m3\/h|m3|m³|m²|m2|mm|cm|m|°C|bar|kWh|%|kg|s|L|h)\s*\)/;
 
-function classify(note, cellBelow, label) {
+/**
+ * Marqueur d'énumération dans une note. La V2 du classeur emploie plusieurs
+ * formulations pour la même intention (liste déroulante, menu déroulant,
+ * cases à cocher) — s'en tenir à « liste déroulante » seul avait fait perdre
+ * 13 champs sur le seul onglet WC1.
+ */
+const ENUM_MARKER_RE = /liste\s*d[ée]roulante|menu\s*d[ée]roulant|(?:cases?\s*)?[aà]\s*cocher/i;
+
+/**
+ * Découpe une liste d'options en respectant les parenthèses : une virgule à
+ * l'intérieur d'une parenthèse fait partie de la valeur (« maçonnée (brique,
+ * parpaing, carreau de plâtre) » est une seule option, pas trois).
+ */
+function splitOptions(text) {
+  const parts = [];
+  let cur = '';
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    if (depth === 0 && /[\n,;]/.test(ch)) {
+      parts.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  parts.push(cur);
+  return parts;
+}
+
+/**
+ * Note décrivant une référence croisée déguisée en liste déroulante — ex.
+ * « Liste déroulante : avec les choix de la liste des réseaux ECS ». Sans
+ * cette détection, le champ devient un select à une seule option absurde
+ * (« avec les choix de la liste des réseaux ECS » comme valeur), au lieu
+ * d'une vraie référence stockant l'Id de l'élément visé. `entityByPlural` fait
+ * correspondre le nom cité au pluriel d'une entité du schéma (ex. « réseaux
+ * ECS » → `reseaux_eau_chaude_sanitaire`).
+ */
+const ENTITY_REF_RE = /avec\s+les\s+choix\s+de\s+la\s+liste\s+des?\s+([^.\n,;()]+)/i;
+
+function classify(note, cellBelow, label, entityByPlural) {
   const n = note || '';
+  const ref = n.match(ENTITY_REF_RE);
+  if (ref && entityByPlural) {
+    const target = entityByPlural.get(normLabel(ref[1]));
+    if (target) return { kind: 'entity-ref', refTo: target };
+  }
   if (/\bo\s*\/\s*n\b/i.test(n) || /^\s*oui\s*\/\s*non\s*$/i.test(cellBelow || '')) {
     return { kind: 'boolean' };
   }
-  if (/liste\s*d[ée]roulante/i.test(n)) {
-    const after = n.replace(/^[\s\S]*?liste\s*d[ée]roulante\s*:?\s*/i, '');
-    let opts = after.split(/[\n,;]+/).map((o) => o.trim().replace(/[.,;]+$/, '')).filter((o) => o && o.length < 80);
+  if (ENUM_MARKER_RE.test(n)) {
+    const after = n.replace(new RegExp('^[\\s\\S]*?(?:' + ENUM_MARKER_RE.source + ')\\s*:?\\s*', 'i'), '');
+    let opts = splitOptions(after).map((o) => o.trim().replace(/[.,;]+$/, '')).filter((o) => o && o.length < 80);
+    // Un seul item retenu : les options sont peut-être jointes par « / » plutôt
+    // que par une virgule (« Bon / Moyen / Mauvais », « oui/non/ne sait pas »).
+    // Ne s'applique qu'à un item unique : un « / » à l'intérieur d'un item d'une
+    // liste déjà scindée (ex. « PVC/EPDM ») fait partie de sa valeur.
     if (opts.length === 1 && /\bou\b/.test(opts[0])) {
       opts = opts[0].split(/\bou\b/).map((o) => o.trim()).filter(Boolean).map((o) => o[0].toUpperCase() + o.slice(1));
+    } else if (opts.length === 1 && opts[0].includes('/')) {
+      opts = opts[0].split('/').map((o) => o.trim()).filter(Boolean);
     }
     return { kind: 'select', options: opts };
   }
@@ -102,25 +165,41 @@ function classify(note, cellBelow, label) {
 }
 
 // ── Entités, dans l'ordre du classeur ──────────────────────────────────────
+//
+// Reconstruite pour la V2 du classeur (2026-08) : la plupart des onglets ont
+// été renommés (ex. Robinet1 → Robinets, Piscine → Bassin1) ou le cluster ECS
+// a été réorganisé. `key`/`route` reprennent ceux de la version précédente
+// quand le même onglet-fiche existe encore, pour rester lisibles ; seul
+// `sheet` a changé. Cinq entités de la version précédente n'ont plus
+// d'onglet correspondant dans cette V2 et ont donc disparu du schéma :
+// Réseau distribution EFS, Production ECS, Stockage ECS (fusionnées avec
+// Production Stockage ECS ci-dessous), équipements ECS (v0), et Collecte eau
+// de pluie. Voir le rapport de régénération pour le détail.
 const ENTITIES = [
   { sheet: 'Compteur général', key: 'releve_compteur_general', route: 'compteur-general', singular: 'Compteur général', plural: 'Compteur général', single: true, cols: [] },
-  { sheet: 'Sous-compteurs1', key: 'sous_compteurs', route: 'sous-compteurs', singular: 'Sous-compteur', plural: 'Sous-compteurs', cols: ['Numero', 'Emplacement', 'AnneeDePose', 'Teletransmission'] },
-  { sheet: 'Réducteur de Pression1', key: 'reducteurs_de_pression', route: 'reducteurs-pression', singular: 'Réducteur de pression', plural: 'Réducteurs de pression', cols: ['Numero', 'ConditionDAcces', 'Type'] },
-  { sheet: 'Réseau distribution EFS', key: 'reseaux_efs', route: 'reseaux-efs', singular: 'Réseau EFS', plural: 'Réseaux de distribution EFS', cols: ['Numero'] },
-  { sheet: 'Réseau distribution ECS', key: 'reseaux_eau_chaude_sanitaire', route: 'reseaux-ecs', singular: 'Réseau ECS', plural: 'Réseaux de distribution ECS', cols: ['Numero'] },
-  { sheet: 'Production ECS', key: 'production_ecs', route: 'production-ecs', singular: 'Production ECS', plural: 'Production ECS', cols: ['Numero'] },
-  { sheet: 'Stockage ECS', key: 'stockage_ecs', route: 'stockage-ecs', singular: 'Stockage ECS', plural: 'Stockage ECS', cols: ['Numero'] },
-  { sheet: 'équipements ECS (v0)', key: 'equipements_ecs', route: 'equipements-ecs', singular: 'Équipement ECS', plural: 'Équipements ECS', cols: ['Numero', 'Emplacement'] },
-  { sheet: 'Robinet1', key: 'robinets', route: 'robinets', singular: 'Robinet', plural: 'Robinets', cols: ['Numero', 'Emplacement', 'Type', 'Debit'] },
-  { sheet: 'Douche-baignoire1', key: 'douches_baignoires', route: 'douches-baignoires', singular: 'Douche / Baignoire', plural: 'Douches et baignoires', cols: ['Numero', "ChoixDeLEquipement", 'Emplacement', 'NumeroRobinetCorrespondant'] },
-  { sheet: 'WC1', key: 'wc', route: 'wc', singular: 'WC', plural: 'WC', cols: ['Numero', 'Type', 'Emplacement'] },
-  { sheet: 'Ventilation', key: 'ventilation_batiment', route: 'ventilation', singular: 'Ventilation', plural: 'Ventilation', cols: ['Numero'] },
-  { sheet: 'Piscine', key: 'piscines', route: 'piscines', singular: 'Piscine', plural: 'Piscines', cols: ['Numero', 'Nom', 'Emplacement'] },
-  { sheet: 'Collecte eau de pluie', key: 'collecte_eau_pluie', route: 'collecte-eau-pluie', singular: "Collecte d'eau de pluie", plural: "Collecte d'eau de pluie", single: true, cols: [] },
+  { sheet: 'Sous-compteur1', key: 'sous_compteurs', route: 'sous-compteurs', singular: 'Sous-compteur', plural: 'Sous-compteurs', cols: ['Numero', 'Emplacement', 'AnneeDePose', 'Teletransmission'] },
+  { sheet: 'Réducteur de pression1', key: 'reducteurs_de_pression', route: 'reducteurs-pression', singular: 'Réducteur de pression', plural: 'Réducteurs de pression', cols: ['Numero', 'Emplacement', 'AnneeDePose'] },
+  { sheet: 'Surpresseur1', key: 'surpresseurs', route: 'surpresseurs', singular: 'Surpresseur', plural: 'Surpresseurs', cols: ['Numero', 'Emplacement', 'AnneeDePose'] },
+  { sheet: 'Réseaux ECS', key: 'reseaux_eau_chaude_sanitaire', route: 'reseaux-ecs', singular: 'Réseau ECS', plural: 'Réseaux ECS', cols: ['Numero', 'MateriauPrincipalDesCanalisations', 'DiametreDesGaines', 'Bouclage'] },
+  { sheet: 'Production Stockage ECS', key: 'production_stockage_ecs', route: 'production-stockage-ecs', singular: 'Production / Stockage ECS', plural: 'Production / Stockage ECS', cols: ['Numero', 'TypeDeSystemeDeProduction', 'SystemesDeProduction'] },
+  { sheet: 'Robinets', key: 'robinets', route: 'robinets', singular: 'Robinet', plural: 'Robinets', cols: ['Numero', 'Emplacement', 'Type', 'Debit'] },
+  { sheet: 'Douche-baignoire1', key: 'douches_baignoires', route: 'douches-baignoires', singular: 'Douche / Baignoire', plural: 'Douches et baignoires', cols: ['Numero', 'TypeDEquipement', 'Emplacement'] },
+  { sheet: 'WC1', key: 'wc', route: 'wc', singular: 'WC', plural: 'WC', cols: ['Numero', 'TypeDeToiletteOuUrinoir', 'Emplacement', 'NombreDEquipementsIdentiques'] },
+  { sheet: 'Appareils de lavage', key: 'appareils_lavage', route: 'appareils-lavage', singular: 'Appareil de lavage', plural: 'Appareils de lavage', cols: ['Numero', 'Emplacement', 'Type'] },
+  { sheet: 'Structure1', key: 'structure', route: 'structure', singular: 'Structure', plural: 'Structures', cols: ['Numero', 'Emplacement', 'TypeDeLaStructure'] },
+  { sheet: 'Ventilation1', key: 'ventilation_batiment', route: 'ventilation', singular: 'Ventilation', plural: 'Ventilation', cols: ['Numero', 'SystemeDeVentilation', 'EmplacementDuSysteme'] },
+  { sheet: 'Incendie', key: 'incendie', route: 'incendie', singular: 'Incendie', plural: 'Incendie', cols: ['Numero', 'Emplacement', 'PrecisionEmplacement'] },
+  { sheet: 'Toiture1', key: 'toitures', route: 'toitures', singular: 'Toiture', plural: 'Toitures', cols: ['Numero', 'Emplacement', 'SurfaceDeToiture', 'ToitureAccessible'] },
+  { sheet: 'Bassin1', key: 'piscines', route: 'piscines', singular: 'Bassin', plural: 'Piscines', cols: ['Numero', 'Nom', 'Emplacement', 'VolumeDuBassin'] },
   { sheet: 'Extérieur1', key: 'espace_vert_exterieur', route: 'espaces-exterieurs', singular: 'Espace extérieur', plural: 'Espaces extérieurs', cols: ['Numero', 'Emplacement'] },
+  { sheet: 'Opportunités1', key: 'opportunites', route: 'opportunites', singular: 'Opportunité', plural: 'Opportunités', cols: ['Numero', 'Emplacement'] },
+  { sheet: 'Autre1', key: 'autre', route: 'autre', singular: 'Autre', plural: 'Autres', cols: ['Numero', 'Choix', 'Nom', 'Emplacement'] },
 ];
 
 const IGNORE = /^(audit sobrieau|enregistrer|num[ée]ro$)/i;
+
+/** Pour résoudre « la liste des réseaux ECS » → `reseaux_eau_chaude_sanitaire`. */
+const entityByPlural = new Map(ENTITIES.map((e) => [normLabel(e.plural), e.key]));
 
 const out = [];
 out.push(`import { EntityDef } from './field.models';`);
@@ -151,11 +230,15 @@ for (const ent of ENTITIES) {
     return '';
   };
 
-  // Étiquettes : cellules texte dont la ligne suivante porte des notes
+  // Étiquettes : cellules texte dont la ligne suivante porte des notes.
+  // Le plafond de longueur écarte les bandeaux/titres (un vrai libellé,
+  // même verbeux avec ses exemples entre parenthèses, ne dépasse pas 250
+  // caractères dans ce classeur — mesuré, le plus long en fait 219).
+  const MAX_LABEL_LEN = 250;
   const rows = {};
   for (const [ref, cell] of Object.entries(s.cells)) {
     const v = String(cell.v ?? '').trim();
-    if (!v || v.length > 70 || IGNORE.test(v)) continue;
+    if (!v || v.length > MAX_LABEL_LEN || IGNORE.test(v)) continue;
     const r = rowOf(ref);
     if (r < 6) continue; // lignes 1 à 5 : bandeau, titre de la fiche, Numéro
     if (!noteRows.has(r + 1)) continue;
@@ -168,7 +251,7 @@ for (const ent of ENTITIES) {
     for (const [ref, cell] of Object.entries(s.cells)) {
       const v = String(cell.v ?? '').trim();
       const r = rowOf(ref), c = colNum(colOf(ref));
-      if (!v || v.length > 70 || r < 6 || IGNORE.test(v)) continue;
+      if (!v || v.length > MAX_LABEL_LEN || r < 6 || IGNORE.test(v)) continue;
       if (occupied.has((r + 1) + ':' + c)) continue; // suivi de contenu → pas une étiquette
       (rows[r] ??= []).push({ col: c, label: v.replace(/\s+/g, ' ') });
     }
@@ -188,7 +271,7 @@ for (const ent of ENTITIES) {
         if (nc >= c.col && (!next || nc < next.col)) { note = strip(raw); break; }
       }
       const below = cellAt(r + 1, c.col);
-      const { kind, options, unit } = classify(note, below, c.label);
+      const { kind, options, unit, refTo } = classify(note, below, c.label, entityByPlural);
 
       let key = keyFor(ent.sheet, c.label);
       while (seen.has(key)) key += 'Bis';
@@ -196,6 +279,7 @@ for (const ent of ENTITIES) {
 
       const f = { key, label: c.label.replace(/\s*\([^)]*\)\s*$/, '').trim() || c.label, kind, row: r };
       if (unit) f.unit = unit;
+      if (refTo) f.refTo = refTo;
       if (options?.length) {
         const constant = LOOKUP.get(norm(options));
         f.options = constant ? `L.${constant}` : JSON.stringify(options);
@@ -218,6 +302,7 @@ for (const ent of ENTITIES) {
   for (const f of fields) {
     const parts = [`key: ${JSON.stringify(f.key)}`, `label: ${JSON.stringify(f.label)}`, `kind: ${JSON.stringify(f.kind)}`, `row: ${f.row}`];
     if (f.unit) parts.push(`unit: ${JSON.stringify(f.unit)}`);
+    if (f.refTo) parts.push(`refTo: ${JSON.stringify(f.refTo)}`);
     if (f.options) parts.push(`options: ${f.options}`);
     if (f.wide) parts.push(`wide: true`);
     out.push(`      { ${parts.join(', ')} },`);

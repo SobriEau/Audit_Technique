@@ -153,10 +153,21 @@ Tout élément listé puis détaillé sur sa propre fiche implémente `AuditEnti
 
 La spécification prévoit de renuméroter les éléments après une suppression
 (« *incrémenter à chaque nouvelle page et l'inverse en cas de suppression* »).
-Or les relations décrites par le classeur — « Numéro robinet correspondant »,
-« Numéro réseau ECS d'appartenance » — pointent sur ce numéro. S'y fier ferait
-glisser silencieusement une douche vers le mauvais robinet dès la première
-suppression. **Ne jamais utiliser `Numero` ni un index de tableau comme clé.**
+Or les relations décrites par le classeur — « Numéro réseau ECS d'appartenance »
+sur les robinets et les douches/baignoires — pointent sur ce numéro. S'y fier
+ferait glisser silencieusement un élément vers la mauvaise cible dès la
+première suppression. **Ne jamais utiliser `Numero` ni un index de tableau
+comme clé.**
+
+Le classeur ne formule pas toujours cette relation de façon reconnaissable :
+« avec les choix de la liste des réseaux ECS » est le seul tour de phrase
+que `gen-schema.js` sait convertir en champ `entity-ref` (voir `ENTITY_REF_RE`).
+La V2 a par ailleurs remplacé le renvoi « Numéro robinet correspondant » qu'avait
+la fiche Douche/Baignoire par une description du robinet **intégrée** à cette
+même fiche — ce n'est plus une référence croisée du tout sur cet écran précis.
+Elle introduit aussi des références **multiples** qu'aucun mécanisme actuel ne
+couvre (« Numéros des robinets correspondants » à cocher, sur les espaces
+extérieurs et les appareils de lavage) : `entity-ref` ne stocke qu'un seul Id.
 
 Les audits antérieurs à `Id` sont repris automatiquement : `ensureEntityIds()`
 attribue les identifiants manquants au chargement et après un import.
@@ -340,9 +351,10 @@ active et évite que le texte parte dans le mauvais champ.
 
 ## 8. Partie technique — un moteur piloté par le schéma
 
-Les douze entités de la partie technique **ne sont pas douze composants**. Le
-classeur décrit partout le même motif « liste puis fiche » : chaque entité est
-donc décrite en données et rendue par deux composants génériques.
+Les dix-huit entités de la partie technique (V2 du classeur, 2026-08) **ne
+sont pas dix-huit composants**. Le classeur décrit partout le même motif
+« liste puis fiche » : chaque entité est donc décrite en données et rendue par
+deux composants génériques.
 
 | Fichier | Rôle |
 |---|---|

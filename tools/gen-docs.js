@@ -14,8 +14,18 @@ const colOf = (r) => r.match(/^[A-Z]+/)[0];
 const rowOf = (r) => parseInt(r.match(/\d+$/)[0], 10);
 const colNum = (c) => [...c].reduce((a, ch) => a * 26 + (ch.charCodeAt(0) - 64), 0);
 
-/** Retire le préfixe « Auteur: » que Excel place en tête de note. */
-const strip = (n) => n.replace(/^[^:\n]{0,40}:\s*/, '').replace(/\r/g, '').trim();
+/**
+ * Retire le préfixe « Auteur: » que Excel place en tête de note.
+ * Garde : certaines notes n'ont pas de signature et commencent directement
+ * par le marqueur de type (« Liste déroulante : ») — sans cette garde, la
+ * regexp l'avalerait comme si c'était une signature.
+ */
+const NOTE_MARKER_RE = /^(liste\s*d[ée]roulante|champ[s]?\s*libre|oui\s*\/\s*non|o\s*\/\s*n\b)/i;
+const strip = (n) => {
+  const t = n.replace(/\r/g, '').trim();
+  if (NOTE_MARKER_RE.test(t)) return t;
+  return t.replace(/^[^:\n]{0,40}:\s*/, '').trim();
+};
 
 /**
  * Détecte une énumération écrite directement dans une cellule
@@ -47,6 +57,36 @@ function cellEnum(v) {
   return parts;
 }
 
+/**
+ * Marqueur d'énumération dans une note — voir la même liste dans
+ * gen-schema.js. « liste déroulante » seul avait fait perdre 13 champs sur
+ * le seul onglet WC1, qui parle de « menu déroulant » et de « cases à
+ * cocher ».
+ */
+const ENUM_MARKER_RE = /liste\s*d[ée]roulante|menu\s*d[ée]roulant|(?:cases?\s*)?[aà]\s*cocher/i;
+
+/**
+ * Découpe une liste d'options en respectant les parenthèses — voir la même
+ * fonction dans gen-schema.js.
+ */
+function splitOptions(text) {
+  const parts = [];
+  let cur = '';
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    if (depth === 0 && /[\n,;]/.test(ch)) {
+      parts.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  parts.push(cur);
+  return parts;
+}
+
 /** Déduit le type de saisie et, le cas échéant, les options. */
 function classify(note, label) {
   const n = note.toLowerCase();
@@ -55,20 +95,26 @@ function classify(note, label) {
     return { type: 'Oui / Non', options: ['Oui', 'Non'] };
   }
 
-  if (/liste\s*d[ée]roulante/i.test(note)) {
-    // Tout ce qui suit « liste déroulante » (et son éventuel deux-points)
-    const after = note.replace(/^[\s\S]*?liste\s*d[ée]roulante\s*:?\s*/i, '');
-    const options = after
-      .split(/[\n,;]+/)
+  if (ENUM_MARKER_RE.test(note)) {
+    // Tout ce qui suit le marqueur (et son éventuel deux-points)
+    const after = note.replace(new RegExp('^[\\s\\S]*?(?:' + ENUM_MARKER_RE.source + ')\\s*:?\\s*', 'i'), '');
+    let options = splitOptions(after)
       .map((o) => o.trim().replace(/[.,;]+$/, ''))
       .filter((o) => o && o.length < 80 && !/^\(?\?+\)?$/.test(o));
+    // Un seul item retenu : les options sont peut-être jointes par « / »
+    // (« Bon / Moyen / Mauvais ») plutôt que par une virgule. Un « / » à
+    // l'intérieur d'un item d'une liste déjà scindée (« PVC/EPDM ») reste
+    // intact — seul un item unique est retenté sur ce séparateur.
+    if (options.length === 1 && options[0].includes('/')) {
+      options = options[0].split('/').map((o) => o.trim()).filter(Boolean);
+    }
     return { type: 'Liste déroulante', options };
   }
 
   if (/champ[s]?\s*libre/i.test(n)) {
     const unit = label && label.match(/\(([^)]+)\)/);
     const numeric =
-      unit && /l\/min|mm|°c|\bs\b|m3|m³|kwh|bar|%|litre|nombre|an|jour|semaine/i.test(unit[1]);
+      unit && /l\/min|l\/s|mm|cm|\bm\b|m²|°c|\bs\b|m3|m³|kwh|bar|%|kg|litre|nombre|an|jour|semaine/i.test(unit[1]);
     if (numeric) return { type: `Nombre (${unit[1]})`, options: null };
     if (/nombre|numéro|débit|temps|diamètre/i.test(label || '')) {
       return { type: 'Nombre', options: null };
@@ -79,7 +125,12 @@ function classify(note, label) {
   return { type: null, options: null };
 }
 
-/** Étiquette la plus probable pour une note : cellule texte au-dessus, à gauche. */
+/**
+ * Étiquette la plus probable pour une note : cellule texte au-dessus, à
+ * gauche. Le plafond de longueur écarte les bandeaux/titres — voir la même
+ * mesure (219 caractères pour le plus long libellé réel) dans gen-schema.js.
+ */
+const MAX_LABEL_LEN = 250;
 function findLabel(cells, ref) {
   const r = rowOf(ref);
   const c = colNum(colOf(ref));
@@ -88,7 +139,7 @@ function findLabel(cells, ref) {
     for (const [cref, cell] of Object.entries(cells)) {
       if (rowOf(cref) !== row) continue;
       const v = String(cell.v ?? '').trim();
-      if (!v || v.length > 90) continue;
+      if (!v || v.length > MAX_LABEL_LEN) continue;
       const cc = colNum(colOf(cref));
       if (cc <= c && (!best || cc > best.cc)) best = { cc, v };
     }
@@ -132,9 +183,13 @@ for (const sheet of wb.sheets) {
     if (opts) inCell.push({ ref, label: findLabel(sheet.cells, ref), options: opts, raw: String(c.v).trim() });
   }
 
+  // Bornée à MAX_LABEL_LEN : plusieurs relectures ont buté sur des libellés
+  // légitimes exclus de ce dump (donc invisibles, y compris pour un
+  // relecteur humain) alors que la légende du fichier le présente comme la
+  // vérité de référence exhaustive.
   const titles = Object.entries(sheet.cells)
     .map(([ref, c]) => ({ ref, v: String(c.v ?? '').trim() }))
-    .filter((x) => x.v && x.v.length > 2 && x.v.length < 70);
+    .filter((x) => x.v && x.v.length > 2 && x.v.length < MAX_LABEL_LEN);
 
   const md = [];
   md.push(`# ${sheet.name}`);
@@ -257,9 +312,10 @@ for (const sheet of wb.sheets) {
 const idx = [];
 idx.push('# Spécification de l\'audit technique');
 idx.push('');
+const totalNotes = wb.sheets.reduce((n, s) => n + Object.keys(s.notes).length, 0);
 idx.push(
   'Un fichier par onglet de `audit_technique.xlsx`. La spécification réelle vit dans ' +
-    'les **notes de cellules** du classeur : 321 notes réparties sur 31 onglets.'
+    `les **notes de cellules** du classeur : ${totalNotes} notes réparties sur ${wb.sheets.length} onglets.`
 );
 idx.push('');
 idx.push('## À lire en premier');

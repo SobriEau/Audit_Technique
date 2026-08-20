@@ -5,10 +5,23 @@
  * données ; les valeurs sont décrites en toutes lettres dans les notes de
  * cellules. Voir `docs/audit/referentiel-listes.md`.
  *
- * ⚠️ Certaines listes divergent entre le catalogue de l'onglet « Infos audit
- * partie technique » et les notes des pages. Le choix retenu ici est la **note
- * de la page**, plus spécifique au champ. Les divergences sont signalées :
- * c'est le seul fichier à reprendre une fois l'arbitrage rendu.
+ * ⚠️ **Ces constantes datent de la V1 du classeur et n'ont pas été mises à
+ * jour pour la V2 (régénération du 2026-08).** La V2 a reformulé la plupart
+ * des énumérations (options ajoutées, retirées ou renommées) : aucune ne
+ * correspond plus exactement aux ~190 listes désormais présentes dans les
+ * notes du classeur, donc `gen-schema.js` ne les référence plus — il inline
+ * chaque liste directement dans `audit-schema.ts`, ce qui fonctionne, mais
+ * perd la mise en commun que ce fichier est censé offrir. Aucune énumération
+ * n'a été perdue pour autant : voir `docs/audit/referentiel-listes.md`, qui
+ * les recense toutes avec leur cellule d'origine.
+ *
+ * Une reprise de ce fichier n'a pas été faite lors de cette régénération :
+ * curer quelles listes méritent une constante partagée (par ex. la triple
+ * énumération « Bon / Moyen / Mauvais » d'état général, répétée dans une
+ * douzaine d'onglets) est un arbitrage humain, pas une déduction mécanique —
+ * plusieurs listes qui partagent un libellé (« Type » sur les compteurs vs
+ * les réducteurs de pression vs les appareils de lavage…) décrivent des
+ * notions distinctes et ne doivent surtout pas être fusionnées.
  */
 
 // ── Comptage ───────────────────────────────────────────────────────────────
