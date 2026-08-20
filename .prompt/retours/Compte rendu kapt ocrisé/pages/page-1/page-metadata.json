@@ -1,0 +1,146 @@
+{
+  "index": 0,
+  "dimensions": {
+    "dpi": 87,
+    "height": 1018,
+    "width": 720
+  },
+  "confidenceScores": null,
+  "blocks": [
+    {
+      "topLeftX": 101,
+      "topLeftY": 39,
+      "bottomRightX": 191,
+      "bottomRightY": 70,
+      "content": "KAPT",
+      "confidenceScores": null,
+      "type": "header"
+    },
+    {
+      "topLeftX": 187,
+      "topLeftY": 244,
+      "bottomRightX": 523,
+      "bottomRightY": 293,
+      "content": "# Compte rendu",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 323,
+      "topLeftY": 303,
+      "bottomRightX": 411,
+      "bottomRightY": 318,
+      "content": "18 août 2026",
+      "confidenceScores": null,
+      "type": "text"
+    },
+    {
+      "topLeftX": 201,
+      "topLeftY": 339,
+      "bottomRightX": 534,
+      "bottomRightY": 359,
+      "content": "Revue ergonomiques de l'application SobriEAU",
+      "confidenceScores": null,
+      "type": "text"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 465,
+      "bottomRightX": 262,
+      "bottomRightY": 494,
+      "content": "## Participants",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 123,
+      "topLeftY": 502,
+      "bottomRightX": 295,
+      "bottomRightY": 548,
+      "content": "- Sacha MAILLER, CEREMA\n- Victor LEDOUX, SobriEAU\n- Adrien DELHORME, KAPT",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 586,
+      "bottomRightX": 276,
+      "bottomRightY": 615,
+      "content": "## Ordre du jour",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 123,
+      "topLeftY": 623,
+      "bottomRightX": 348,
+      "bottomRightY": 639,
+      "content": "- Revue ergonomique de l'application",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 677,
+      "bottomRightX": 567,
+      "bottomRightY": 706,
+      "content": "## Revue ergonomique de l'application",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 736,
+      "bottomRightX": 262,
+      "bottomRightY": 757,
+      "content": "### Toutes les pages",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 764,
+      "bottomRightX": 208,
+      "bottomRightY": 782,
+      "content": "#### Barre du haut",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 121,
+      "topLeftY": 786,
+      "bottomRightX": 631,
+      "bottomRightY": 879,
+      "content": "- Le bouton « connexion » n'est peut-être pas nécessaire dans la v1, ou alors au moment de l'import ou de l'export des projets en JSON\n- Le bouton « Enregistrer » peut, sur certaines pages, être confondu avec l'enregistrement du formulaire de la page. Le renommer en « Enregistrer le projet » ou « Enregistrer l'audit » permettrait de réduire cette ambiguïté.\n- Le bouton « Charger » ne sera présent que sur la page d'accueil",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 892,
+      "bottomRightX": 326,
+      "bottomRightY": 912,
+      "content": "#### Textes d'aide sur les champs",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 913,
+      "bottomRightX": 626,
+      "bottomRightY": 945,
+      "content": "Lorsque les libellés des champs ne sont pas évidents, il est conseillé d'ajouter un texte d'aide en dessous",
+      "confidenceScores": null,
+      "type": "text"
+    },
+    {
+      "topLeftX": 239,
+      "topLeftY": 959,
+      "bottomRightX": 497,
+      "bottomRightY": 974,
+      "content": "KAPT, Bâtiment INEED 1, rue Marc Seguin 26300 ALIXAN",
+      "confidenceScores": null,
+      "type": "footer"
+    }
+  ]
+}

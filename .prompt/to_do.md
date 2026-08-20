@@ -1,0 +1,2 @@
+dans le dossier "retours" tu trouveras les retours des participant à une réunion d'analyse de l'outil produit (dans une version actuelle ou antérieure)
+peux tu croiser l'ensembel de ces document et les analyser avec ta connaissance de l'outil actuel pour écrire le prompt "to_do_2.md" qui sera le prompt d'execution de tout les changements à effectuer avec les tests ? (si la connexion à google drive est évoquée dans un des compte rendu comme non fonctionnel ce problème est déjà géré)

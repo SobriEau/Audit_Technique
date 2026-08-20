@@ -1,0 +1,57 @@
+{
+  "index": 2,
+  "dimensions": {
+    "dpi": 87,
+    "height": 1018,
+    "width": 720
+  },
+  "confidenceScores": null,
+  "blocks": [
+    {
+      "topLeftX": 101,
+      "topLeftY": 39,
+      "bottomRightX": 192,
+      "bottomRightY": 70,
+      "content": "ikapt",
+      "confidenceScores": null,
+      "type": "header"
+    },
+    {
+      "topLeftX": 143,
+      "topLeftY": 109,
+      "bottomRightX": 636,
+      "bottomRightY": 157,
+      "content": "possible de lui demander d'associer l'une des images de plans à cet élément technique et de permettre d'ouvrir facilement cette image dans un nouvel onglet, en grande taille. La localisation avec un curseur sur le plan est un plus.",
+      "confidenceScores": null,
+      "type": "text"
+    },
+    {
+      "topLeftX": 121,
+      "topLeftY": 157,
+      "bottomRightX": 632,
+      "bottomRightY": 267,
+      "content": "- Dans les listes d'éléments, pouvoir dupliquer un élément peut parfois être un vrai gain de temps.\n- Aussi, pouvoir indiquer le nombre d'éléments strictement identiques à un même emplacement peut être intéressant.\n- Le bouton Enregistrer en bas du formulaire, doit être un point de passage obligatoire. Il serait préférable qu'il soit toujours visible à l'écran : par exemple dans une barre qui reste « collée » en bas de l'écran.",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 99,
+      "topLeftY": 415,
+      "bottomRightX": 633,
+      "bottomRightY": 599,
+      "content": "![img-0.jpeg](img-0.jpeg)",
+      "confidenceScores": null,
+      "type": "image",
+      "imageId": "img-0.jpeg"
+    },
+    {
+      "topLeftX": 239,
+      "topLeftY": 959,
+      "bottomRightX": 497,
+      "bottomRightY": 974,
+      "content": "KAPT, Bâtiment INEED 1, rue Marc Seguin 26300 ALIXAN",
+      "confidenceScores": null,
+      "type": "footer"
+    }
+  ]
+}

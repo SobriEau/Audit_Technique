@@ -1,0 +1,11 @@
+ikapt
+
+possible de lui demander d'associer l'une des images de plans à cet élément technique et de permettre d'ouvrir facilement cette image dans un nouvel onglet, en grande taille. La localisation avec un curseur sur le plan est un plus.
+
+- Dans les listes d'éléments, pouvoir dupliquer un élément peut parfois être un vrai gain de temps.
+- Aussi, pouvoir indiquer le nombre d'éléments strictement identiques à un même emplacement peut être intéressant.
+- Le bouton Enregistrer en bas du formulaire, doit être un point de passage obligatoire. Il serait préférable qu'il soit toujours visible à l'écran : par exemple dans une barre qui reste « collée » en bas de l'écran.
+
+![img-0.jpeg](img-0.jpeg)
+
+KAPT, Bâtiment INEED 1, rue Marc Seguin 26300 ALIXAN

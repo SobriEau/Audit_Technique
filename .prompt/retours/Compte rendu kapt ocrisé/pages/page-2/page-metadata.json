@@ -1,0 +1,128 @@
+{
+  "index": 1,
+  "dimensions": {
+    "dpi": 87,
+    "height": 1018,
+    "width": 720
+  },
+  "confidenceScores": null,
+  "blocks": [
+    {
+      "topLeftX": 101,
+      "topLeftY": 39,
+      "bottomRightX": 191,
+      "bottomRightY": 70,
+      "content": "KAPT",
+      "confidenceScores": null,
+      "type": "header"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 110,
+      "bottomRightX": 306,
+      "bottomRightY": 129,
+      "content": "## Regroupement de champs",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 131,
+      "bottomRightX": 592,
+      "bottomRightY": 178,
+      "content": "Pour rendre plus facile à lire les formulaires les plus complets, ne pas hésiter à faire des groupes de champs espacés visuellement. Par exemple « Emplacement », puis « Consommation », etc.",
+      "confidenceScores": null,
+      "type": "text"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 206,
+      "bottomRightX": 225,
+      "bottomRightY": 228,
+      "content": "## Page Accueil",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 233,
+      "bottomRightX": 505,
+      "bottomRightY": 251,
+      "content": "Il serait pertinent que l'écran d'accueil soit une page ne contenant que :",
+      "confidenceScores": null,
+      "type": "text"
+    },
+    {
+      "topLeftX": 121,
+      "topLeftY": 263,
+      "bottomRightX": 489,
+      "bottomRightY": 309,
+      "content": "- La liste des projets stockés dans le navigateur (local storage)\n- Un bouton pour importer un projet (depuis un JSON)\n- Un bouton « Nouveau projet »",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 336,
+      "bottomRightX": 332,
+      "bottomRightY": 360,
+      "content": "## Page d'accueil du projet",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 121,
+      "topLeftY": 366,
+      "bottomRightX": 634,
+      "bottomRightY": 663,
+      "content": "- Ajouter champ texte libre « nom du projet » facultatif, pour nommer et identifier le projet\n- Ajouter un champ « nom du site » et préciser quelles informations sont attendues\n- Ajouter un texte d'aide sur le champ adresse : préciser ce qui est attendu (voie, code postal, commune, etc)\n- Ajouter un badge [Priorité : basse], [Priorité : moyenne] ou [Priorité : haute] à droite des libellés des champs pour indiquer que la saisie ou non d'un champ a un impact sur la qualité de l'audit\n- Préciser le libellé du champ « Info » : « Informations générales » par exemple\n- Préciser quelle date on attends dans le champ Date de la section Audit (date de début d'audit ? date de fin ?)\n- Après discussion, il a été convenu qu'il n'est pas nécessaire de demander la date des plans car seuls les dernières versions seront chargées\n- Ne pas permettre l'ajout de photos sur l'écran général du projet, seulement la consultation\n- Supprimer les boutons « questionnaires ... »\n- Renommer le bouton « Audit technique » en « Démarrer l'audit technique »\n- Ajouter une section avec des cases à cocher qui permettent de pré-sélectionner les formulaires qui seront accessibles dans l'audit technique",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 692,
+      "bottomRightX": 257,
+      "bottomRightY": 713,
+      "content": "## Audit technique",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 121,
+      "topLeftY": 719,
+      "bottomRightX": 628,
+      "bottomRightY": 829,
+      "content": "- Ajouter le fil d'Ariane pour aider au repérage et à la navigation dans l'application : Au maximum on devrait attendre cinq niveaux de profondeur (Accueil > Nom du Projet > Audit technique > Section > Ajout/modification d'un élément)\n- Le fil d'Ariane pourra remplacer le bouton retour\n- Supprimer le champ « infos » en haut de page qui n'est pas nécessaire\n- La liste des sections pourrait être rendue plus lisible en regroupant certaines sections en catégories (par exemple : ECS, EFS, extérieur, etc)",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 101,
+      "topLeftY": 857,
+      "bottomRightX": 384,
+      "bottomRightY": 878,
+      "content": "## Fiche d'un élément technique",
+      "confidenceScores": null,
+      "type": "title"
+    },
+    {
+      "topLeftX": 121,
+      "topLeftY": 885,
+      "bottomRightX": 627,
+      "bottomRightY": 932,
+      "content": "- Champ Emplacement : dans tous les cas il sera nécessaire de remplir ce champ au format texte pour identifier l'emplacement d'un élément. Indiquer dans le texte d'aide de s'appuyer sur le plan pour nommer les emplacements. Pour aider l'utilisateur il est",
+      "confidenceScores": null,
+      "type": "list"
+    },
+    {
+      "topLeftX": 240,
+      "topLeftY": 959,
+      "bottomRightX": 497,
+      "bottomRightY": 973,
+      "content": "KAPT, Bâtiment INEED 1, rue Marc Seguin 26300 ALIXAN",
+      "confidenceScores": null,
+      "type": "footer"
+    }
+  ]
+}

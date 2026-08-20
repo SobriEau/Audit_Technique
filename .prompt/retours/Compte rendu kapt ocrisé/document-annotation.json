@@ -1,0 +1,100 @@
+{
+  "entities": [
+    {
+      "text": "18 août 2026",
+      "type": "date",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "text": "Sacha MAILLER",
+      "type": "person",
+      "start": 100,
+      "end": 113
+    },
+    {
+      "text": "CEREMA",
+      "type": "organization",
+      "start": 115,
+      "end": 121
+    },
+    {
+      "text": "Victor LEDOUX",
+      "type": "person",
+      "start": 126,
+      "end": 139
+    },
+    {
+      "text": "SobriEAU",
+      "type": "organization",
+      "start": 141,
+      "end": 149
+    },
+    {
+      "text": "Adrien DELHORME",
+      "type": "person",
+      "start": 154,
+      "end": 169
+    },
+    {
+      "text": "KAPT",
+      "type": "organization",
+      "start": 171,
+      "end": 175
+    },
+    {
+      "text": "KAPT",
+      "type": "organization",
+      "start": 1000,
+      "end": 1004
+    },
+    {
+      "text": "Bâtiment INEED",
+      "type": "location",
+      "start": 1006,
+      "end": 1019
+    },
+    {
+      "text": "1, rue Marc Seguin",
+      "type": "location",
+      "start": 1020,
+      "end": 1036
+    },
+    {
+      "text": "26300 ALIXAN",
+      "type": "location",
+      "start": 1037,
+      "end": 1050
+    },
+    {
+      "text": "KAPT",
+      "type": "organization",
+      "start": 1100,
+      "end": 1104
+    },
+    {
+      "text": "Bâtiment INEED",
+      "type": "location",
+      "start": 1106,
+      "end": 1119
+    },
+    {
+      "text": "1, rue Marc Seguin",
+      "type": "location",
+      "start": 1120,
+      "end": 1136
+    },
+    {
+      "text": "26300 ALIXAN",
+      "type": "location",
+      "start": 1137,
+      "end": 1150
+    },
+    {
+      "text": "KAPT",
+      "type": "organization",
+      "start": 1151,
+      "end": 1155
+    }
+  ]
+}
