@@ -141,6 +141,30 @@
 </div>
 
 <div class="panel">
+  <h2>Équipements présents dans le bâtiment</h2>
+  <p class="muted">
+    Décochez ce qui est absent du bâtiment : sa section n'apparaîtra plus dans
+    le tableau de bord de l'audit technique. Compteur général, robinets et WC
+    restent toujours affichés, ils concernent presque tous les bâtiments.
+  </p>
+
+  <ul class="equipements-list">
+    @for (e of equipements; track e.key) {
+      <li>
+        <label class="equipement-check">
+          <input
+            type="checkbox"
+            [checked]="estPresent(e.key)"
+            (change)="changerPresence(e.key, $any($event.target).checked)"
+          />
+          {{ e.plural }}
+        </label>
+      </li>
+    }
+  </ul>
+</div>
+
+<div class="panel">
   <div class="buttons">
     <button class="nav-btn nav-btn--qte" (click)="nav('qte')">
       Démarrer l'audit technique

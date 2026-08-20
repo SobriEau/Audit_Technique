@@ -70,6 +70,33 @@ footer {
   font-size: var(--fs-sm);
 }
 
+/* ── Équipements présents ─────────────────────────────────────────────── */
+
+.equipements-list {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-2) var(--sp-4);
+}
+
+.equipement-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  font-weight: normal;
+  color: var(--c-text);
+  cursor: pointer;
+}
+
+.equipement-check input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
 /* Rappel d'enregistrement : en bas du formulaire, pas au-dessus, pour ne pas
    retarder la saisie — mais visible avant de quitter la page. */
 .rappel-enregistrer {

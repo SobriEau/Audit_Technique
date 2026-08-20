@@ -8,11 +8,20 @@ import { PlanManagerComponent } from '../shared/components/plan-manager/plan-man
 import { PhotoEditorComponent } from '../shared/components/photo-editor/photo-editor.component';
 import { AssetRef, AuditSummary } from '../models/data.models';
 import { PhotoMode, photoMode, setPhotoMode } from '../core/utils/photo-mode';
+import { AUDIT_SCHEMA } from '../models/audit-schema';
+import { EntityDef } from '../models/field.models';
 
 /** Question posée à l'auditeur quand un changement d'adresse est ambigu. */
 type Arbitrage =
   | { genre: 'existe'; adresse: string; cible: AuditSummary }
   | { genre: 'inedite'; adresse: string };
+
+/**
+ * Présents dans presque tous les bâtiments : ces sections restent toujours
+ * affichées sur le tableau de bord, sans case à cocher. Toutes les autres
+ * sont des équipements dont la présence varie et se déclarent ci-dessous.
+ */
+const TOUJOURS_PRESENT = ['releve_compteur_general', 'robinets', 'wc'];
 
 /**
  * Accueil du projet ouvert : identité de l'audit (adresse, nom, auditeur…),
@@ -46,6 +55,14 @@ export class HomeComponent implements OnInit {
   /** Sert uniquement à proposer les adresses déjà connues (datalist) ci-dessous. */
   audits: AuditSummary[] = [];
 
+  /** Équipements dont la présence peut varier d'un bâtiment à l'autre. */
+  readonly equipements: EntityDef[] = AUDIT_SCHEMA.filter(
+    (e) => !e.single && !TOUJOURS_PRESENT.includes(e.key)
+  );
+
+  /** Présence déclarée par équipement. Une clé absente vaut présent. */
+  presence: Record<string, boolean> = {};
+
   /** Non nul tant que l'auditeur n'a pas tranché un changement d'adresse. */
   arbitrage: Arbitrage | null = null;
 
@@ -67,8 +84,20 @@ export class HomeComponent implements OnInit {
     this.date = d.Date ?? '';
     this.auditeur = d.Auditeur ?? '';
     this.photos = d.Photos ?? [];
+    this.presence = { ...(d.EquipementsPresents ?? {}) };
     this.audits = this.dataService.listAudits();
     this.arbitrage = null;
+  }
+
+  /** Une clé absente de `presence` vaut présent (rétrocompatibilité). */
+  estPresent(key: string): boolean {
+    return this.presence[key] !== false;
+  }
+
+  changerPresence(key: string, present: boolean): void {
+    this.presence = { ...this.presence, [key]: present };
+    this.dataService.data.EquipementsPresents = this.presence;
+    this.dataService.save();
   }
 
   /** Titre affiché dans l'en-tête : le nom du projet plutôt qu'un intitulé générique. */

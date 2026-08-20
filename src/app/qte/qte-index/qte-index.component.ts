@@ -34,9 +34,26 @@ interface SectionGroup {
   styleUrl: './qte-index.component.scss',
 })
 export class QteIndexComponent {
-  groups: SectionGroup[] = buildGroups();
+  private readonly groups: SectionGroup[] = buildGroups();
 
   constructor(private router: Router, private dataService: DataService) {}
+
+  /**
+   * Groupes filtrés des équipements déclarés absents depuis l'accueil du
+   * projet — sauf s'ils contiennent déjà des éléments : la case à cocher ne
+   * masque qu'une section vide, jamais une saisie déjà faite.
+   */
+  get visibleGroups(): SectionGroup[] {
+    return this.groups
+      .map((g) => ({ label: g.label, sections: g.sections.filter((s) => this.isVisible(s)) }))
+      .filter((g) => g.sections.length > 0);
+  }
+
+  private isVisible(section: EntityDef): boolean {
+    if (section.single) return true;
+    if (this.dataService.data.EquipementsPresents?.[section.key] !== false) return true;
+    return (this.count(section) ?? 0) > 0;
+  }
 
   /** Nombre d'éléments saisis, affiché en regard de chaque section. */
   count(section: EntityDef): number | null {

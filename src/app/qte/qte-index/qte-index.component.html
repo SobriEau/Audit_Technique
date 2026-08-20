@@ -1,6 +1,6 @@
 <app-page-header pageTitle="Audit Technique" [crumbs]="[{ label: 'Audit technique' }]" />
 
-@for (group of groups; track group.label) {
+@for (group of visibleGroups; track group.label) {
   <div class="panel">
     <h2>{{ group.label }}</h2>
     <div class="grid">

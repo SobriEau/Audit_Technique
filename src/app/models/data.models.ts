@@ -162,4 +162,16 @@ export interface AppData {
   Qge?: Record<string, unknown>;
   Qte?: QteData;
   Qus?: Record<string, unknown>;
+
+  /**
+   * Équipements que l'auditeur a explicitement déclarés absents du bâtiment,
+   * pour ne pas afficher leur section sur le tableau de bord de l'audit
+   * technique. `false` = absent ; une clé manquante vaut présent, pour ne
+   * jamais faire disparaître une section sur un audit déjà commencé.
+   *
+   * Une section contenant déjà des éléments reste affichée même décochée
+   * (voir `QteIndexComponent.isVisible`) : la case ne masque qu'une section
+   * vide, jamais une saisie déjà faite.
+   */
+  EquipementsPresents?: Record<string, boolean>;
 }
