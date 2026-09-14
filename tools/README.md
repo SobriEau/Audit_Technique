@@ -83,6 +83,25 @@ cherché aux emplacements usuels, sinon renseigner `CHROME_PATH`.
   cas des quatre onglets ECS dans la V1 du classeur) ; leurs champs sont alors
   déduits de la seule disposition des cellules et méritent une relecture
   attentive — `check-coverage.js` les signale.
+- **`requirement` (obligatoire/recommandé/facultatif) vient du classeur depuis
+  la V3 (2026-08-21).** Sur la ligne d'un champ, la cellule qui porte un de ces
+  trois mots — entre l'étiquette et le champ suivant de la même ligne — est
+  reprise telle quelle sur le `FieldDef` correspondant. Un champ sans ce
+  marqueur (ancien onglet non repassé en V3, ou oubli) n'a pas de
+  `requirement` : `entity-form.component.ts` le traite alors comme
+  `facultatif` pour l'affichage, jamais comme obligatoire à la validation.
+- **`LEGACY_FIELD_LINES` dans `gen-schema.js` fige les champs des entités dont
+  l'onglet a disparu du classeur sans équivalent ailleurs** (V3 : Surpresseur1
+  seul). Tant qu'aucun onglet ne le redécrit, une régénération conserve ses
+  champs à l'identique (copie de la V2) plutôt que de faire disparaître
+  l'entité — elle reste d'ailleurs masquée par défaut sur l'accueil du projet,
+  réactivable d'une case. Si un onglet réapparaît un jour sous ce nom, il
+  reprend la main automatiquement et ce repli devient inutile.
+  « Réducteur de pression1 » a disparu différemment : son contenu a été
+  intégré à un bloc conditionnel dans Compteur général (« Présence d'un
+  réducteur de pression à proximité ? » → Réglage, Pression de consigne,
+  Etat général…), donc pas de repli pour lui — la fiche à part a été retirée
+  du schéma (décision Sacha, 2026-09) pour ne pas dupliquer la saisie.
 
 ---
 

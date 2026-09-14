@@ -8,6 +8,20 @@
  * dans un gabarit.
  */
 
+/**
+ * Niveau de remplissage attendu pour un champ, tel que noté dans le classeur
+ * (V3, 2026-08-21 — colonne voisine du libellé). Pilote le filtrage par
+ * niveau de remplissage (voir `AppData.NiveauRemplissage`) et, pour
+ * `obligatoire`, la validation à l'enregistrement d'une fiche.
+ *
+ * Sans rapport avec `Priority` (`field-priority.ts`) : celle-ci est un badge
+ * visuel curé à la main, délibérément indépendant de toute notion de
+ * validation. Un champ absent du classeur V3 (onglet disparu, ancien champ
+ * jamais reclassé) n'a pas de `requirement` : il est alors traité comme
+ * `facultatif` pour l'affichage, et jamais exigé à la validation.
+ */
+export type FieldRequirement = 'obligatoire' | 'recommande' | 'facultatif';
+
 /** Nature de la saisie, qui détermine le composant partagé utilisé. */
 export type FieldKind =
   | 'text' // texte court
@@ -56,6 +70,9 @@ export interface FieldDef {
 
   /** Divergence ou question laissée ouverte par les auteurs du classeur. */
   warn?: string;
+
+  /** Niveau de remplissage attendu (V3 du classeur). Voir `FieldRequirement`. */
+  requirement?: FieldRequirement;
 }
 
 export interface EntityDef {

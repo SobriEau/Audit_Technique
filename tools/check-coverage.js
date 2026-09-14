@@ -53,7 +53,6 @@ const norm = (s) =>
 const ENTITES = {
   'Compteur général': 'releve_compteur_general',
   'Sous-compteur1': 'sous_compteurs',
-  'Réducteur de pression1': 'reducteurs_de_pression',
   Surpresseur1: 'surpresseurs',
   'Réseaux ECS': 'reseaux_eau_chaude_sanitaire',
   'Production Stockage ECS': 'production_stockage_ecs',
@@ -89,7 +88,34 @@ function libellesDuSchema() {
 
 /** Notes qui décrivent une règle, non un champ : ni oubli, ni à transcrire. */
 /** Cellules qui ne sont pas des champs — même filtre que `gen-schema.js`. */
-const IGNORE = /^(audit sobrieau|enregistrer|num[ée]ro$)/i;
+const IGNORE = /^(audit sobrieau|enregistrer|valider|num[ée]ro$)/i;
+
+/**
+ * Marqueur de niveau de remplissage (V3 du classeur) — même exclusion que
+ * `gen-schema.js` : sans elle, chaque cellule « Obligatoire »/« Recommandé »/
+ * « Facultatif » ressort ici comme une étiquette prétendument oubliée, alors
+ * qu'elle est correctement traitée à part (`FieldDef.requirement`).
+ */
+const REQUIREMENT_WORDS = /^(obligatoire|recommand[ée]|facultatif)$/i;
+const isRequirementMarker = (v) => REQUIREMENT_WORDS.test(v.trim());
+
+/**
+ * Titres de sous-section du classeur V3 — même exclusion que `gen-schema.js`
+ * (voir `SECTION_HEADER_RE` là-bas pour le détail, notamment pourquoi
+ * « Utilisations » n'y figure pas).
+ */
+const SECTION_HEADER_RE =
+  /^(localisation|ouvrir le plan|caract[ée]ristiques|connexion|etat lors de la visite|mesures?|ou|materiel|structure|reseaux|reserve|tests|purges|organes de reseau|opportunites|\d+)$/i;
+const isSectionHeader = (v) => SECTION_HEADER_RE.test(norm(v));
+
+/**
+ * Entités dont l'onglet a disparu du classeur mais que `gen-schema.js`
+ * conserve volontairement (`LEGACY_FIELD_LINES`, V3 : Surpresseur1 — voir
+ * `ENTITES` ci-dessus, Réducteur de pression1 a été retiré du schéma au
+ * profit du bloc intégré à Compteur général) — à ne pas signaler comme un
+ * oubli.
+ */
+const ENTITES_REPLI = new Set(['surpresseurs']);
 
 const NOTE_COMPORTEMENT =
   /retour à la page|bouton home|enregistrement des données|ajout d.un|ajout d.une|suppression de la page|incrémenter à chaque|données reprises|message avertissement|si on clique|prise de photo/i;
@@ -106,7 +132,11 @@ for (const [onglet, cle] of Object.entries(ENTITES)) {
 
   const s = wb.sheets.find((x) => x.name === onglet);
   if (!s) {
-    console.log(`▶ ${onglet}\n    ONGLET ABSENT du classeur — le schéma le déclare pourtant.\n`);
+    if (ENTITES_REPLI.has(cle)) {
+      console.log(`▶ ${onglet}\n    Onglet absent — champs conservés depuis l'ancien schéma (repli connu, voir LEGACY_FIELD_LINES).\n`);
+    } else {
+      console.log(`▶ ${onglet}\n    ONGLET ABSENT du classeur — le schéma le déclare pourtant.\n`);
+    }
     continue;
   }
 
@@ -121,7 +151,7 @@ for (const [onglet, cle] of Object.entries(ENTITES)) {
   for (const [ref, cell] of Object.entries(s.cells)) {
     const v = String(cell.v ?? '').trim();
     const r = rowOf(ref);
-    if (!v || v.length > 250 || r < 6 || IGNORE.test(v)) continue;
+    if (!v || v.length > 250 || r < 6 || IGNORE.test(v) || isRequirementMarker(v) || isSectionHeader(v)) continue;
     // Une étiquette est suivie d'une cellule de saisie, donc d'une note
     if (!lignesNotees.has(r + 1)) continue;
     if (retenus.has(norm(v))) continue;
@@ -142,7 +172,7 @@ for (const [onglet, cle] of Object.entries(ENTITES)) {
       if (rowOf(cref) !== r) continue;
       const cc = colNum(colOf(cref));
       const v = String(cell.v ?? '').trim();
-      if (!v || cc > c || cc <= meilleur) continue;
+      if (!v || cc > c || cc <= meilleur || isRequirementMarker(v) || isSectionHeader(v)) continue;
       meilleur = cc;
       etiquette = v;
     }

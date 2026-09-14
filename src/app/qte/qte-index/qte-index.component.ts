@@ -14,7 +14,7 @@ import { EntityDef } from '../../models/field.models';
  * une section ne doit jamais disparaître de l'écran faute d'y figurer.
  */
 const GROUPS: { label: string; keys: string[] }[] = [
-  { label: 'Arrivée d’eau', keys: ['releve_compteur_general', 'sous_compteurs', 'reducteurs_de_pression', 'surpresseurs'] },
+  { label: 'Arrivée d’eau', keys: ['releve_compteur_general', 'sous_compteurs', 'surpresseurs'] },
   { label: 'Réseaux ECS', keys: ['reseaux_eau_chaude_sanitaire', 'production_stockage_ecs'] },
   { label: 'Points d’eau', keys: ['robinets', 'douches_baignoires', 'wc', 'appareils_lavage', 'piscines'] },
   { label: 'Bâtiment', keys: ['structure', 'ventilation_batiment', 'incendie', 'toitures'] },

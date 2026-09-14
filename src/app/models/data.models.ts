@@ -71,6 +71,12 @@ export interface AuditEntity {
 }
 
 /**
+ * Niveau de remplissage des fiches de l'audit technique. Voir
+ * `AppData.NiveauRemplissage` et `FieldDef.requirement` (`field.models.ts`).
+ */
+export type NiveauRemplissage = 'complet' | 'allege' | 'minimal';
+
+/**
  * Référence vers un autre élément de l'audit, par son `Id`.
  *
  * À utiliser pour toutes les relations décrites par la spécification
@@ -174,4 +180,18 @@ export interface AppData {
    * vide, jamais une saisie déjà faite.
    */
   EquipementsPresents?: Record<string, boolean>;
+
+  /**
+   * Niveau de remplissage des fiches de l'audit technique, d'après le
+   * `requirement` de chaque champ (V3 du classeur). Une valeur absente vaut
+   * `'complet'` : un audit déjà commencé ne doit jamais voir des champs déjà
+   * remplis se masquer sans que l'auditeur l'ait choisi.
+   *
+   * `'complet'` affiche tous les champs ; `'allege'` seulement les champs
+   * `obligatoire`/`recommande` ; `'minimal'` les seuls `obligatoire`. Dans
+   * tous les cas, un champ masqué déjà rempli reste consultable depuis le
+   * volet dépliable de la fiche (voir `EntityFormComponent`), et un champ
+   * `obligatoire` est exigé à la validation quel que soit le niveau choisi.
+   */
+  NiveauRemplissage?: NiveauRemplissage;
 }

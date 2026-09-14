@@ -91,6 +91,27 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
     return FIELD_PRIORITY[this.def.key] ?? null;
   }
 
+  /**
+   * Niveau de remplissage du classeur (V3), affiché en badge neutre —
+   * jamais dans la teinte des pastilles de priorité ci-dessus : l'une est
+   * un jugement éditorial curé à la main, l'autre une donnée du classeur qui
+   * pilote une vraie validation à l'enregistrement (`entity-form`). Les
+   * confondre visuellement referait exactement l'amalgame que la palette des
+   * pastilles de priorité a été choisie pour éviter.
+   */
+  get requirementLabel(): string | null {
+    switch (this.def.requirement) {
+      case 'obligatoire':
+        return 'Obligatoire';
+      case 'recommande':
+        return 'Recommandé';
+      case 'facultatif':
+        return 'Facultatif';
+      default:
+        return null;
+    }
+  }
+
   // ── État de la liste filtrable ───────────────────────────────────────────
   comboOpen = false;
   comboQuery = '';

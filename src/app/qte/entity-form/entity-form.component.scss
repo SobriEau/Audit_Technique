@@ -20,3 +20,59 @@
     display: block;
   }
 }
+
+/* ── Champs masqués par le niveau de remplissage ──────────────────────── */
+
+.champs-masques summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.filtre-masques {
+  display: block;
+  width: 100%;
+  margin: var(--sp-3) 0;
+}
+
+.liste-masques {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-2);
+}
+
+.liste-masques button {
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.liste-masques button:hover {
+  border-color: var(--c-primary);
+}
+
+/* ── Champs obligatoires manquants ────────────────────────────────────── */
+
+.champs-manquants {
+  border: 1px solid var(--c-danger-border);
+  border-left: 4px solid var(--c-danger);
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
+}
+
+.champs-manquants p {
+  margin: 0 0 var(--sp-2);
+}
+
+.champs-manquants ul {
+  margin: 0;
+  padding-left: var(--sp-5);
+}

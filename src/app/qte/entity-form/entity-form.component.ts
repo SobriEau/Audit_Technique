@@ -8,7 +8,7 @@ import { PlanLocatorComponent } from '../../shared/components/plan-locator/plan-
 import { PhotoEditorComponent } from '../../shared/components/photo-editor/photo-editor.component';
 import { entityByRoute } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
-import { AssetRef, PlanLocation } from '../../models/data.models';
+import { AssetRef, NiveauRemplissage, PlanLocation } from '../../models/data.models';
 
 type Record_ = Record<string, unknown>;
 
@@ -37,6 +37,36 @@ function groupByRow(fields: FieldDef[]): FieldDef[][] {
   }
   return rows;
 }
+
+/**
+ * Un champ est visible à un niveau de remplissage donné d'après son
+ * `requirement` (V3 du classeur). Un champ dépourvu de `requirement` (onglet
+ * disparu, ou jamais reclassé) est traité comme `facultatif` : masqué dès
+ * qu'on quitte le niveau complet, jamais exigé à la validation.
+ */
+function requirementVisible(req: FieldDef['requirement'], niveau: NiveauRemplissage): boolean {
+  if (niveau === 'complet') return true;
+  if (niveau === 'allege') return req === 'obligatoire' || req === 'recommande';
+  return req === 'obligatoire';
+}
+
+/** Comparaison insensible à la casse et aux accents, pour le filtre du volet des champs masqués. */
+function normalizeSearch(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+/** Un champ sans valeur : chaîne vide (après espaces) ou `null`/`undefined`. 0 et `false` comptent comme répondus. */
+function estVide(v: unknown): boolean {
+  if (v === null || v === undefined) return true;
+  if (typeof v === 'string') return v.trim() === '';
+  return false;
+}
+
+const NIVEAU_LABELS: Record<NiveauRemplissage, string> = {
+  complet: 'Complet',
+  allege: 'Allégée',
+  minimal: 'Minimale',
+};
 
 /**
  * Fiche générique : rend le formulaire d'un élément à partir du schéma.
@@ -69,6 +99,23 @@ export class EntityFormComponent implements OnInit {
    */
   formRows: FieldDef[][] = [];
 
+  /** Niveau de remplissage choisi sur l'accueil du projet. */
+  niveau: NiveauRemplissage = 'complet';
+
+  /**
+   * Champs masqués par le niveau de remplissage, révélés malgré tout sur
+   * cette fiche — depuis le volet dépliable, ou automatiquement parce
+   * qu'obligatoires et laissés vides à la validation. Propre à la fiche
+   * ouverte : rouvrir la page repart du niveau choisi.
+   */
+  revealed = new Set<string>();
+
+  /** Filtre du volet des champs masqués par le niveau de remplissage. */
+  filtreMasques = '';
+
+  /** Champs obligatoires restés vides au dernier essai de validation. */
+  champsManquants: FieldDef[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -89,6 +136,10 @@ export class EntityFormComponent implements OnInit {
       }
       this.def = def;
       this.formRows = groupByRow(def.fields.filter((f) => f.kind !== 'photos' && f.kind !== 'plan'));
+      this.niveau = this.data.data.NiveauRemplissage ?? 'complet';
+      this.revealed = new Set();
+      this.filtreMasques = '';
+      this.champsManquants = [];
 
       if (def.single) {
         this.item = { ...this.data.getSingle(def.key) };
@@ -149,6 +200,47 @@ export class EntityFormComponent implements OnInit {
     return i === -1 ? this.formRows : this.formRows.slice(i + 1);
   }
 
+  /**
+   * Un champ masqué par le niveau de remplissage en cours reste affiché s'il
+   * a été révélé depuis le volet dépliable, ou automatiquement parce
+   * qu'obligatoire et resté vide à la validation.
+   */
+  isVisible(f: FieldDef): boolean {
+    return requirementVisible(f.requirement, this.niveau) || this.revealed.has(f.key);
+  }
+
+  private filterRows(rows: FieldDef[][]): FieldDef[][] {
+    return rows.map((row) => row.filter((f) => this.isVisible(f))).filter((row) => row.length > 0);
+  }
+
+  get visibleRowsBeforeLocation(): FieldDef[][] {
+    return this.filterRows(this.rowsBeforeLocation);
+  }
+
+  get visibleRowsAfterLocation(): FieldDef[][] {
+    return this.filterRows(this.rowsAfterLocation);
+  }
+
+  /** Champs masqués par le niveau de remplissage en cours, pour le volet dépliable. */
+  get hiddenFields(): FieldDef[] {
+    return this.def.fields.filter((f) => f.kind !== 'photos' && f.kind !== 'plan' && !this.isVisible(f));
+  }
+
+  get hiddenFieldsFiltres(): FieldDef[] {
+    const q = normalizeSearch(this.filtreMasques);
+    if (!q) return this.hiddenFields;
+    return this.hiddenFields.filter((f) => normalizeSearch(f.label).includes(q));
+  }
+
+  /** Affiche un champ masqué directement dans la fiche, sans changer le niveau choisi. */
+  revealField(f: FieldDef): void {
+    this.revealed.add(f.key);
+  }
+
+  get niveauLabel(): string {
+    return NIVEAU_LABELS[this.niveau];
+  }
+
   get photos(): AssetRef[] {
     return (this.item['Photos'] as AssetRef[]) ?? [];
   }
@@ -187,7 +279,26 @@ export class EntityFormComponent implements OnInit {
     }
   }
 
+  /**
+   * Un champ `obligatoire` (V3 du classeur) doit être rempli avant
+   * l'enregistrement, qu'il soit visible au niveau de remplissage en cours
+   * ou non — sans quoi choisir « Minimale » permettrait de valider une fiche
+   * sans ses champs les plus nécessaires. Les champs manquants sont révélés
+   * automatiquement pour que l'auditeur puisse les compléter tout de suite.
+   */
   save(): void {
+    const manquants = this.def.fields.filter(
+      (f) =>
+        f.kind !== 'photos' &&
+        f.kind !== 'plan' &&
+        f.requirement === 'obligatoire' &&
+        estVide(this.item[f.key])
+    );
+    this.champsManquants = manquants;
+    if (manquants.length) {
+      for (const f of manquants) this.revealed.add(f.key);
+      return;
+    }
     this.persist();
     this.router.navigate(this.backTo);
   }

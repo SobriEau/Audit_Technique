@@ -7,6 +7,9 @@
       @if (priority) {
         <span class="priority" [class]="'priority--' + priority">Priorité : {{ priority }}</span>
       }
+      @if (requirementLabel) {
+        <span class="badge-neutre">{{ requirementLabel }}</span>
+      }
     </legend>
 
     <div class="radio-group">
@@ -35,6 +38,9 @@
     {{ def.label }}
     @if (priority) {
       <span class="priority" [class]="'priority--' + priority">Priorité : {{ priority }}</span>
+    }
+    @if (requirementLabel) {
+      <span class="badge-neutre">{{ requirementLabel }}</span>
     }
   </label>
 

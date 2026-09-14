@@ -3,7 +3,7 @@
 
   <div class="panel">
     <!-- Une ligne du formulaire = une ligne du tableau Excel -->
-    @for (row of rowsBeforeLocation; track $index) {
+    @for (row of visibleRowsBeforeLocation; track $index) {
       <div class="field-row">
         @for (f of row; track f.key) {
           <app-audit-field
@@ -18,7 +18,7 @@
 
     <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
 
-    @for (row of rowsAfterLocation; track $index) {
+    @for (row of visibleRowsAfterLocation; track $index) {
       <div class="field-row">
         @for (f of row; track f.key) {
           <app-audit-field
@@ -41,6 +41,57 @@
       [contexte]="title"
     />
   </div>
+
+  @if (hiddenFields.length) {
+    <div class="panel">
+      <details class="champs-masques">
+        <summary>
+          {{ hiddenFields.length }} champ{{ hiddenFields.length > 1 ? 's' : '' }} masqué{{
+            hiddenFields.length > 1 ? 's' : ''
+          }}
+          par le niveau de remplissage « {{ niveauLabel }} »
+        </summary>
+
+        <p class="muted">
+          Rien n'est perdu : ces champs restent modifiables ici, sans changer
+          le niveau de remplissage choisi sur l'accueil du projet.
+        </p>
+
+        <input
+          type="text"
+          class="filtre-masques"
+          placeholder="Filtrer par nom de champ…"
+          [(ngModel)]="filtreMasques"
+          [ngModelOptions]="{ standalone: true }"
+        />
+
+        <ul class="liste-masques">
+          @for (f of hiddenFieldsFiltres; track f.key) {
+            <li>
+              <button type="button" (click)="revealField(f)">{{ f.label }}</button>
+            </li>
+          } @empty {
+            <li class="muted">Aucun champ ne correspond à ce filtre.</li>
+          }
+        </ul>
+      </details>
+    </div>
+  }
+
+  @if (champsManquants.length) {
+    <div class="panel champs-manquants" role="alert">
+      <p>
+        <strong>Champ{{ champsManquants.length > 1 ? 's' : '' }} obligatoire{{
+          champsManquants.length > 1 ? 's' : ''
+        }} à compléter avant d'enregistrer :</strong>
+      </p>
+      <ul>
+        @for (f of champsManquants; track f.key) {
+          <li>{{ f.label }}</li>
+        }
+      </ul>
+    </div>
+  }
 
   <div class="actions actions--fixed">
     <div class="actions-fixed-row">

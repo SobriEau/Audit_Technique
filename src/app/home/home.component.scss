@@ -97,6 +97,45 @@ footer {
   height: 18px;
 }
 
+/* ── Niveau de remplissage ─────────────────────────────────────────────── */
+
+.niveau-titre {
+  margin-top: var(--sp-5);
+}
+
+.niveau-choix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.niveau-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.niveau-option.checked {
+  border-color: var(--c-primary);
+  background: var(--c-surface-alt);
+}
+
+.niveau-option input {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.niveau-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 /* Rappel d'enregistrement : en bas du formulaire, pas au-dessus, pour ne pas
    retarder la saisie — mais visible avant de quitter la page. */
 .rappel-enregistrer {

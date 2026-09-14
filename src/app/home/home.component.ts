@@ -6,7 +6,7 @@ import { PageHeaderComponent } from '../shared/components/page-header/page-heade
 import { RichEditorComponent } from '../shared/components/rich-editor/rich-editor.component';
 import { PlanManagerComponent } from '../shared/components/plan-manager/plan-manager.component';
 import { PhotoEditorComponent } from '../shared/components/photo-editor/photo-editor.component';
-import { AssetRef, AuditSummary } from '../models/data.models';
+import { AssetRef, AuditSummary, NiveauRemplissage } from '../models/data.models';
 import { PhotoMode, photoMode, setPhotoMode } from '../core/utils/photo-mode';
 import { AUDIT_SCHEMA } from '../models/audit-schema';
 import { EntityDef } from '../models/field.models';
@@ -22,6 +22,20 @@ type Arbitrage =
  * sont des équipements dont la présence varie et se déclarent ci-dessous.
  */
 const TOUJOURS_PRESENT = ['releve_compteur_general', 'robinets', 'wc'];
+
+/**
+ * Équipements absents de la V3 du classeur (2026-08-21) sans équivalent
+ * intégré ailleurs : masqués par défaut sur le tableau de bord, mais
+ * réactivables d'une simple case, comme n'importe quel équipement — voir
+ * `estPresent()`. Une section qui contient déjà des éléments reste affichée
+ * malgré tout (`QteIndexComponent.isVisible` porte cette règle), donc un
+ * audit démarré sous l'ancien classeur n'est pas concerné par ce masquage.
+ *
+ * Le réducteur de pression n'y figure pas : son contenu est désormais un bloc
+ * conditionnel intégré à la fiche Compteur général, la fiche à part a été
+ * retirée du schéma plutôt que masquée (décision Sacha, 2026-09).
+ */
+const MASQUE_PAR_DEFAUT = ['surpresseurs'];
 
 /**
  * Accueil du projet ouvert : identité de l'audit (adresse, nom, auditeur…),
@@ -60,8 +74,11 @@ export class HomeComponent implements OnInit {
     (e) => !e.single && !TOUJOURS_PRESENT.includes(e.key)
   );
 
-  /** Présence déclarée par équipement. Une clé absente vaut présent. */
+  /** Présence déclarée par équipement. Une clé absente vaut présent (sauf `MASQUE_PAR_DEFAUT`). */
   presence: Record<string, boolean> = {};
+
+  /** Niveau de remplissage des fiches de l'audit technique. */
+  niveau: NiveauRemplissage = 'complet';
 
   /** Non nul tant que l'auditeur n'a pas tranché un changement d'adresse. */
   arbitrage: Arbitrage | null = null;
@@ -85,18 +102,33 @@ export class HomeComponent implements OnInit {
     this.auditeur = d.Auditeur ?? '';
     this.photos = d.Photos ?? [];
     this.presence = { ...(d.EquipementsPresents ?? {}) };
+    this.niveau = d.NiveauRemplissage ?? 'complet';
     this.audits = this.dataService.listAudits();
     this.arbitrage = null;
   }
 
-  /** Une clé absente de `presence` vaut présent (rétrocompatibilité). */
+  /**
+   * Une clé absente de `presence` vaut présent — sauf pour les équipements de
+   * `MASQUE_PAR_DEFAUT`, absents de la V3 du classeur, masqués par défaut à
+   * moins de contenir déjà des éléments (audit démarré sous l'ancien classeur).
+   */
   estPresent(key: string): boolean {
-    return this.presence[key] !== false;
+    const declare = this.presence[key];
+    if (declare !== undefined) return declare;
+    if (MASQUE_PAR_DEFAUT.includes(key)) return this.dataService.getEntities(key).length > 0;
+    return true;
   }
 
   changerPresence(key: string, present: boolean): void {
     this.presence = { ...this.presence, [key]: present };
     this.dataService.data.EquipementsPresents = this.presence;
+    this.dataService.save();
+  }
+
+  /** Niveau de remplissage choisi pour les fiches de l'audit technique. */
+  changerNiveau(niveau: NiveauRemplissage): void {
+    this.niveau = niveau;
+    this.dataService.data.NiveauRemplissage = niveau;
     this.dataService.save();
   }
 

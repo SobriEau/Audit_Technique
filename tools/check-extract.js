@@ -99,6 +99,7 @@ function charger(route) {
       [
         '--headless=new',
         '--disable-gpu',
+        '--no-sandbox',
         '--no-first-run',
         '--no-default-browser-check',
         `--user-data-dir=${profil}`,
@@ -106,7 +107,12 @@ function charger(route) {
         '--dump-dom',
         'file:///' + CIBLE.replace(/\\/g, '/') + route,
       ],
-      { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }
+      {
+        encoding: 'utf8',
+        maxBuffer: 256 * 1024 * 1024,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        timeout: 30000,
+      }
     );
   } catch (e) {
     console.error('Chrome a échoué :', e.message);

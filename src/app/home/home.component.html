@@ -162,6 +162,55 @@
       </li>
     }
   </ul>
+
+  <h2 class="niveau-titre">Niveau de remplissage des fiches</h2>
+  <p class="muted">
+    Un niveau plus léger masque les champs les moins prioritaires sur les
+    fiches de l'audit technique — ils restent consultables et modifiables
+    depuis le volet dépliable en bas de chaque fiche, et rien de déjà saisi
+    n'est jamais effacé.
+  </p>
+
+  <div class="niveau-choix">
+    <label class="niveau-option" [class.checked]="niveau === 'complet'">
+      <input
+        type="radio"
+        name="niveau"
+        [checked]="niveau === 'complet'"
+        (change)="changerNiveau('complet')"
+      />
+      <span>
+        <strong>Complet</strong>
+        <span class="muted">Tous les champs du classeur.</span>
+      </span>
+    </label>
+
+    <label class="niveau-option" [class.checked]="niveau === 'allege'">
+      <input
+        type="radio"
+        name="niveau"
+        [checked]="niveau === 'allege'"
+        (change)="changerNiveau('allege')"
+      />
+      <span>
+        <strong>Allégée</strong>
+        <span class="muted">Champs obligatoires et recommandés seulement.</span>
+      </span>
+    </label>
+
+    <label class="niveau-option" [class.checked]="niveau === 'minimal'">
+      <input
+        type="radio"
+        name="niveau"
+        [checked]="niveau === 'minimal'"
+        (change)="changerNiveau('minimal')"
+      />
+      <span>
+        <strong>Minimale</strong>
+        <span class="muted">Champs obligatoires seulement.</span>
+      </span>
+    </label>
+  </div>
 </div>
 
 <div class="panel">
