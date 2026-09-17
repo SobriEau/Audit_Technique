@@ -39,7 +39,17 @@
   <app-drive-actions layout="accueil" />
 </div>
 
+<!-- Maquette du classeur V3 (onglet « Accueil ») : le bloc des financeurs
+     sous « Ce projet est financé par : », puis les porteurs du projet. -->
 <footer class="financeurs">
-  <img [src]="logoCerema" alt="République Française — Cerema, climat et territoires de demain" />
-  <img [src]="logoAgro" alt="AgroParisTech Innovation" />
+  <img
+    class="financeurs-bloc"
+    [src]="logoFinanceurs"
+    alt="Financé par la République Française, France 2030 et l'ADEME"
+  />
+  <div class="porteurs">
+    <img [src]="logoCerema" alt="République Française — Cerema, climat et territoires de demain" />
+    <img [src]="logoAgro" alt="AgroParisTech Innovation" />
+    <img [src]="logoPonts" alt="École nationale des Ponts et Chaussées — Institut Polytechnique de Paris" />
+  </div>
 </footer>

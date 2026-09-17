@@ -9,71 +9,29 @@ import { PhotoEditorComponent } from '../../shared/components/photo-editor/photo
 import { entityByRoute } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
 import { AssetRef, NiveauRemplissage, PlanLocation } from '../../models/data.models';
+import { FormSection, buildSections, formFields } from '../form-layout';
+import { NIVEAU_LABELS, champsManquants, champsMasques, requirementVisible } from '../exigences';
 
 type Record_ = Record<string, unknown>;
 
-/**
- * Regroupe les champs par ligne du classeur, en conservant leur ordre.
- *
- * Un champ marqué `wide`, ou dépourvu de `row`, occupe sa propre ligne. Les
- * autres se répartissent la largeur de la ligne qu'ils partagent.
- */
-function groupByRow(fields: FieldDef[]): FieldDef[][] {
-  const rows: FieldDef[][] = [];
-  let currentRow: number | null = null;
-
-  for (const f of fields) {
-    if (f.wide || f.row === undefined) {
-      rows.push([f]);
-      currentRow = null;
-      continue;
-    }
-    if (f.row !== currentRow) {
-      rows.push([f]);
-      currentRow = f.row;
-    } else {
-      rows[rows.length - 1].push(f);
-    }
-  }
-  return rows;
-}
-
-/**
- * Un champ est visible à un niveau de remplissage donné d'après son
- * `requirement` (V3 du classeur). Un champ dépourvu de `requirement` (onglet
- * disparu, ou jamais reclassé) est traité comme `facultatif` : masqué dès
- * qu'on quitte le niveau complet, jamais exigé à la validation.
- */
-function requirementVisible(req: FieldDef['requirement'], niveau: NiveauRemplissage): boolean {
-  if (niveau === 'complet') return true;
-  if (niveau === 'allege') return req === 'obligatoire' || req === 'recommande';
-  return req === 'obligatoire';
-}
-
-/** Comparaison insensible à la casse et aux accents, pour le filtre du volet des champs masqués. */
+/** Comparaison insensible à la casse et aux accents, pour le filtre des champs masqués. */
 function normalizeSearch(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
-
-/** Un champ sans valeur : chaîne vide (après espaces) ou `null`/`undefined`. 0 et `false` comptent comme répondus. */
-function estVide(v: unknown): boolean {
-  if (v === null || v === undefined) return true;
-  if (typeof v === 'string') return v.trim() === '';
-  return false;
-}
-
-const NIVEAU_LABELS: Record<NiveauRemplissage, string> = {
-  complet: 'Complet',
-  allege: 'Allégée',
-  minimal: 'Minimale',
-};
 
 /**
  * Fiche générique : rend le formulaire d'un élément à partir du schéma.
  *
  * Sert aussi bien les entités listées (robinets, WC, piscines…) que les pages
- * uniques (compteur général, collecte d'eau de pluie), signalées par
- * `single` dans le schéma.
+ * uniques (compteur général), signalées par `single` dans le schéma.
+ *
+ * Trois mécanismes se superposent, et viennent de deux migrations V3 menées en
+ * parallèle puis fusionnées (voir `fusion-origin-main.md`) :
+ *  - le **découpage en sections** du classeur (migration locale) ;
+ *  - le **niveau de remplissage**, qui masque les champs les moins exigés, et
+ *    la **validation** des champs obligatoires (migration d'origin/main) ;
+ *  - les **blocs conditionnels**, ajoutés à la fusion pour que la validation
+ *    n'exige pas les champs d'un bloc qui ne concerne pas l'élément.
  */
 @Component({
   selector: 'app-entity-form',
@@ -92,12 +50,8 @@ export class EntityFormComponent implements OnInit {
   def!: EntityDef;
   item: Record_ = {};
 
-  /**
-   * Champs regroupés par ligne du classeur : chaque sous-tableau est une ligne
-   * du formulaire. C'est la disposition prescrite par le tableau Excel, et non
-   * un remplissage automatique.
-   */
-  formRows: FieldDef[][] = [];
+  /** Champs à rendre, hors photos et plan qui ont leur propre bloc. */
+  champs: FieldDef[] = [];
 
   /** Niveau de remplissage choisi sur l'accueil du projet. */
   niveau: NiveauRemplissage = 'complet';
@@ -135,7 +89,7 @@ export class EntityFormComponent implements OnInit {
         return;
       }
       this.def = def;
-      this.formRows = groupByRow(def.fields.filter((f) => f.kind !== 'photos' && f.kind !== 'plan'));
+      this.champs = formFields(def.fields);
       this.niveau = this.data.data.NiveauRemplissage ?? 'complet';
       this.revealed = new Set();
       this.filtreMasques = '';
@@ -182,22 +136,47 @@ export class EntityFormComponent implements OnInit {
   }
 
   /**
-   * Lignes du classeur jusqu'à celle d'Emplacement incluse, et le reste.
-   * Sépare le point d'insertion du bloc de localisation, qui doit apparaître
-   * juste après ce champ plutôt qu'en fin de fiche.
+   * Découpe la fiche en blocs, selon les sections du classeur, en ne gardant
+   * que les champs visibles au niveau de remplissage choisi.
+   *
+   * Une fiche peut compter jusqu'à 77 champs : d'un seul tenant, elle est
+   * illisible (retour de la revue d'ergonomie, « séparer les formulaires en
+   * plus petits blocs »). Le classeur V3 dit lui-même où couper — chaque
+   * champ porte le titre de sa section.
+   *
+   * Ce découpage vient **par-dessus** le groupement par ligne, il ne le
+   * remplace pas : les champs qui partagent une ligne du classeur restent
+   * côte à côte à l'intérieur de leur bloc. Une section dont tous les champs
+   * sont masqués disparaît, sauf si elle porte la localisation sur plan.
+   *
+   * La localisation s'insère à la fin de la section qui porte l'emplacement —
+   * c'est-à-dire « Localisation » quand le classeur la nomme.
    */
-  private get locationRowIndex(): number {
-    return this.formRows.findIndex((row) => row.some((f) => f.key === 'Emplacement'));
-  }
+  get sections(): FormSection[] {
+    const blocs = buildSections(this.champs);
 
-  get rowsBeforeLocation(): FieldDef[][] {
-    const i = this.locationRowIndex;
-    return i === -1 ? [] : this.formRows.slice(0, i + 1);
-  }
+    const iEmplacement = blocs.findIndex((b) =>
+      b.rows.some((row) => row.some((f) => f.key === 'Emplacement'))
+    );
+    if (iEmplacement !== -1) {
+      blocs[iEmplacement].withLocator = true;
+    } else if (blocs.length && blocs[0].title === null) {
+      // Pas de champ « Emplacement » — les espaces extérieurs le nomment
+      // autrement. La localisation rejoint alors le bloc de tête plutôt que
+      // d'ouvrir un panneau vide à elle seule.
+      blocs[0].withLocator = true;
+    } else {
+      // Fiche entièrement sectionnée : la localisation ouvre la page, pour ne
+      // pas la reléguer en bas (retour KAPT, « Localiser : mettre tout en haut »).
+      blocs.unshift({ title: null, rows: [], withLocator: true });
+    }
 
-  get rowsAfterLocation(): FieldDef[][] {
-    const i = this.locationRowIndex;
-    return i === -1 ? this.formRows : this.formRows.slice(i + 1);
+    return blocs
+      .map((b) => ({
+        ...b,
+        rows: b.rows.map((row) => row.filter((f) => this.isVisible(f))).filter((row) => row.length > 0),
+      }))
+      .filter((b) => b.rows.length > 0 || b.withLocator);
   }
 
   /**
@@ -209,21 +188,9 @@ export class EntityFormComponent implements OnInit {
     return requirementVisible(f.requirement, this.niveau) || this.revealed.has(f.key);
   }
 
-  private filterRows(rows: FieldDef[][]): FieldDef[][] {
-    return rows.map((row) => row.filter((f) => this.isVisible(f))).filter((row) => row.length > 0);
-  }
-
-  get visibleRowsBeforeLocation(): FieldDef[][] {
-    return this.filterRows(this.rowsBeforeLocation);
-  }
-
-  get visibleRowsAfterLocation(): FieldDef[][] {
-    return this.filterRows(this.rowsAfterLocation);
-  }
-
   /** Champs masqués par le niveau de remplissage en cours, pour le volet dépliable. */
   get hiddenFields(): FieldDef[] {
-    return this.def.fields.filter((f) => f.kind !== 'photos' && f.kind !== 'plan' && !this.isVisible(f));
+    return champsMasques(this.def, this.niveau, this.revealed);
   }
 
   get hiddenFieldsFiltres(): FieldDef[] {
@@ -280,20 +247,13 @@ export class EntityFormComponent implements OnInit {
   }
 
   /**
-   * Un champ `obligatoire` (V3 du classeur) doit être rempli avant
-   * l'enregistrement, qu'il soit visible au niveau de remplissage en cours
-   * ou non — sans quoi choisir « Minimale » permettrait de valider une fiche
-   * sans ses champs les plus nécessaires. Les champs manquants sont révélés
-   * automatiquement pour que l'auditeur puisse les compléter tout de suite.
+   * Les champs obligatoires doivent être remplis avant l'enregistrement, qu'ils
+   * soient visibles au niveau de remplissage en cours ou non — mais seulement
+   * dans les blocs qui concernent l'élément (voir `champsManquants`). Les
+   * champs manquants sont révélés pour être complétés tout de suite.
    */
   save(): void {
-    const manquants = this.def.fields.filter(
-      (f) =>
-        f.kind !== 'photos' &&
-        f.kind !== 'plan' &&
-        f.requirement === 'obligatoire' &&
-        estVide(this.item[f.key])
-    );
+    const manquants = champsManquants(this.def, this.item);
     this.champsManquants = manquants;
     if (manquants.length) {
       for (const f of manquants) this.revealed.add(f.key);

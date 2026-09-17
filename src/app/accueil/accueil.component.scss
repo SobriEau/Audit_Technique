@@ -45,17 +45,39 @@
 
 .financeurs {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--sp-5);
+  gap: var(--sp-4);
   margin-top: var(--sp-5);
   padding-top: var(--sp-4);
   border-top: 1px solid var(--c-border);
 }
 
-.financeurs img {
+/* Le bloc des financeurs porte lui-même la mention « Financé par » : plus
+   haut que les logos des porteurs, sans quoi ce texte devient illisible. */
+.financeurs-bloc {
   display: block;
-  height: 64px;
+  height: 160px;
   width: auto;
+  max-width: 100%;
+  /* Sur un écran étroit, la largeur plafonne avant la hauteur : sans cela
+     le logo serait écrasé au lieu d'être réduit. */
+  object-fit: contain;
+}
+
+.porteurs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+}
+
+.porteurs img {
+  display: block;
+  height: 80px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
   opacity: 0.85;
 }

@@ -138,7 +138,13 @@ export class AuditRegistryService {
     this.writeIndex(list);
     safeStorage.setItem(
       AUDIT_PREFIX + summary.Id,
-      JSON.stringify({ Id: summary.Id, Adresse: adresse } as AppData)
+      // `UtilisationsEau` vide, et non absent : c'est ce qui range un audit neuf
+      // sous la règle du classeur V3 — rien d'affiché qui n'ait été demandé.
+      // Un audit sans cette clé est un audit antérieur, qui garde l'ancien
+      // régime où tout était visible (voir `QteIndexComponent.isVisible`).
+      // Sans cette initialisation, un audit neuf affichait toutes les sections
+      // tant qu'aucune case n'était cochée, puis les masquait à la première.
+      JSON.stringify({ Id: summary.Id, Adresse: adresse, UtilisationsEau: {} } as AppData)
     );
     safeStorage.setItem(CURRENT_KEY, summary.Id);
     return summary;
@@ -165,13 +171,25 @@ export class AuditRegistryService {
       return false;
     });
 
+    // Tout champ que l'auditeur peut avoir rempli doit figurer ici. Un oubli
+    // ne se voit pas : l'audit passe pour vide, et changer son adresse le
+    // renomme sans poser de question — la saisie faite jusque-là se retrouve
+    // sous un autre bâtiment.
+    const documents = Object.values(data.Documents ?? {}).some(
+      (d) => d?.coche === true || !!d?.precision
+    );
+
     return (
       !hasQte &&
       !data.Info &&
       !data.Auditeur &&
+      !data.Accompagnant &&
+      !data.Effectif &&
       !data.Date &&
       !data.NomProjet &&
       !data.NomSite &&
+      !documents &&
+      !Object.values(data.UtilisationsEau ?? {}).some(Boolean) &&
       !(data.Plans ?? []).length &&
       !(data.Photos ?? []).length &&
       !Object.keys(data.Qge ?? {}).length &&

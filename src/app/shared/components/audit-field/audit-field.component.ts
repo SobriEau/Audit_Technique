@@ -5,7 +5,7 @@ import { DataService } from '../../../core/services/data.service';
 import { AuditEntity } from '../../../models/data.models';
 import { RichEditorComponent } from '../rich-editor/rich-editor.component';
 import { PhotoEditorComponent } from '../photo-editor/photo-editor.component';
-import { FIELD_PRIORITY, Priority } from '../../../models/field-priority';
+import { REQUIREMENT_LABEL } from '../../../models/field-priority';
 
 /**
  * Aide affichée quand le classeur n'en porte pas, pour un champ générique
@@ -86,30 +86,19 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
     return this.def.help ?? GENERIC_HELP[this.def.key] ?? null;
   }
 
-  /** Priorité de remplissage, si ce champ en porte une. */
-  get priority(): Priority | null {
-    return FIELD_PRIORITY[this.def.key] ?? null;
-  }
-
   /**
-   * Niveau de remplissage du classeur (V3), affiché en badge neutre —
-   * jamais dans la teinte des pastilles de priorité ci-dessus : l'une est
-   * un jugement éditorial curé à la main, l'autre une donnée du classeur qui
-   * pilote une vraie validation à l'enregistrement (`entity-form`). Les
-   * confondre visuellement referait exactement l'amalgame que la palette des
-   * pastilles de priorité a été choisie pour éviter.
+   * Pastille d'exigence du classeur (« Obligatoire », « Recommandé »,
+   * « Facultatif »), ou `null` si le classeur ne dit rien pour ce champ.
+   *
+   * Une seule pastille, dans la palette orange. Les deux migrations V3 menées
+   * en parallèle en affichaient deux — une pastille orange tirée d'une table
+   * curée à la main, un badge neutre tiré du classeur — pour la même donnée.
+   * Le badge neutre visait à ne pas confondre exigence et validation ; le rouge
+   * de l'encadré des champs manquants s'en charge, et l'orange ne se lit pas
+   * comme une erreur. Voir `fusion-origin-main.md`.
    */
   get requirementLabel(): string | null {
-    switch (this.def.requirement) {
-      case 'obligatoire':
-        return 'Obligatoire';
-      case 'recommande':
-        return 'Recommandé';
-      case 'facultatif':
-        return 'Facultatif';
-      default:
-        return null;
-    }
+    return this.def.requirement ? REQUIREMENT_LABEL[this.def.requirement] : null;
   }
 
   // ── État de la liste filtrable ───────────────────────────────────────────

@@ -8,6 +8,7 @@ import { PlanManagerComponent } from '../shared/components/plan-manager/plan-man
 import { PhotoEditorComponent } from '../shared/components/photo-editor/photo-editor.component';
 import { AssetRef, AuditSummary, NiveauRemplissage } from '../models/data.models';
 import { PhotoMode, photoMode, setPhotoMode } from '../core/utils/photo-mode';
+import { UTILISATIONS_EAU, UtilisationEau } from '../models/utilisations-eau';
 import { AUDIT_SCHEMA } from '../models/audit-schema';
 import { EntityDef } from '../models/field.models';
 
@@ -15,27 +16,6 @@ import { EntityDef } from '../models/field.models';
 type Arbitrage =
   | { genre: 'existe'; adresse: string; cible: AuditSummary }
   | { genre: 'inedite'; adresse: string };
-
-/**
- * Présents dans presque tous les bâtiments : ces sections restent toujours
- * affichées sur le tableau de bord, sans case à cocher. Toutes les autres
- * sont des équipements dont la présence varie et se déclarent ci-dessous.
- */
-const TOUJOURS_PRESENT = ['releve_compteur_general', 'robinets', 'wc'];
-
-/**
- * Équipements absents de la V3 du classeur (2026-08-21) sans équivalent
- * intégré ailleurs : masqués par défaut sur le tableau de bord, mais
- * réactivables d'une simple case, comme n'importe quel équipement — voir
- * `estPresent()`. Une section qui contient déjà des éléments reste affichée
- * malgré tout (`QteIndexComponent.isVisible` porte cette règle), donc un
- * audit démarré sous l'ancien classeur n'est pas concerné par ce masquage.
- *
- * Le réducteur de pression n'y figure pas : son contenu est désormais un bloc
- * conditionnel intégré à la fiche Compteur général, la fiche à part a été
- * retirée du schéma plutôt que masquée (décision Sacha, 2026-09).
- */
-const MASQUE_PAR_DEFAUT = ['surpresseurs'];
 
 /**
  * Accueil du projet ouvert : identité de l'audit (adresse, nom, auditeur…),
@@ -64,17 +44,28 @@ export class HomeComponent implements OnInit {
   info = '';
   date = '';
   auditeur = '';
+  accompagnant = '';
+  effectif = '';
   photos: AssetRef[] = [];
 
   /** Sert uniquement à proposer les adresses déjà connues (datalist) ci-dessous. */
   audits: AuditSummary[] = [];
 
-  /** Équipements dont la présence peut varier d'un bâtiment à l'autre. */
-  readonly equipements: EntityDef[] = AUDIT_SCHEMA.filter(
-    (e) => !e.single && !TOUJOURS_PRESENT.includes(e.key)
-  );
+  /** Les dix utilisations de l'eau que le classeur fait déclarer. */
+  readonly utilisations: UtilisationEau[] = UTILISATIONS_EAU;
 
-  /** Présence déclarée par équipement. Une clé absente vaut présent (sauf `MASQUE_PAR_DEFAUT`). */
+  /** Utilisations cochées. Une clé absente vaut « non cochée ». */
+  usages: Record<string, boolean> = {};
+
+  /**
+   * Entités hors classeur (le surpresseur) : aucun usage de l'eau ne les
+   * commande, elles s'affichent d'une case à part. Leur onglet a disparu en V3
+   * mais origin/main les a conservées, masquées par défaut — décision reprise
+   * à la fusion (voir `fusion-origin-main.md`).
+   */
+  readonly horsClasseur: EntityDef[] = AUDIT_SCHEMA.filter((e) => e.horsClasseur);
+
+  /** Présence déclarée des entités hors classeur. Une clé absente vaut « masqué ». */
   presence: Record<string, boolean> = {};
 
   /** Niveau de remplissage des fiches de l'audit technique. */
@@ -100,28 +91,43 @@ export class HomeComponent implements OnInit {
     this.info = d.Info ?? '';
     this.date = d.Date ?? '';
     this.auditeur = d.Auditeur ?? '';
+    this.accompagnant = d.Accompagnant ?? '';
+    this.effectif = d.Effectif ?? '';
     this.photos = d.Photos ?? [];
+    this.usages = { ...(d.UtilisationsEau ?? {}) };
     this.presence = { ...(d.EquipementsPresents ?? {}) };
     this.niveau = d.NiveauRemplissage ?? 'complet';
     this.audits = this.dataService.listAudits();
     this.arbitrage = null;
   }
 
-  /**
-   * Une clé absente de `presence` vaut présent — sauf pour les équipements de
-   * `MASQUE_PAR_DEFAUT`, absents de la V3 du classeur, masqués par défaut à
-   * moins de contenir déjà des éléments (audit démarré sous l'ancien classeur).
-   */
-  estPresent(key: string): boolean {
-    const declare = this.presence[key];
-    if (declare !== undefined) return declare;
-    if (MASQUE_PAR_DEFAUT.includes(key)) return this.dataService.getEntities(key).length > 0;
-    return true;
+  estCoche(key: string): boolean {
+    return this.usages[key] === true;
   }
 
-  changerPresence(key: string, present: boolean): void {
-    this.presence = { ...this.presence, [key]: present };
+  /**
+   * Une entité hors classeur est affichée si l'auditeur l'a demandé, ou si elle
+   * contient déjà des éléments — un audit commencé sous l'ancien classeur ne
+   * doit pas voir disparaître ce qu'il a saisi.
+   */
+  estAffiche(key: string): boolean {
+    return this.presence[key] === true || this.dataService.getEntities(key).length > 0;
+  }
+
+  changerPresence(key: string, affiche: boolean): void {
+    this.presence = { ...this.presence, [key]: affiche };
     this.dataService.data.EquipementsPresents = this.presence;
+    this.dataService.save();
+  }
+
+  /**
+   * Cocher une utilisation fait apparaître la ou les sections correspondantes
+   * du tableau de bord. La décocher ne masque qu'une section vide : une
+   * saisie déjà faite reste toujours atteignable (voir `QteIndexComponent`).
+   */
+  changerUsage(key: string, coche: boolean): void {
+    this.usages = { ...this.usages, [key]: coche };
+    this.dataService.data.UtilisationsEau = this.usages;
     this.dataService.save();
   }
 
@@ -208,6 +214,8 @@ export class HomeComponent implements OnInit {
     d.Info = this.info || null;
     d.Date = this.date || null;
     d.Auditeur = this.auditeur || null;
+    d.Accompagnant = this.accompagnant || null;
+    d.Effectif = this.effectif || null;
     this.dataService.save();
   }
 

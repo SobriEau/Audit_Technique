@@ -121,12 +121,19 @@ AppData
 ├── AdresseKey           forme normalisée, recalculée à l'enregistrement
 ├── Info                 HTML libre (éditeur riche)
 ├── Date, Auditeur       texte
+├── Accompagnant         texte — nom et fonction de la personne sur place
+├── Effectif             texte — salariés, élèves, visiteurs…
+├── UtilisationsEau {}   usages de l'eau cochés → sections affichées (§8)
+├── NiveauRemplissage    complet | allege | minimal — champs masqués sur les fiches (§8)
+├── EquipementsPresents {} ancien régime d'affichage, et entités hors classeur
+├── Documents {}         documents récupérés, par identifiant stable
 ├── Plans[]              AssetRef — plans du bâtiment, communs à l'audit
 ├── Photos[]             AssetRef — galerie générale
 ├── Qge {}               JSON libre (éditeur brut)
 ├── Qus {}               JSON libre (éditeur brut)
 └── Qte
     ├── Info                     HTML libre
+    ├── TableauDeBord {}         contexte du bâtiment (construction, pressions…)
     ├── robinets[]               une entrée par élément
     │   ├── Id                   identité stable
     │   ├── Numero               libellé affiché
@@ -159,15 +166,23 @@ ferait glisser silencieusement un élément vers la mauvaise cible dès la
 première suppression. **Ne jamais utiliser `Numero` ni un index de tableau
 comme clé.**
 
-Le classeur ne formule pas toujours cette relation de façon reconnaissable :
-« avec les choix de la liste des réseaux ECS » est le seul tour de phrase
-que `gen-schema.js` sait convertir en champ `entity-ref` (voir `ENTITY_REF_RE`).
-La V2 a par ailleurs remplacé le renvoi « Numéro robinet correspondant » qu'avait
-la fiche Douche/Baignoire par une description du robinet **intégrée** à cette
-même fiche — ce n'est plus une référence croisée du tout sur cet écran précis.
-Elle introduit aussi des références **multiples** qu'aucun mécanisme actuel ne
-couvre (« Numéros des robinets correspondants » à cocher, sur les espaces
-extérieurs et les appareils de lavage) : `entity-ref` ne stocke qu'un seul Id.
+Le classeur ne formule pas toujours cette relation de façon reconnaissable. La
+V3 emploie **huit** tournures pour huit renvois, et deux seulement passaient par
+le motif d'origine (« avec les choix de la liste des réseaux ECS »). Trois
+autres ne sont annoncées que par le libellé — « Numéro de réseau ECS associé »,
+« Numéro du robinet utilisé pour le remplissage » — la note se bornant à
+« Champ libre » ; s'en tenir à la note les laissait en texte libre, où
+l'auditeur saisit à la main un numéro que la renumérotation d'une suppression
+fera pointer ailleurs. `gen-schema.js` lit donc aussi le libellé
+(`LABEL_REF_RE`), et le contrôle est simple : le schéma doit porter **cinq**
+`entity-ref`.
+
+Les trois derniers renvois sont **multiples** — « Numéros des robinets
+correspondants », au pluriel, à cocher — et aucun mécanisme ne les couvre :
+`entity-ref` ne stocke qu'un seul Id. Ils restent donc en texte, mais **avec un
+`warn`** qui le dit à l'écran plutôt qu'un `entity-ref` qui enregistrerait une
+seule cible sur trois sans prévenir. C'est la première chose à reprendre si le
+type `entity-ref-multi` est un jour ajouté.
 
 Les audits antérieurs à `Id` sont repris automatiquement : `ensureEntityIds()`
 attribue les identifiants manquants au chargement et après un import.
@@ -351,18 +366,40 @@ active et évite que le texte parte dans le mauvais champ.
 
 ## 8. Partie technique — un moteur piloté par le schéma
 
-Les dix-huit entités de la partie technique (V2 du classeur, 2026-08) **ne
-sont pas dix-huit composants**. Le classeur décrit partout le même motif
-« liste puis fiche » : chaque entité est donc décrite en données et rendue par
-deux composants génériques.
+Les entités de la partie technique (V3 du classeur, 2026-08) **ne sont pas
+autant de composants** : seize fiches du classeur, plus la zone piscine rendue
+en tête de la page Piscines, plus le surpresseur conservé hors classeur. Le
+classeur décrit partout le même motif « liste puis fiche » : chaque entité est
+donc décrite en données et rendue par deux composants génériques.
 
 | Fichier | Rôle |
 |---|---|
-| [audit-schema.ts](src/app/models/audit-schema.ts) | **Généré** depuis le classeur : champs, types, colonnes, disposition |
-| [value-lists.ts](src/app/models/value-lists.ts) | Toutes les listes de valeurs, curées à la main |
+| [audit-schema.ts](src/app/models/audit-schema.ts) | **Généré** depuis le classeur : champs, types, colonnes, disposition, sections, priorités |
+| [value-lists.ts](src/app/models/value-lists.ts) | Les listes de valeurs partagées, curées à la main |
 | [field.models.ts](src/app/models/field.models.ts) | Vocabulaire de description des champs |
+| [field-priority.ts](src/app/models/field-priority.ts) | Libellé de la pastille d'exigence |
+| [exigences.ts](src/app/qte/exigences.ts) | Niveau de remplissage et validation — fonctions pures, testées par `check-exigences.js` |
+| [form-layout.ts](src/app/qte/form-layout.ts) | Lignes et sections d'un formulaire, partagées par la fiche et le préambule |
+| [utilisations-eau.ts](src/app/models/utilisations-eau.ts) | Usages de l'eau → sections à afficher, curé à la main |
+| `glossaire.ts`, `documents-collectes.ts` | **Générés** : contenus repris mot pour mot du classeur |
 | `audit-field` | **Composant de saisie unique** — texte, nombre, liste, oui/non, référence, photos |
 | `entity-list` / `entity-form` | Rendu générique de la liste et de la fiche |
+
+**Deux entités de la V2 n'ont plus d'onglet en V3**, et elles ne sont pas
+traitées pareil. Le *réducteur de pression* est replié en bloc conditionnel
+dans la fiche Compteur général (six champs sur dix-sept survivent) : sa fiche à
+part est retirée du schéma, et `Qte.reducteurs_de_pression` n'est plus lu. Le
+*surpresseur* n'a aucun équivalent : il est **conservé** avec ses champs figés
+depuis la V2 (`CHAMPS_FIGES`, entité `horsClasseur`), masqué par défaut et
+réactivable d'une case sur l'accueil du projet.
+
+### Deux migrations V3 ont été menées en parallèle
+
+Le 2026-08-24 sur un poste, le 2026-09-14 sur un autre, sans que l'une sache
+rien de l'autre. Elles ont été fusionnées le 2026-09-16 ; chaque arbitrage est
+consigné dans [fusion-origin-main.md](fusion-origin-main.md). À lire avant de
+toucher à l'exigence des champs, au surpresseur ou à la validation : plusieurs
+choix y défont explicitement ce qu'une des deux versions avait écrit.
 
 ⚠️ **`audit-schema.ts` est généré : ne pas l'éditer à la main.** Il se régénère
 depuis `audit_technique.xlsx` — voir [tools/README.md](tools/README.md). Une
@@ -384,8 +421,75 @@ pouvant en compter un, deux ou trois.
 l'appariement voulu — « Commande / Temporisation / Cool-start » sur une ligne,
 « Débit / Présence d'un réducteur » sur la suivante.
 
+### Sections et priorités — deux informations que le classeur cache
+
+La V3 ajoute deux choses qu'aucune cellule ne déclare en toutes lettres :
+
+- **Le découpage en sections.** Deux dispositifs coexistent — un titre écrit à
+  la verticale dans une cellule fusionnée à gauche des champs (neuf onglets),
+  et un intertitre pleine largeur reconnaissable à son seul fond de cellule
+  (onze onglets, dont cinq n'ont que celui-là). Il faut donc lire les **styles**
+  du classeur, ce que `xlsx-extract.js` transporte désormais. `entity-form`
+  rend un `.panel` par section : une fiche peut compter 77 champs.
+- **L'exigence de chaque question** (`FieldDef.requirement`) — `Obligatoire`,
+  `Recommandé`, `Facultatif` — écrite dans une cellule à droite du libellé.
+  481 cellules, aucune variante. **Une seule donnée, trois usages** : la
+  pastille orange après l'intitulé, le niveau de remplissage qui masque les
+  champs les moins exigés, et la validation qui refuse d'enregistrer une fiche
+  dont un champ obligatoire est vide.
+
+Un champ **sans** exigence n'affiche aucune pastille, compte comme facultatif
+pour le niveau de remplissage, et n'est jamais exigé. L'absence n'est pas un
+quatrième niveau : elle distingue « le classeur dit facultatif » de « le
+classeur ne dit rien », et garde la trace des questions non arbitrées.
+
+⚠️ **La validation ne vaut que pour les blocs qui concernent l'élément.** Une
+même fiche décrit plusieurs objets : quatre appareils de lavage, la douche et
+la baignoire, le réducteur de pression du compteur. Sans restriction, un
+lave-linge ne pouvait pas être enregistré sans remplir les champs obligatoires
+de l'autolaveuse — c'était le cas sur origin/main avant la fusion. Les blocs
+conditionnels se déclarent dans `ENTITIES` (`lib/classeur.js`) ; le générateur
+refuse une déclaration qui ne se résout pas, et `check-exigences.js` vérifie
+que chaque fiche reste validable. Masquer les blocs inactifs à l'écran
+(l'affichage conditionnel) reste à faire.
+
+⚠️ **Ces cellules occupent la place d'un libellé.** Non filtrées, elles
+produisaient 406 faux champs — plus que de vrais — et, en s'intercalant entre
+un libellé et sa note, faisaient perdre sa liste déroulante à 48 champs réels
+sans rien signaler. Le tri des cellules vit dans
+[tools/lib/classeur.js](tools/lib/classeur.js), partagé par le générateur et
+les contrôles ; `check-coverage.js` le vérifie, sa rubrique « FAUX CHAMPS »
+devant rester vide.
+
 Routes : `#/qte/<route>` pour la liste — ou directement la fiche si l'entité est
 déclarée `single` — et `#/qte/<route>/<Id>` pour un élément.
+
+### Les quatre écrans du classeur, et où ils vivent
+
+Le fil d'Ariane du classeur V3 (« Accueil - Généralités - Tableau de bord -
+Robinets - Robinet 1 », repris sur les seize fiches) décrit l'application telle
+qu'elle est structurée. Chaque onglet a son écran :
+
+| Onglet du classeur | Écran | Route |
+|---|---|---|
+| ` Accueil` | Choix du projet | `#/accueil` |
+| `Généralités` | Accueil du projet ouvert | `#/home` |
+| `Tableau de bord` | Contexte du bâtiment + navigation + glossaire | `#/qte` |
+| `Documents collectés` | Documents à réunir | `#/documents` |
+
+**L'affichage des sections est piloté par les usages déclarés**, non par les
+équipements. Le classeur fait cocher dix *utilisations de l'eau* (Généralités
+B33) ; trois d'entre elles commandent la même section (« Appareils de lavage »),
+une en commande deux (l'eau chaude sanitaire), et sept sections s'affichent
+toujours. La correspondance est un arbitrage, écrite à la main dans
+[utilisations-eau.ts](src/app/models/utilisations-eau.ts).
+
+Deux garde-fous à ne pas retirer : **une section qui contient déjà des éléments
+reste affichée même non cochée** — décocher ne doit jamais rendre une saisie
+inatteignable — et **les audits antérieurs, dépourvus d'`UtilisationsEau`,
+retombent sur l'ancien `EquipementsPresents`**, où une clé absente valait
+« présent ». Les faire basculer sur la règle du classeur ferait disparaître,
+d'une mise à jour à l'autre, des sections que l'auditeur voyait la veille.
 
 ### Deux formes pour un champ à choix
 
@@ -502,8 +606,12 @@ interactif et dépend du stockage.
 
 ```bash
 npm start                     # développement
+npm run gen                   # régénère schéma, pages, docs depuis le classeur
+npm run check:coverage        # que contient le classeur que le schéma ignore ?
 npm run build                 # fichier autonome, puis ouvrir index.html
 npm run check:extract         # le fichier sait-il encore se reproduire ?
+npm run check:smoke           # chaque écran se rend-il en file:// ?
+npm run check:exigences       # chaque fiche est-elle validable ?
 ```
 
 Points de contrôle qui ont déjà révélé des régressions :
@@ -518,6 +626,14 @@ Points de contrôle qui ont déjà révélé des régressions :
 5. Supprimer un plan localisé : aucun élément ne doit rester sur un plan absent.
 6. `node tools/check-extract.js` après chaque build : la copie que produit
    `#/telecharger` doit avoir l'empreinte du livrable.
+7. `npm run check:smoke` après chaque build : les écrans se rendent-ils en
+   `file://` ? Une page blanche ne remonte aucune erreur, nulle part.
+8. `npm run check:coverage` après chaque régénération : la rubrique
+   « FAUX CHAMPS » doit rester vide, et chaque « priorité sans champ » désigne
+   une question que le classeur a jugée utile et que le schéma n'a pas vue.
+9. `npm run check:exigences` après toute modification des blocs conditionnels,
+   des exigences ou de la validation : une fiche invalidable ne produit aucune
+   erreur, elle empêche seulement l'auditeur d'avancer.
 
 ---
 

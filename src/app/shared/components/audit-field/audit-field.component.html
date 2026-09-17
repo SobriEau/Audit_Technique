@@ -4,11 +4,8 @@
   <fieldset class="radio-field">
     <legend>
       {{ def.label }}
-      @if (priority) {
-        <span class="priority" [class]="'priority--' + priority">Priorité : {{ priority }}</span>
-      }
       @if (requirementLabel) {
-        <span class="badge-neutre">{{ requirementLabel }}</span>
+        <span class="priority" [class]="'priority--' + def.requirement">{{ requirementLabel }}</span>
       }
     </legend>
 
@@ -36,11 +33,8 @@
 } @else {
   <label [attr.for]="uid">
     {{ def.label }}
-    @if (priority) {
-      <span class="priority" [class]="'priority--' + priority">Priorité : {{ priority }}</span>
-    }
     @if (requirementLabel) {
-      <span class="badge-neutre">{{ requirementLabel }}</span>
+      <span class="priority" [class]="'priority--' + def.requirement">{{ requirementLabel }}</span>
     }
   </label>
 

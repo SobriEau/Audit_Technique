@@ -42,13 +42,16 @@
 
   /* ── Priorité de champ (dégradé d'orange, jamais rouge/vert :
      un badge de priorité ne doit pas se confondre avec un état
-     d'erreur ou de validation) ────────────────────────────── */
-  --c-priority-basse-bg: #fff3e0;
-  --c-priority-basse-text: #a15c00;
-  --c-priority-moyenne-bg: #ffe0b2;
-  --c-priority-moyenne-text: #8a4a00;
-  --c-priority-haute-bg: #ffb74d;
-  --c-priority-haute-text: #5c2e00;
+     d'erreur ou de validation).
+
+     Les trois niveaux sont ceux du classeur, du plus léger au plus
+     appuyé : facultatif, recommandé, obligatoire. ─────────── */
+  --c-priority-facultatif-bg: #fff3e0;
+  --c-priority-facultatif-text: #a15c00;
+  --c-priority-recommande-bg: #ffe0b2;
+  --c-priority-recommande-text: #8a4a00;
+  --c-priority-obligatoire-bg: #ffb74d;
+  --c-priority-obligatoire-text: #5c2e00;
 
   /* ── Badge neutre (ex. « Facultatif ») ───────────────────── */
   --c-badge-neutre-bg: var(--c-surface-alt);
@@ -382,9 +385,48 @@ label {
 }
 
 /**
- * Badge neutre à côté d'un libellé (ex. « Facultatif »), sur le même principe
- * visuel que les pastilles de priorité (audit-field), mais dans une teinte
- * neutre : il ne s'agit pas d'un niveau d'importance.
+ * Pastille de priorité, à côté du libellé d'une question.
+ *
+ * Globale, et non portée par `audit-field` : le même niveau d'exigence
+ * s'affiche sur les fiches, sur l'accueil du projet et sur la liste des
+ * documents à collecter. Trois copies du même bloc avaient commencé à
+ * apparaître.
+ *
+ * Le dégradé va du plus léger au plus appuyé — facultatif, recommandé,
+ * obligatoire — et reste dans les oranges : jamais de rouge ni de vert, qui
+ * feraient lire une priorité comme une erreur ou une validation.
+ */
+.priority {
+  display: inline-block;
+  margin-left: var(--sp-2);
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: normal;
+  vertical-align: middle;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.priority--facultatif {
+  background: var(--c-priority-facultatif-bg);
+  color: var(--c-priority-facultatif-text);
+}
+
+.priority--recommande {
+  background: var(--c-priority-recommande-bg);
+  color: var(--c-priority-recommande-text);
+}
+
+.priority--obligatoire {
+  background: var(--c-priority-obligatoire-bg);
+  color: var(--c-priority-obligatoire-text);
+}
+
+/**
+ * Badge neutre à côté d'un libellé, sur le même principe visuel que les
+ * pastilles de priorité ci-dessus, mais dans une teinte neutre : il ne s'agit
+ * pas d'un niveau d'importance.
  */
 .badge-neutre {
   display: inline-block;
@@ -397,6 +439,33 @@ label {
   color: var(--c-badge-neutre-text);
   background: var(--c-badge-neutre-bg);
   border: 1px solid var(--c-border);
+}
+
+/**
+ * Ligne de formulaire. La disposition vient du classeur : chaque `.field-row`
+ * reprend une ligne du tableau Excel, et ses champs s'y répartissent la largeur
+ * à parts égales. Une ligne peut donc porter un, deux ou trois champs — on ne
+ * remplit jamais mécaniquement (pas de grille `auto-fit`, voir CLAUDE.md §8).
+ *
+ * Globale et non portée par `entity-form` : la zone piscine, rendue en tête de
+ * la liste des bassins, et le contexte du tableau de bord l'emploient aussi.
+ * Scopée à la fiche, elle laissait ces champs empilés.
+ */
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-4);
+}
+
+.field-row app-audit-field {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .field-row {
+    display: block;
+  }
 }
 
 /* ── Adaptation mobile / tablette ─────────────────────────── */

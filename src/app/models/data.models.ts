@@ -104,8 +104,32 @@ export interface Robinet extends AuditEntity {
   Remarques?: string | null;
 }
 
+/**
+ * Contexte du bâtiment, saisi sur le tableau de bord de l'audit technique
+ * (onglet « Tableau de bord » du classeur, lignes 7 à 23).
+ *
+ * Rangé dans un objet imbriqué plutôt qu'à plat sous `Qte` : `isEmpty()` du
+ * registre ne regarde que les tableaux et les objets nommés sous `Qte`, et
+ * sept clés scalaires à plat feraient passer pour vide un audit rempli
+ * uniquement ici — l'arbitrage d'adresse renommerait alors sans demander.
+ */
+export interface TableauDeBord {
+  /** Année, saisie sur quatre chiffres. */
+  AnneeConstruction?: string | null;
+  AnneeDerniereRenovation?: string | null;
+  TravauxDerniereRenovation?: string | null;
+  DysfonctionnementsBatiment?: string | null;
+  PlaintesUtilisateurs?: string | null;
+  /** Pression mesurée au point le plus proche du compteur, en bar. */
+  PressionProcheCompteur?: number | null;
+  PressionEloigneeCompteur?: number | null;
+}
+
 export interface QteData {
   Info?: string | null;
+
+  /** Contexte du bâtiment — voir `TableauDeBord`. */
+  TableauDeBord?: TableauDeBord;
 
   /** Robinets — typés explicitement car historiquement les plus anciens. */
   robinets?: Robinet[];
@@ -161,6 +185,10 @@ export interface AppData {
   Info?: string | null;
   Date?: string | null;
   Auditeur?: string | null;
+  /** Nom et fonction de la personne qui accompagne l'auditeur sur place. */
+  Accompagnant?: string | null;
+  /** Effectif fréquentant le bâtiment (salariés, élèves, visiteurs…). */
+  Effectif?: string | null;
   /** Plans du bâtiment chargés depuis l'accueil, communs à tout l'audit. */
   Plans?: AssetRef[];
   /** Galerie générale de l'audit, indépendante des éléments techniques. */
@@ -178,8 +206,39 @@ export interface AppData {
    * Une section contenant déjà des éléments reste affichée même décochée
    * (voir `QteIndexComponent.isVisible`) : la case ne masque qu'une section
    * vide, jamais une saisie déjà faite.
+   *
+   * Deux usages subsistent depuis le passage à `UtilisationsEau` :
+   *  - les audits commencés avant, qui n'ont pas d'`UtilisationsEau` et
+   *    gardent ce régime ;
+   *  - les entités **hors classeur** (le surpresseur), qu'aucun usage de l'eau
+   *    ne commande : `true` les affiche, et une clé absente vaut ici
+   *    « masqué », puisque le classeur V3 ne les décrit plus.
    */
   EquipementsPresents?: Record<string, boolean>;
+
+  /**
+   * Utilisations de l'eau cochées sur l'accueil du projet, par clé
+   * d'utilisation (voir `utilisations-eau.ts`).
+   *
+   * Le classeur raisonne en **usages** (« lavage vaisselle », « eau chaude
+   * sanitaire »), l'application affichait jusqu'ici des **équipements** tirés
+   * du schéma. Ce n'est pas la même liste : un usage peut commander deux
+   * sections, trois usages peuvent commander la même. `EquipementsPresents`
+   * reste lu pour les audits saisis avant ce changement.
+   *
+   * Une clé absente vaut « non coché » — à l'inverse d'`EquipementsPresents`,
+   * où l'absence valait « présent ». Le classeur part d'un formulaire vierge
+   * et demande à l'auditeur de déclarer ce qu'il voit.
+   */
+  UtilisationsEau?: Record<string, boolean>;
+
+  /**
+   * Documents que l'auditeur a pu récupérer, par identifiant de document
+   * (voir `documents-collectes.ts`, généré depuis le classeur).
+   *
+   * `precision` ne sert qu'aux lignes libres « Autre, préciser : ».
+   */
+  Documents?: Record<string, { coche?: boolean; precision?: string | null }>;
 
   /**
    * Niveau de remplissage des fiches de l'audit technique, d'après le
@@ -191,7 +250,8 @@ export interface AppData {
    * `obligatoire`/`recommande` ; `'minimal'` les seuls `obligatoire`. Dans
    * tous les cas, un champ masqué déjà rempli reste consultable depuis le
    * volet dépliable de la fiche (voir `EntityFormComponent`), et un champ
-   * `obligatoire` est exigé à la validation quel que soit le niveau choisi.
+   * `obligatoire` est exigé à la validation quel que soit le niveau choisi —
+   * pourvu que son bloc concerne l'élément (voir `BlocConditionnel`).
    */
   NiveauRemplissage?: NiveauRemplissage;
 }

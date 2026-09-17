@@ -1,7 +1,7 @@
 /**
  * Description déclarative des formulaires d'audit.
  *
- * Les dix entités de la partie technique partagent le même motif « liste puis
+ * Les entités de la partie technique partagent le même motif « liste puis
  * fiche ». Plutôt que de dupliquer vingt composants, chaque entité est décrite
  * ici en données et rendue par les composants génériques `entity-list` et
  * `entity-form`. Ajouter un champ ou une entité se fait dans le schéma, pas
@@ -9,16 +9,25 @@
  */
 
 /**
- * Niveau de remplissage attendu pour un champ, tel que noté dans le classeur
- * (V3, 2026-08-21 — colonne voisine du libellé). Pilote le filtrage par
- * niveau de remplissage (voir `AppData.NiveauRemplissage`) et, pour
- * `obligatoire`, la validation à l'enregistrement d'une fiche.
+ * Niveau d'exigence d'un champ, tel que le classeur V3 le note dans une
+ * cellule voisine du libellé : 481 cellules, trois valeurs, aucune variante.
  *
- * Sans rapport avec `Priority` (`field-priority.ts`) : celle-ci est un badge
- * visuel curé à la main, délibérément indépendant de toute notion de
- * validation. Un champ absent du classeur V3 (onglet disparu, ancien champ
- * jamais reclassé) n'a pas de `requirement` : il est alors traité comme
- * `facultatif` pour l'affichage, et jamais exigé à la validation.
+ * **Une seule donnée, trois usages** :
+ *  - la **pastille** affichée après l'intitulé (`audit-field`) ;
+ *  - le **niveau de remplissage** choisi sur l'accueil du projet, qui masque
+ *    les champs les moins exigés (`AppData.NiveauRemplissage`) ;
+ *  - la **validation** d'une fiche, qui exige les champs `obligatoire`.
+ *
+ * Deux migrations V3 menées en parallèle en avaient fait deux notions — une
+ * `priority` affichée en pastille, un `requirement` affiché en badge neutre et
+ * pilotant la validation — portant exactement les mêmes valeurs, tirées des
+ * mêmes cellules. Un champ en montrait alors deux à la suite. Voir
+ * `fusion-origin-main.md`.
+ *
+ * Un champ sans `requirement` (le classeur ne dit rien, ou l'onglet a disparu)
+ * n'affiche aucune pastille, est traité comme `facultatif` pour le filtrage, et
+ * n'est jamais exigé. L'absence n'est pas un quatrième niveau : la distinguer
+ * garde la trace des questions que le classeur n'a pas arbitrées.
  */
 export type FieldRequirement = 'obligatoire' | 'recommande' | 'facultatif';
 
@@ -62,6 +71,29 @@ export interface FieldDef {
   /** Le champ occupe toute la largeur, quelle que soit sa ligne. */
   wide?: boolean;
 
+  /**
+   * Intitulé du bloc auquel le champ appartient (« Localisation »,
+   * « Lave linge — Caractéristiques »…), repris du classeur.
+   *
+   * Découpe la fiche en sections, **au-dessus** du groupement par `row` : les
+   * champs d'une même ligne restent côte à côte, les sections ne font que les
+   * rassembler par blocs. Absent pour les champs qui précèdent le premier
+   * intitulé de la fiche — ils forment un bloc de tête sans titre, plutôt
+   * qu'un titre inventé.
+   */
+  section?: string;
+
+  /**
+   * Intitulé de premier niveau englobant la section — « Lave linge »,
+   * « Douche », « Réducteur de pression ». Absent quand la section n'est pas
+   * imbriquée. Sert à rattacher un champ à un bloc conditionnel
+   * (`EntityDef.blocsConditionnels`).
+   */
+  bloc?: string;
+
+  /** Niveau d'exigence du classeur. Voir `FieldRequirement`. */
+  requirement?: FieldRequirement;
+
   /** Aide affichée sous le champ, reprise de la note du classeur. */
   help?: string;
 
@@ -70,9 +102,30 @@ export interface FieldDef {
 
   /** Divergence ou question laissée ouverte par les auteurs du classeur. */
   warn?: string;
+}
 
-  /** Niveau de remplissage attendu (V3 du classeur). Voir `FieldRequirement`. */
-  requirement?: FieldRequirement;
+/**
+ * Bloc d'une fiche qui ne concerne l'élément que sous condition.
+ *
+ * Le classeur décrit plusieurs objets sur une même fiche : les quatre types
+ * d'appareils de lavage, la douche et la baignoire, le réducteur de pression
+ * du compteur général. Chaque bloc a ses champs obligatoires — et un lave-linge
+ * ne peut pas remplir ceux de l'autolaveuse.
+ *
+ * Aujourd'hui, seule la **validation** en tient compte : un champ obligatoire
+ * n'est exigé que si son bloc est actif. Masquer les blocs inactifs est
+ * l'affichage conditionnel, reporté à une passe ultérieure (`arbitrages-v3.md`,
+ * Q17) ; cette table en est le point de départ.
+ */
+export interface BlocConditionnel {
+  /** Intitulé du bloc, tel que `FieldDef.bloc` le porte. */
+  bloc: string;
+  /** Clé du champ qui commande le bloc. */
+  champ: string;
+  /** Valeurs de ce champ qui rendent le bloc actif. */
+  valeurs: readonly (string | boolean)[];
+  /** Cellule du classeur qui énonce la règle. */
+  source: string;
 }
 
 export interface EntityDef {
@@ -88,6 +141,29 @@ export interface EntityDef {
    * collecte d'eau de pluie.
    */
   single?: boolean;
+
+  /**
+   * Cette entité est rendue **en tête de la page d'une autre**, dont la clé est
+   * donnée ici, et n'apparaît pas comme une section du tableau de bord.
+   *
+   * Un seul cas : la zone piscine (pédiluve, nettoyage des plages), que le
+   * classeur décrit sur l'onglet « Liste Piscines » parce qu'elle vaut pour
+   * l'ensemble des bassins et non pour chacun d'eux.
+   */
+  embedded?: string;
+
+  /** Clé de l'entité à rendre en tête de cette liste. Réciproque d'`embedded`. */
+  preambule?: string;
+
+  /**
+   * L'onglet de cette entité a disparu du classeur ; ses champs sont figés
+   * depuis la dernière version qui la décrivait. Un seul cas : le surpresseur,
+   * conservé depuis la V2 et masqué par défaut sur l'accueil du projet.
+   */
+  horsClasseur?: boolean;
+
+  /** Blocs de la fiche qui ne valent que sous condition. */
+  blocsConditionnels?: readonly BlocConditionnel[];
 
   /** Clés de champs affichées en colonnes de la page liste. */
   listColumns: string[];

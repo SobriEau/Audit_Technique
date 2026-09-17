@@ -1,53 +1,21 @@
 # Liste SS-compteur
 
-> Spécification extraite de `audit_technique.xlsx`, onglet « Liste SS-compteur ».
-> 11 cellules, 7 notes.
+Onglet hors schéma généré : 11 cellule(s), 5 note(s). Restitué tel quel, sans interprétation.
 
-## Rôle de la page
-
-Page **index** : elle récapitule les éléments saisis et sert de point d'entrée vers la fiche de chaque élément.
-
-## Champs attendus
-
-| Cellule | Libellé | Type attendu | Valeurs |
-|---|---|---|---|
-| `B29` | Remarques | Texte libre | — |
-
-## Valeurs inscrites directement dans les cellules
-
-Contrairement aux listes ci-dessus, ces valeurs sont écrites dans la cellule elle-même plutôt que dans une note. Le classeur ne portant aucune validation de données, elles restent indicatives : à confirmer au cas par cas.
-
-| Cellule | Rattaché à | Valeurs |
+| Cellule | Contenu | Note |
 |---|---|---|
-| `F15` | Télétransmission | Oui · Non |
-
-## Comportements attendus
-
-Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, d'enregistrement ou une question laissée ouverte par les auteurs.
-
-- `A1` Bouton Home pour retour à la page d'accueil - Message avertissement enregistrement
-- `G4` **Liste des Sous-compteurs** — Retour à la page "Partie Technique"  / - Message avertissement enregistrement
-- `E8` **Présence d'au moins un sous-compteur** — Présence ou non d'un sous compteur dans le bâtiment
-- `B15` **Numéro** — Données reprises sur les pages "Sous-compteur"  / - nombre de ligne à incrémenter au fur et à mesure  / - si on clique sur la ligne on revient à la page du sous compteur en question
-- `C32` **Enregistrer** — Enregistrement des données
-- `F32` **Enregistrer** — Ajout d'une page pour un sous compteur / - Ajouter  un message de confirmation / - Message avertissement enregistrement
-
-## Contenu de l'onglet
-
-<details><summary>Cellules non vides</summary>
-
-| Cellule | Contenu |
-|---|---|
-| `B1` | Audit SOBRIEAU   PARTIE TECHNIQUE |
-| `C4` | Liste des Sous-compteurs |
-| `D8` | Présence d'au moins un sous-compteur |
-| `B14` | Numéro |
-| `C14` | Emplacement |
-| `E14` | Année de pose |
-| `F14` | Télétransmission |
-| `G14` | Remarques |
-| `F15` | Oui/Non |
-| `B28` | Remarques |
-| `C32` | Enregistrer |
-
-</details>
+| `B3` | Accueil - Généralités - Tableau de bord - Sous-compteur | — |
+| `C5` | Liste des Sous-compteurs | — |
+| `D9` | Présence d'au moins un sous-compteur | — |
+| `E9` | — | Présence ou non d'un sous compteur dans le bâtiment |
+| `B15` | Numéro | — |
+| `C15` | Emplacement | — |
+| `E15` | Année de pose | — |
+| `F15` | Télétransmission | — |
+| `G15` | Remarques | — |
+| `B16` | — | Données reprises sur les pages "Sous-compteur" - nombre de ligne à incrémenter au fur et à mesure - si on clique sur la ligne on revient à la page du sous compteur en question |
+| `F16` | Oui/Non | — |
+| `B29` | Remarques | — |
+| `B30` | — | champs libre |
+| `C33` | Valider | Enregistrement des données |
+| `F33` | — | Ajout d'une page pour un sous compteur - Ajouter un message de confirmation - Message avertissement enregistrement |

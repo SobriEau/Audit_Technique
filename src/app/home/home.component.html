@@ -13,7 +13,10 @@
   />
   <p class="muted field-help">Facultatif : sert à identifier le projet dans la liste des audits.</p>
 
-  <label for="nomSite">Nom du site audité</label>
+  <label for="nomSite">
+    Nom du site audité
+    <span class="priority priority--obligatoire">Obligatoire</span>
+  </label>
   <input
     id="nomSite"
     type="text"
@@ -21,8 +24,42 @@
     [(ngModel)]="nomSite"
     (blur)="autoSave()"
   />
+  <p class="muted field-help">Nom usuel du site, et nom du bâtiment.</p>
 
-  <label for="adresse">Adresse</label>
+  <label for="date">
+    Date de début de la visite terrain
+    <span class="priority priority--recommande">Recommandé</span>
+  </label>
+  <input id="date" type="date" [(ngModel)]="date" (change)="autoSave()" />
+
+  <label for="auditeur">
+    Nom de l'auditeur
+    <span class="priority priority--recommande">Recommandé</span>
+  </label>
+  <input
+    id="auditeur"
+    type="text"
+    [(ngModel)]="auditeur"
+    placeholder="Jean Dupont"
+    (blur)="autoSave()"
+  />
+
+  <label for="accompagnant">
+    Nom et fonction de l'accompagnant
+    <span class="priority priority--recommande">Recommandé</span>
+  </label>
+  <input
+    id="accompagnant"
+    type="text"
+    [(ngModel)]="accompagnant"
+    placeholder="Marie Durand - responsable technique"
+    (blur)="autoSave()"
+  />
+
+  <label for="adresse">
+    Adresse
+    <span class="priority priority--facultatif">Facultatif</span>
+  </label>
   <input
     id="adresse"
     type="text"
@@ -75,21 +112,30 @@
     </div>
   }
 
-  <label>Informations complémentaires</label>
-  <p class="muted field-help">Toute information utile à la compréhension de l'audit.</p>
-  <app-rich-editor [(ngModel)]="info" (ngModelChange)="autoSave()" />
-
-  <label for="date">Date de début de la visite terrain</label>
-  <input id="date" type="date" [(ngModel)]="date" (change)="autoSave()" />
-
-  <label for="auditeur">Nom, prénom de l'auditeur</label>
+  <label for="effectif">
+    Effectif
+    <span class="priority priority--obligatoire">Obligatoire</span>
+  </label>
   <input
-    id="auditeur"
+    id="effectif"
     type="text"
-    [(ngModel)]="auditeur"
-    placeholder="Jean Dupont"
+    [(ngModel)]="effectif"
+    placeholder="Ex. 320 élèves, 28 personnels"
     (blur)="autoSave()"
   />
+  <p class="muted field-help">
+    Salariés, visiteurs, élèves, spectateurs, clients — selon le bâtiment.
+  </p>
+
+  <label>
+    Informations complémentaires
+    <span class="priority priority--facultatif">Facultatif</span>
+  </label>
+  <p class="muted field-help">
+    Saisons, horaires d'ouverture, fréquentation, ou toute information utile à
+    la compréhension de l'audit.
+  </p>
+  <app-rich-editor [(ngModel)]="info" (ngModelChange)="autoSave()" />
 
   <p class="muted rappel-enregistrer">
     Les données se conservent automatiquement dans ce navigateur pendant la
@@ -141,27 +187,54 @@
 </div>
 
 <div class="panel">
-  <h2>Équipements présents dans le bâtiment</h2>
+  <h2>
+    Utilisations de l'eau dans le bâtiment
+    <span class="priority priority--obligatoire">Obligatoire</span>
+  </h2>
   <p class="muted">
-    Décochez ce qui est absent du bâtiment : sa section n'apparaîtra plus dans
-    le tableau de bord de l'audit technique. Compteur général, robinets et WC
-    restent toujours affichés, ils concernent presque tous les bâtiments.
+    Cochez tout ce qui est présent : seules les sections correspondantes
+    apparaîtront dans l'audit technique. Compteur, sous-compteurs, toiture,
+    structure, ventilation et opportunités restent toujours affichés, ils
+    concernent tout bâtiment. Décocher ne masque jamais une section déjà
+    remplie.
   </p>
 
   <ul class="equipements-list">
-    @for (e of equipements; track e.key) {
+    @for (u of utilisations; track u.key) {
       <li>
         <label class="equipement-check">
           <input
             type="checkbox"
-            [checked]="estPresent(e.key)"
-            (change)="changerPresence(e.key, $any($event.target).checked)"
+            [checked]="estCoche(u.key)"
+            (change)="changerUsage(u.key, $any($event.target).checked)"
           />
-          {{ e.plural }}
+          {{ u.label }}
         </label>
       </li>
     }
   </ul>
+
+  @if (horsClasseur.length) {
+    <!-- Entités que le classeur V3 ne décrit plus, conservées masquées par
+         défaut. Aucun usage de l'eau ne les commande : case à part. -->
+    <p class="muted">
+      Équipements que le classeur actuel ne décrit plus, affichables au besoin :
+    </p>
+    <ul class="equipements-list">
+      @for (e of horsClasseur; track e.key) {
+        <li>
+          <label class="equipement-check">
+            <input
+              type="checkbox"
+              [checked]="estAffiche(e.key)"
+              (change)="changerPresence(e.key, $any($event.target).checked)"
+            />
+            {{ e.plural }}
+          </label>
+        </li>
+      }
+    </ul>
+  }
 
   <h2 class="niveau-titre">Niveau de remplissage des fiches</h2>
   <p class="muted">
@@ -215,6 +288,9 @@
 
 <div class="panel">
   <div class="buttons">
+    <button class="nav-btn" (click)="nav('documents')">
+      Voir la liste des documents collectés
+    </button>
     <button class="nav-btn nav-btn--qte" (click)="nav('qte')">
       Démarrer l'audit technique
     </button>

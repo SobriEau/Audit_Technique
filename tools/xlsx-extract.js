@@ -7,7 +7,18 @@ const fs = require('fs');
 const path = require('path');
 const sax = require('sax');
 
-const ROOT = path.join(__dirname, '.cache', 'xlsx');
+/**
+ * Dossier du classeur décompressé et fichier de sortie, tous deux surchargeables
+ * en argument : `node tools/xlsx-extract.js [dossier] [sortie.json]`. Comparer
+ * deux versions du classeur suppose de les extraire côte à côte sans que la
+ * seconde écrase la première.
+ */
+const ROOT = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(__dirname, '.cache', 'xlsx');
+const OUT = process.argv[3]
+  ? path.resolve(process.argv[3])
+  : path.join(__dirname, '.cache', 'workbook.json');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const exists = (p) => fs.existsSync(path.join(ROOT, p));
 
@@ -131,6 +142,7 @@ function worksheet(sheetPath, strings) {
 
   let ref = null;
   let type = null;
+  let style = null;
   let inV = false;
   let inF = false;
   let vBuf = '';
@@ -143,7 +155,7 @@ function worksheet(sheetPath, strings) {
 
   parse(read(sheetPath), {
     open: (name, a) => {
-      if (name === 'c') { ref = a.r; type = a.t || 'n'; vBuf = ''; fBuf = ''; }
+      if (name === 'c') { ref = a.r; type = a.t || 'n'; style = a.s; vBuf = ''; fBuf = ''; }
       if (name === 'v') inV = true;
       if (name === 'f') inF = true;
       if (name === 'mergeCell') merges.push(a.ref);
@@ -172,7 +184,13 @@ function worksheet(sheetPath, strings) {
       if (name === 'c' && ref) {
         let value = vBuf;
         if (type === 's') value = strings[parseInt(vBuf, 10)] ?? '';
-        if (value !== '' || fBuf) cells[ref] = { v: value, t: type, f: fBuf || undefined };
+        if (value !== '' || fBuf) {
+          cells[ref] = { v: value, t: type, f: fBuf || undefined };
+          // Index de style : c'est lui qui distingue un intertitre de section
+          // d'un libellé de champ, la V3 du classeur ne les séparant que par
+          // le fond de la cellule et l'orientation du texte.
+          if (style !== undefined && style !== null) cells[ref].s = parseInt(style, 10);
+        }
         ref = null;
       }
       if (name === 'dataValidation' || name === 'x14:dataValidation') {
@@ -190,12 +208,47 @@ function worksheet(sheetPath, strings) {
   return { cells, validations, merges };
 }
 
+/**
+ * Formats de cellule (`cellXfs`), réduits à ce qui sert à lire la mise en page :
+ * le fond et l'orientation du texte.
+ *
+ * La V3 du classeur découpe ses fiches en sections sans le dire nulle part en
+ * toutes lettres : un intitulé de section se reconnaît à son fond distinct, ou
+ * à son texte écrit à la verticale dans une cellule fusionnée. Sans ces deux
+ * attributs, la moitié des sections sont indiscernables d'un libellé de champ.
+ */
+function cellFormats() {
+  if (!exists('xl/styles.xml')) return [];
+  const xfs = [];
+  let inCellXfs = false;
+  let cur = null;
+
+  parse(read('xl/styles.xml'), {
+    open: (name, a, selfClosing) => {
+      if (name === 'cellXfs') inCellXfs = true;
+      if (!inCellXfs) return;
+      if (name === 'xf') {
+        cur = { fillId: a.fillId !== undefined ? parseInt(a.fillId, 10) : 0 };
+        if (selfClosing) { xfs.push(cur); cur = null; }
+      }
+      if (name === 'alignment' && cur && a.textRotation) {
+        cur.textRotation = parseInt(a.textRotation, 10);
+      }
+    },
+    close: (name) => {
+      if (name === 'xf' && inCellXfs && cur) { xfs.push(cur); cur = null; }
+      if (name === 'cellXfs') inCellXfs = false;
+    },
+  });
+  return xfs;
+}
+
 // ── Assemblage ─────────────────────────────────────────────────────────────
 const strings = sharedStrings();
 const { sheets, definedNames } = workbook();
 const wbRels = rels('xl/_rels/workbook.xml.rels');
 
-const result = { definedNames, sheets: [] };
+const result = { definedNames, cellFormats: cellFormats(), sheets: [] };
 
 for (const s of sheets) {
   const target = wbRels[s.rid];
@@ -231,9 +284,10 @@ for (const s of sheets) {
   });
 }
 
-fs.writeFileSync(path.join(__dirname, '.cache', 'workbook.json'), JSON.stringify(result, null, 1), 'utf8');
+fs.writeFileSync(OUT, JSON.stringify(result, null, 1), 'utf8');
 
 console.log('Plages nommées :', Object.keys(definedNames).length);
+console.log('Formats de cellule :', result.cellFormats.length);
 console.log('\nFeuille                                   cellules  notes  listes');
 console.log('─'.repeat(72));
 for (const s of result.sheets) {

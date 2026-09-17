@@ -1,0 +1,29 @@
+<app-page-header
+  pageTitle="Glossaire"
+  [backTo]="['/qte']"
+  [crumbs]="[{ label: 'Audit technique', link: ['/qte'] }, { label: 'Glossaire' }]"
+/>
+
+<div class="panel">
+  <label for="recherche">Rechercher</label>
+  <input
+    id="recherche"
+    type="search"
+    placeholder="Ex. ECS, plénum, sprinkler"
+    [(ngModel)]="recherche"
+  />
+  <p class="muted field-help">
+    La recherche porte aussi sur les définitions, et ignore les accents.
+  </p>
+
+  @if (entrees.length) {
+    <dl class="glossaire">
+      @for (e of entrees; track e.terme) {
+        <dt>{{ e.terme }}</dt>
+        <dd>{{ e.definition }}</dd>
+      }
+    </dl>
+  } @else {
+    <p class="muted">Aucune entrée ne correspond à cette recherche.</p>
+  }
+</div>

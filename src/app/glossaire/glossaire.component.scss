@@ -1,0 +1,18 @@
+.glossaire {
+  margin: var(--sp-3) 0 0;
+
+  dt {
+    font-weight: 600;
+    color: var(--c-primary);
+    margin-top: var(--sp-3);
+  }
+
+  dd {
+    margin: var(--sp-1) 0 0;
+  }
+
+  /* Le premier terme ne doit pas décoller du champ de recherche. */
+  dt:first-of-type {
+    margin-top: 0;
+  }
+}

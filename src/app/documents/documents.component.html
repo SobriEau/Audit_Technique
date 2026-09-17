@@ -1,0 +1,55 @@
+<app-page-header
+  pageTitle="Documents collectés"
+  [backTo]="['/home']"
+  [crumbs]="[{ label: 'Accueil du projet', link: ['/home'] }, { label: 'Documents collectés' }]"
+/>
+
+<div class="panel">
+  <p class="muted">
+    Cochez ce que le gestionnaire du bâtiment a pu vous transmettre.
+    <strong>{{ obtenus }} sur {{ cases.length }}</strong> documents obtenus.
+    Rien n'est à téléverser ici : cette liste sert à savoir ce qui manque.
+  </p>
+
+  <ul class="documents">
+    @for (d of cases; track d.id) {
+      <li>
+        <label class="document">
+          <input
+            type="checkbox"
+            [checked]="estCoche(d.id)"
+            (change)="cocher(d.id, $any($event.target).checked)"
+          />
+          <span class="libelle">
+            {{ d.libelle }}
+            @if (d.requirement) {
+              <span class="priority" [class]="'priority--' + d.requirement">
+                {{ libelleExigence(d.requirement) }}
+              </span>
+            }
+          </span>
+        </label>
+      </li>
+    }
+  </ul>
+</div>
+
+<div class="panel">
+  <h2>Autres documents</h2>
+  <p class="muted">
+    Pour tout document utile que la liste ci-dessus ne prévoit pas.
+  </p>
+
+  @for (id of lignesLibres; track id) {
+    <input
+      type="text"
+      [value]="precision(id)"
+      placeholder="Autre document, préciser lequel"
+      (blur)="preciser(id, $any($event.target).value)"
+    />
+  }
+
+  <div class="actions">
+    <button type="button" class="ghost" (click)="ajouterLigne()">Ajouter une ligne</button>
+  </div>
+</div>

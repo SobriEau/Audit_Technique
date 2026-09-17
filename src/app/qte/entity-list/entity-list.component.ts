@@ -3,9 +3,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DataService } from '../../core/services/data.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EntityFormComponent } from '../entity-form/entity-form.component';
-import { entityByRoute } from '../../models/audit-schema';
+import { FormsModule } from '@angular/forms';
+import { AuditFieldComponent } from '../../shared/components/audit-field/audit-field.component';
+import { entityByKey, entityByRoute } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
 import { AuditEntity } from '../../models/data.models';
+import { FormSection, buildSections, formFields } from '../form-layout';
 
 /**
  * Page index générique : liste les éléments d'une entité et mène à leur fiche.
@@ -17,7 +20,7 @@ import { AuditEntity } from '../../models/data.models';
 @Component({
   selector: 'app-entity-list',
   standalone: true,
-  imports: [PageHeaderComponent, EntityFormComponent],
+  imports: [FormsModule, PageHeaderComponent, EntityFormComponent, AuditFieldComponent],
   templateUrl: './entity-list.component.html',
   styleUrl: './entity-list.component.scss',
 })
@@ -25,6 +28,17 @@ export class EntityListComponent implements OnInit {
   def!: EntityDef;
   items: AuditEntity[] = [];
   columns: FieldDef[] = [];
+
+  /**
+   * Entité rendue **en tête de cette page**, quand le classeur en décrit une.
+   *
+   * Un seul cas : la zone piscine — pédiluve et nettoyage des plages — que
+   * l'onglet « Liste Piscines » décrit sous le tableau des bassins, parce
+   * qu'elle vaut pour l'ensemble de la zone et non pour chaque bassin.
+   */
+  preambule: EntityDef | null = null;
+  preambuleSections: FormSection[] = [];
+  private preambuleValeurs: Record<string, unknown> = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -50,8 +64,27 @@ export class EntityListComponent implements OnInit {
       this.columns = def.listColumns
         .map((k) => def.fields.find((f) => f.key === k))
         .filter((f): f is FieldDef => !!f);
+
+      this.preambule = def.preambule ? entityByKey(def.preambule) ?? null : null;
+      this.preambuleSections = this.preambule ? buildSections(formFields(this.preambule.fields)) : [];
+      this.preambuleValeurs = this.preambule ? { ...this.data.getSingle(this.preambule.key) } : {};
+
       this.reload();
     });
+  }
+
+  valeurPreambule(f: FieldDef): unknown {
+    return this.preambuleValeurs[f.key] ?? null;
+  }
+
+  /**
+   * Enregistré à la volée, sans bouton : cette page n'a pas de « Valider »,
+   * l'auditeur en repart en ouvrant la fiche d'un bassin.
+   */
+  changerPreambule(f: FieldDef, valeur: unknown): void {
+    if (!this.preambule) return;
+    this.preambuleValeurs[f.key] = valeur;
+    this.data.setSingle(this.preambule.key, this.preambuleValeurs);
   }
 
   private reload(): void {

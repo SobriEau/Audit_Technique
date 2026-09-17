@@ -13,32 +13,34 @@
  * n'est pas forcément un défaut — beaucoup de notes décrivent une navigation
  * ou posent une question, pas un champ. Il sert à décider quoi relire.
  *
+ * **Il lit le classeur avec `lib/classeur.js`, exactement comme le
+ * générateur.** C'est essentiel : tant qu'il portait sa propre copie des
+ * règles, il signalait comme oubliés des champs que le générateur retenait, et
+ * prenait les 374 cellules de priorité de la V3 pour autant d'étiquettes
+ * perdues — 81 % de bruit, qui poussait les vrais signalements hors du
+ * rapport.
+ *
  *   node tools/check-coverage.js            tous les onglets
- *   node tools/check-coverage.js Robinet1   un seul
+ *   node tools/check-coverage.js Robinets   un seul
  */
 const fs = require('fs');
 const path = require('path');
 
 const wb = require('./.cache/workbook.json');
+const {
+  colName,
+  normCell,
+  isTechnical,
+  requirementOf,
+  ENTITIES,
+  lireFiche,
+  strip,
+} = require('./lib/classeur');
+
 const SCHEMA = path.join(__dirname, '..', 'src', 'app', 'models', 'audit-schema.ts');
 
-const rowOf = (r) => parseInt(r.match(/\d+$/)[0], 10);
-const colOf = (r) => r.match(/^[A-Z]+/)[0];
-const colNum = (c) => [...c].reduce((a, ch) => a * 26 + (ch.charCodeAt(0) - 64), 0);
-/**
- * Certaines notes ne portent pas de signature d'auteur et commencent
- * directement par le marqueur de type (« Liste déroulante : ») — voir la
- * même garde dans gen-schema.js.
- */
-const NOTE_MARKER_RE = /^(liste\s*d[ée]roulante|champ[s]?\s*libre|oui\s*\/\s*non|o\s*\/\s*n\b)/i;
-const strip = (n) => {
-  const t = n.replace(/\r/g, '').trim();
-  if (NOTE_MARKER_RE.test(t)) return t;
-  return t.replace(/^[^:\n]{0,40}:\s*/, '').trim();
-};
-
 const norm = (s) =>
-  (s || '')
+  String(s == null ? '' : s)
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -47,28 +49,27 @@ const norm = (s) =>
     .trim();
 
 /**
- * Correspondance onglet → entité. Reprise de `gen-schema.js` : les deux
- * doivent rester alignés, sinon le contrôle passe à côté d'un onglet entier.
+ * Colonnes de liste déclarées mais introuvables parmi les champs.
+ *
+ * `listColumns` est écrit à la main dans `lib/classeur.js`, alors que les clés
+ * de champ sont dérivées des libellés du classeur : une reformulation en amont
+ * suffit à rendre une colonne orpheline. Le tableau se contente alors de ne
+ * pas l'afficher — sans erreur, sans trou visible. C'est arrivé dès cette
+ * régénération, sur les espaces extérieurs.
  */
-const ENTITES = {
-  'Compteur général': 'releve_compteur_general',
-  'Sous-compteur1': 'sous_compteurs',
-  Surpresseur1: 'surpresseurs',
-  'Réseaux ECS': 'reseaux_eau_chaude_sanitaire',
-  'Production Stockage ECS': 'production_stockage_ecs',
-  Robinets: 'robinets',
-  'Douche-baignoire1': 'douches_baignoires',
-  WC1: 'wc',
-  'Appareils de lavage': 'appareils_lavage',
-  Structure1: 'structure',
-  Ventilation1: 'ventilation_batiment',
-  Incendie: 'incendie',
-  Toiture1: 'toitures',
-  Bassin1: 'piscines',
-  'Extérieur1': 'espace_vert_exterieur',
-  'Opportunités1': 'opportunites',
-  Autre1: 'autre',
-};
+function colonnesOrphelines() {
+  const src = fs.readFileSync(SCHEMA, 'utf8');
+  const out = [];
+  for (const bloc of src.split(/\n  \{\n/).slice(1)) {
+    const cle = (bloc.match(/key: "([^"]+)"/) || [])[1];
+    const brut = (bloc.match(/listColumns: (\[[^\]]*\])/) || [null, '[]'])[1];
+    const champs = new Set([...bloc.matchAll(/\{ key: "([^"]+)"/g)].map((m) => m[1]));
+    for (const c of JSON.parse(brut)) {
+      if (!champs.has(c)) out.push(`${cle} → « ${c} »`);
+    }
+  }
+  return out;
+}
 
 /** Libellés retenus par le schéma, par clé d'entité. */
 function libellesDuSchema() {
@@ -77,7 +78,7 @@ function libellesDuSchema() {
   const blocs = src.split(/\n  \{\n/).slice(1);
 
   for (const bloc of blocs) {
-    const cle = bloc.match(/key:\s*"([^"]+)"/)?.[1];
+    const cle = (bloc.match(/key:\s*"([^"]+)"/) || [])[1];
     if (!cle) continue;
     parEntite[cle] = [...bloc.matchAll(/label:\s*"((?:[^"\\]|\\.)*)"/g)].map((m) =>
       m[1].replace(/\\"/g, '"')
@@ -86,135 +87,164 @@ function libellesDuSchema() {
   return parEntite;
 }
 
-/** Notes qui décrivent une règle, non un champ : ni oubli, ni à transcrire. */
-/** Cellules qui ne sont pas des champs — même filtre que `gen-schema.js`. */
-const IGNORE = /^(audit sobrieau|enregistrer|valider|num[ée]ro$)/i;
-
-/**
- * Marqueur de niveau de remplissage (V3 du classeur) — même exclusion que
- * `gen-schema.js` : sans elle, chaque cellule « Obligatoire »/« Recommandé »/
- * « Facultatif » ressort ici comme une étiquette prétendument oubliée, alors
- * qu'elle est correctement traitée à part (`FieldDef.requirement`).
- */
-const REQUIREMENT_WORDS = /^(obligatoire|recommand[ée]|facultatif)$/i;
-const isRequirementMarker = (v) => REQUIREMENT_WORDS.test(v.trim());
-
-/**
- * Titres de sous-section du classeur V3 — même exclusion que `gen-schema.js`
- * (voir `SECTION_HEADER_RE` là-bas pour le détail, notamment pourquoi
- * « Utilisations » n'y figure pas).
- */
-const SECTION_HEADER_RE =
-  /^(localisation|ouvrir le plan|caract[ée]ristiques|connexion|etat lors de la visite|mesures?|ou|materiel|structure|reseaux|reserve|tests|purges|organes de reseau|opportunites|\d+)$/i;
-const isSectionHeader = (v) => SECTION_HEADER_RE.test(norm(v));
-
-/**
- * Entités dont l'onglet a disparu du classeur mais que `gen-schema.js`
- * conserve volontairement (`LEGACY_FIELD_LINES`, V3 : Surpresseur1 — voir
- * `ENTITES` ci-dessus, Réducteur de pression1 a été retiré du schéma au
- * profit du bloc intégré à Compteur général) — à ne pas signaler comme un
- * oubli.
- */
-const ENTITES_REPLI = new Set(['surpresseurs']);
-
+/** Notes qui décrivent une règle d'interface, non un champ : ni oubli, ni à transcrire. */
 const NOTE_COMPORTEMENT =
-  /retour à la page|bouton home|enregistrement des données|ajout d.un|ajout d.une|suppression de la page|incrémenter à chaque|données reprises|message avertissement|si on clique|prise de photo/i;
+  /retour à la page|bouton home|enregistrement des données|ajout d.un|ajout d.une|suppression de la page|incrémenter à chaque|données reprises|message avertissement|si on clique|prise de photo|afficher|si oui|si non|ouvrir le plan|code batiment/i;
 
 const schema = libellesDuSchema();
 const filtre = process.argv[2];
+
 let totalNotes = 0;
 let totalEtiquettes = 0;
+let totalPrio = 0;
 
 console.log('\nCONTROLE DE COUVERTURE — classeur vs schéma\n');
 
-for (const [onglet, cle] of Object.entries(ENTITES)) {
-  if (filtre && onglet !== filtre) continue;
+const orphelines = colonnesOrphelines();
+if (orphelines.length) {
+  console.log('▶ COLONNES DE LISTE INTROUVABLES — le tableau les omettra en silence :');
+  orphelines.forEach((o) => console.log('    · ' + o));
+  console.log();
+}
 
-  const s = wb.sheets.find((x) => x.name === onglet);
-  if (!s) {
-    if (ENTITES_REPLI.has(cle)) {
-      console.log(`▶ ${onglet}\n    Onglet absent — champs conservés depuis l'ancien schéma (repli connu, voir LEGACY_FIELD_LINES).\n`);
+for (const ent of ENTITIES) {
+  if (filtre && ent.sheet !== filtre) continue;
+
+  const sheet = wb.sheets.find((x) => x.name === ent.sheet);
+  if (!sheet) {
+    if (ent.horsClasseur) {
+      // Repli connu : champs figés depuis la dernière version qui décrivait
+      // l'entité (`CHAMPS_FIGES`). Le signaler comme un manque ferait croire
+      // à un oubli à chaque exécution.
+      console.log(`▶ ${ent.sheet}  →  ${ent.key}   hors classeur, champs figés conservés   [repli connu]\n`);
     } else {
-      console.log(`▶ ${onglet}\n    ONGLET ABSENT du classeur — le schéma le déclare pourtant.\n`);
+      console.log(`▶ ${ent.sheet}\n    ONGLET ABSENT du classeur — le schéma le déclare pourtant.\n`);
     }
     continue;
   }
 
-  const retenus = new Set((schema[cle] ?? []).map(norm));
-  const lignesNotees = new Set(Object.keys(s.notes).map(rowOf));
+  const { champs, sections, candidats, priorites } = lireFiche(wb, sheet);
+  const retenus = new Set((schema[ent.key] || []).map(norm));
+  const refsRetenues = new Set(champs.map((c) => c.ref));
 
-  // ── Étiquettes présentes dans la feuille, absentes du schéma ────────────
-  // Plafond aligné sur gen-schema.js (MAX_LABEL_LEN) : un plafond différent
-  // ici masquerait à ce contrôle exactement les oublis que le générateur
-  // fait pour la même raison — les deux doivent voir la même chose.
-  const etiquettesOubliees = [];
-  for (const [ref, cell] of Object.entries(s.cells)) {
-    const v = String(cell.v ?? '').trim();
-    const r = rowOf(ref);
-    if (!v || v.length > 250 || r < 6 || IGNORE.test(v) || isRequirementMarker(v) || isSectionHeader(v)) continue;
-    // Une étiquette est suivie d'une cellule de saisie, donc d'une note
-    if (!lignesNotees.has(r + 1)) continue;
-    if (retenus.has(norm(v))) continue;
-    etiquettesOubliees.push(`${ref} « ${v.replace(/\s+/g, ' ')} »`);
+  // ── Étiquettes vues par le lecteur mais absentes du schéma ──────────────
+  //
+  // Un candidat sans note ni priorité n'est pas devenu un champ : c'est le
+  // seul motif de rejet possible ici, puisque le tri des cellules est commun
+  // aux deux.
+  //
+  // La plupart de ces cellules sont des **légendes** — les tables qui
+  // définissent « Bon état / Etat moyen / Mauvais état », les noms de formes
+  // de gouttières, les questions que les auteurs se posent en marge. Elles se
+  // reconnaissent à leur voisinage : une phrase longue sur la même ligne, ou
+  // un libellé qui est lui-même une phrase. Les mélanger aux vrais oublis
+  // noyait ces derniers — 169 signalements dont une poignée seulement
+  // demandent une décision.
+  const LONG = 55;
+  const lignesLongues = new Set();
+  for (const [ref, cell] of Object.entries(sheet.cells)) {
+    const v = String(cell.v == null ? '' : cell.v).trim();
+    if (v.length > LONG) lignesLongues.add(parseInt(ref.match(/\d+$/)[0], 10));
   }
+  // Une ligne de vraies questions porte presque toujours un niveau de
+  // priorité — 426 champs sur 470. Son absence, jointe à une phrase longue,
+  // signe une légende ou un commentaire d'auteur.
+  const lignesAvecPrio = new Set(priorites.map((p) => p.r));
+
+  const orphelins = candidats.filter((c) => !refsRetenues.has(c.ref) && !retenus.has(norm(c.label)));
+  const estLegende = (c) =>
+    !lignesAvecPrio.has(c.r) && (c.label.length > LONG || lignesLongues.has(c.r));
+
+  const etiquettesOubliees = orphelins
+    .filter((c) => !estLegende(c))
+    .map((c) => `${c.ref} « ${c.label} »`);
+  const legendes = orphelins.filter(estLegende);
 
   // ── Notes décrivant un champ, sans champ correspondant ──────────────────
+  const notesRattachees = new Set();
+  for (const c of champs) if (c.note) notesRattachees.add(norm(c.note).slice(0, 60));
+
   const notesOrphelines = [];
-  for (const [ref, brut] of Object.entries(s.notes)) {
+  for (const [ref, brut] of Object.entries(sheet.notes)) {
     const n = strip(brut);
     if (!n || NOTE_COMPORTEMENT.test(n)) continue;
-    // L'étiquette est au-dessus, à gauche
-    const r = rowOf(ref) - 1;
-    const c = colNum(colOf(ref));
-    let etiquette = null;
-    let meilleur = -1;
-    for (const [cref, cell] of Object.entries(s.cells)) {
-      if (rowOf(cref) !== r) continue;
-      const cc = colNum(colOf(cref));
-      const v = String(cell.v ?? '').trim();
-      if (!v || cc > c || cc <= meilleur || isRequirementMarker(v) || isSectionHeader(v)) continue;
-      meilleur = cc;
-      etiquette = v;
-    }
-    if (etiquette && retenus.has(norm(etiquette))) continue;
-    notesOrphelines.push(`${ref} ${etiquette ? `(sous « ${etiquette}` + ' »)' : '(étiquette non trouvée)'} : ${n.replace(/\s+/g, ' ').slice(0, 90)}`);
+    if (notesRattachees.has(norm(n).slice(0, 60))) continue;
+    notesOrphelines.push(`${ref} : ${n.replace(/\s+/g, ' ').slice(0, 90)}`);
   }
+
+  // ── Priorités non rattachées ────────────────────────────────────────────
+  //
+  // Une priorité orpheline signale un champ que le lecteur n'a pas vu : le
+  // classeur a jugé la question digne d'un niveau d'exigence, donc elle
+  // existe. C'est le contrôle le plus utile de la V3.
+  const prioOrphelines = priorites
+    .filter((p) => !p.pris)
+    .map((p) => `${colName(p.c)}${p.r} « ${p.niveau} » sans champ`);
+
+  // ── Garde-fous ──────────────────────────────────────────────────────────
+  //
+  // Un champ dont le libellé est un mot technique ou un niveau de priorité
+  // signifie que le tri des cellules a laissé passer un faux libellé. Attendu
+  // à zéro ; s'il remonte, c'est le générateur qu'il faut corriger, pas le
+  // classeur.
+  const fauxChamps = champs
+    .filter((c) => isTechnical(c.label) || requirementOf(c.label))
+    .map((c) => `${c.ref} « ${c.label} » retenu comme champ`);
 
   totalEtiquettes += etiquettesOubliees.length;
   totalNotes += notesOrphelines.length;
+  totalPrio += prioOrphelines.length;
 
-  const nb = (schema[cle] ?? []).length;
-  const etat = etiquettesOubliees.length + notesOrphelines.length === 0 ? 'complet' : 'À RELIRE';
-  console.log(`▶ ${onglet}  →  ${cle}   ${nb} champs retenus   [${etat}]`);
+  const nb = (schema[ent.key] || []).length;
+  const sansPrio = champs.filter((c) => !c.requirement).length;
+  const anomalies =
+    etiquettesOubliees.length + notesOrphelines.length + prioOrphelines.length + fauxChamps.length;
 
-  if (etiquettesOubliees.length) {
-    console.log(`    Étiquettes sans champ (${etiquettesOubliees.length}) :`);
-    etiquettesOubliees.slice(0, 8).forEach((l) => console.log('      · ' + l));
-    if (etiquettesOubliees.length > 8) console.log(`      … et ${etiquettesOubliees.length - 8} autres`);
-  }
-  if (notesOrphelines.length) {
-    console.log(`    Notes non rattachées (${notesOrphelines.length}) :`);
-    notesOrphelines.slice(0, 6).forEach((l) => console.log('      · ' + l));
-    if (notesOrphelines.length > 6) console.log(`      … et ${notesOrphelines.length - 6} autres`);
-  }
+  console.log(
+    `▶ ${ent.sheet}  →  ${ent.key}   ${nb} champs, ${sections.length} sections, ` +
+      `${sansPrio} sans priorité   [${anomalies === 0 ? 'complet' : 'À RELIRE'}]`
+  );
+
+  const bloc = (titre, lignes, max) => {
+    if (!lignes.length) return;
+    console.log(`    ${titre} (${lignes.length}) :`);
+    lignes.slice(0, max).forEach((l) => console.log('      · ' + l));
+    if (lignes.length > max) console.log(`      … et ${lignes.length - max} autres`);
+  };
+
+  bloc('FAUX CHAMPS — à corriger dans le générateur', fauxChamps, 10);
+  bloc('Priorités sans champ', prioOrphelines, 10);
+  bloc('Étiquettes sans champ', etiquettesOubliees, 8);
+  bloc('Notes non rattachées', notesOrphelines, 6);
+  if (legendes.length) console.log(`    (+ ${legendes.length} légende(s) et commentaire(s) du classeur, ignorés)`);
   console.log();
 }
 
 // ── Onglets du classeur qu'aucune entité ne couvre ────────────────────────
 if (!filtre) {
-  const couverts = new Set(Object.keys(ENTITES));
+  const couverts = new Set(ENTITIES.map((e) => e.sheet));
+
+  /**
+   * Onglets volontairement hors du schéma généré : ce sont des écrans écrits à
+   * la main, pas des fiches d'équipement. Les lister comme « non couverts »
+   * ferait croire à un oubli à chaque exécution.
+   */
+  const HORS_SCHEMA = /^\s*(accueil|généralités|tableau de bord|documents collectés)\s*$/i;
+
   const ignores = wb.sheets
-    .filter((s) => !couverts.has(s.name) && !/^\s*liste|visuel|^\s*infos|^\s*partie technique\s*$/i.test(s.name))
+    .filter((s) => !couverts.has(s.name))
+    .filter((s) => !/^\s*liste/i.test(s.name) && !HORS_SCHEMA.test(s.name))
     .filter((s) => s.cellCount > 0);
 
   if (ignores.length) {
-    console.log('▶ Onglets renseignés qu\'aucune entité ne couvre :');
+    console.log("▶ Onglets renseignés qu'aucune entité ne couvre :");
     ignores.forEach((s) => console.log(`    · ${s.name} (${s.cellCount} cellules, ${s.noteCount} notes)`));
     console.log();
   }
 
   console.log(
-    `TOTAL : ${totalEtiquettes} étiquette(s) sans champ, ${totalNotes} note(s) non rattachée(s).\n` +
+    `TOTAL : ${totalEtiquettes} étiquette(s) sans champ, ${totalNotes} note(s) non rattachée(s), ` +
+      `${totalPrio} priorité(s) sans champ.\n` +
       'Toutes ne sont pas des oublis — ce relevé sert à décider quoi relire.'
   );
 }

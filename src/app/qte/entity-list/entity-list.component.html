@@ -11,6 +11,32 @@
     [crumbs]="[{ label: 'Audit technique', link: ['/qte'] }, { label: def.plural }]"
   />
 
+  <!-- Champs communs à tous les éléments de la page (la zone piscine : pédiluve,
+       nettoyage des plages), en tête, comme arbitré (arbitrages-v3.md, Q10).
+       Enregistrés à la volée : la page n'a pas de « Valider ». -->
+  @if (preambule) {
+    @for (bloc of preambuleSections; track $index) {
+      <div class="panel">
+        @if (bloc.title) {
+          <h2>{{ bloc.title }}</h2>
+        }
+        @for (row of bloc.rows; track $index) {
+          <div class="field-row">
+            @for (f of row; track f.key) {
+              <app-audit-field
+                [def]="f"
+                [ngModel]="valeurPreambule(f)"
+                (ngModelChange)="changerPreambule(f, $event)"
+                [ngModelOptions]="{ standalone: true }"
+              />
+            }
+          </div>
+        }
+      </div>
+    }
+    <h2>{{ def.plural }}</h2>
+  }
+
   <p class="muted">
     Liste des éléments saisis. Cliquez sur une ligne pour ouvrir sa fiche.
   </p>

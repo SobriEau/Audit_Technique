@@ -1,25 +1,6 @@
-/**
- * La disposition vient du classeur : chaque `.field-row` reprend une ligne du
- * tableau Excel, et ses champs s'y répartissent la largeur à parts égales.
- * Une ligne peut donc porter un, deux ou trois champs — on ne remplit jamais
- * mécaniquement.
- */
-.field-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--sp-4);
-}
-
-.field-row app-audit-field {
-  flex: 1 1 240px;
-  min-width: 0;
-}
-
-@media (max-width: 640px) {
-  .field-row {
-    display: block;
-  }
-}
+/* La disposition en lignes (`.field-row`) est une classe globale, dans
+   styles.scss : elle sert aussi au préambule de la page Piscines et au
+   contexte du tableau de bord. */
 
 /* ── Champs masqués par le niveau de remplissage ──────────────────────── */
 

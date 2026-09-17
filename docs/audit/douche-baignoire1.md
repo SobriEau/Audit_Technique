@@ -1,252 +1,115 @@
 # Douche-baignoire1
 
-> Spécification extraite de `audit_technique.xlsx`, onglet « Douche-baignoire1 ».
-> 77 cellules, 58 notes.
+Entité `douches_baignoires` — route `#/qte/douches-baignoires`.
 
-## Rôle de la page
+54 champ(s), 13 section(s). Colonnes du tableau : `TypeDEquipement`, `Emplacement`.
 
-Page de **saisie** : formulaire décrivant un élément de l'audit.
 
-## Champs attendus
+## En tête de fiche (aucune section)
 
-| Cellule | Libellé | Type attendu | Valeurs |
+| Cellule | Libellé | Priorité | Note du classeur |
 |---|---|---|---|
-| `G8` | Type d'équipement | Liste déroulante | douche ou baignoire · Affiche ensuite la partie · "Douche et pommeau" · ou · "Baignoire et pommeau" |
-| `K8` | Emplacement | Texte libre | — |
-| `E11` | Précision emplacement | Texte libre | — |
-| `E15` | Utilisations (lavage du corps, nettoyage de matériel, etc.) | Texte libre | — |
-| `I15` | Année de pose | Texte libre | — |
-| `E18` | Usagers (personnels, public, enfants, patients, adultes, PMR, etc.) | Nombre (personnels, public, enfants, patients, adultes, PMR, etc.) | — |
-| `G21` | Nombre d'utilisation/semaine | Nombre | — |
-| `K21` | Nombre d'équipements identiques | Nombre | — |
-| `E25` | Particularités de la douche (pommeau manuel ou douchette, ciel de pluie, tête de douche fixe ou murale, colonne de douche seule, système mixte (tête + douchette), encastrée, hydromassante (jet latéraux), etc.) | Nombre (pommeau manuel ou douchette, ciel de pluie, tête de douche fixe ou murale, colonne de douche seule, système mixte (tête + douchette) | — |
-| `G28` | Type de pommeau | Liste déroulante | Pommeau de douche classique · Pommeau de douche hydroéconome · Pommeau de douche anti-légionnelle · pommeau anti-calcaire |
-| `K28` | Jets du pommeau | Liste déroulante | aucune · pluie laminaire · aéré · brumisé · pulsé/massage · concentré/puissant · multi-jets |
-| `G31` | Débit en sortie du pommeau (L/min) | Nombre (L/min) | — |
-| `K31` | Présence d'un limiteur de débit | Oui / Non | Oui · Non |
-| `F34` | Température max ECS (°C) | Nombre (°C) | — |
-| `H34` | Temps d'obtention (s) | Nombre (s) | — |
-| `K34` | Numéro réseau ECS d'appartenance | Liste déroulante | avec les choix de la liste des réseaux ECS |
-| `E37` | Etat général | Liste déroulante | Bon · Moyen · Mauvais |
-| `I37` | Date dernière maintenance | Texte libre | — |
-| `E40` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, tartre, etc,…) | Texte libre | — |
-| `E43` | Remarques | Texte libre | — |
-| `E50` | Particularités de la baignoire (sur pieds, portante, encastrée, hydromassante (jet latéraux), etc.) | Nombre (sur pieds, portante, encastrée, hydromassante (jet latéraux) | — |
-| `G53` | Type de pommeau | Liste déroulante | Pommeau de douche classique · Pommeau de douche hydroéconome · Pommeau de douche anti-légionnelle · pommeau anti-calcaire |
-| `K53` | Jets du pommeau | Liste déroulante | aucune · pluie laminaire · aéré · brumisé · pulsé/massage · concentré/puissant · multi-jets |
-| `G56` | Débit en sortie du pommeau (L/min) | Nombre (L/min) | — |
-| `K56` | Présence d'un réducteur de débit | Oui / Non | Oui · Non |
-| `G59` | Baignoire - Indiquer ses dimensions (cm) | Nombre (cm) | — |
-| `K59` | Baignoire - Indiquer son volume (L) | Texte libre | — |
-| `F62` | Température max ECS (°C) | Nombre (°C) | — |
-| `H62` | Temps d'obtention (s) | Nombre (s) | — |
-| `K62` | Numéro réseau ECS d'appartenance | Liste déroulante | avec les choix de la liste des réseaux ECS |
-| `E65` | Etat général* | Liste déroulante | Bon · Moyen · Mauvais |
-| `I65` | Date dernière maintenance | Texte libre | — |
-| `E68` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, tartre, etc,…) | Texte libre | — |
-| `E71` | Remarques | Texte libre | — |
-| `E78` | Type | Liste déroulante | Simple EF · Simple ECS · Mélangeur · Mitigeur classique · Mitigeur thermostatique |
-| `I78` | Particularité (cold start, double butée, …) | Texte libre | — |
-| `E81` | Temporisation | Liste déroulante | Aucune · Mécanique · Electronique |
-| `I81` | Temps de la temporisation (s) | Nombre (s) | — |
-| `E84` | Informations sur le bec du robinet de la baignoire (hauteur, bec fixe, orientable, col de cygne, etc.) | Texte libre | — |
-| `H87` | Débit en sortie du robinet de la baignoire (L/min) | Nombre (L/min) | — |
-| `K87` | Présence d'un limiteur de débit | Oui / Non | Oui · Non |
-| `E90` | Diamètre Nominal de l'alimentation (mm) | Nombre (mm) | — |
-| `K90` | Matériau du tuyau d'alimentation | Liste déroulante | Cuivre · Multicouche · PER · PEHD · PE |
-| `E93` | Etat général* | Liste déroulante | Bon · Moyen · Mauvais |
-| `I93` | Date dernière maintenance | Texte libre | — |
-| `E96` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, présences d'éclaboussures excessives, etc,…) | Texte libre | — |
-| `E99` | Remarques (infos complémentaires, etc..) | Texte libre | — |
-| `E106` | Remarques générales (eau adoucie, …) | Texte libre | — |
+| `G8` | Type d'équipement | Obligatoire | liste déroulante douche ou baignoire Affiche ensuite la partie "Douche" ou "Baignoire" |
+| `E11` | Nombre d'équipements identiques | Obligatoire | Champ libre |
+| `I11` | Numéro réseau ECS d'appartenance | Obligatoire | Liste déroulante avec les choix de la liste des réseaux ECS |
 
-### Listes de valeurs
+## Localisation
 
-Ces énumérations sont écrites en toutes lettres dans les notes du classeur. Elles ne proviennent d'aucune validation Excel ni d'un onglet de référence.
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E14` | Emplacement (reprendre le nom de la pièce indiquée sur le plan) | Obligatoire | Champ libre |
+| `E17` | Précision emplacement | Recommandé | champ libre |
 
-**Type d'équipement**
+## Utilisations
 
-- douche ou baignoire
-- Affiche ensuite la partie
-- "Douche et pommeau"
-- ou
-- "Baignoire et pommeau"
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E21` | Usagers (personnels, public, enfants, patients, adultes, etc.) | Recommandé | Champ libre |
+| `I21` | Nombre d'utilisation/semaine | Facultatif | Champ libre |
 
-**Type de pommeau**
+## Douche — Caractéristiques
 
-- Pommeau de douche classique
-- Pommeau de douche hydroéconome
-- Pommeau de douche anti-légionnelle
-- pommeau anti-calcaire
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E25` | Type de sol | Facultatif | liste déroulante receveur à l'italienne carrellée à l'italienne pierre naturelle chape béton étanche |
+| `I25` | Adaptée PMR ? | Recommandé | liste déroulante Oui / Non |
+| `E28` | Type d'emetteur | Obligatoire | case à cocher tête de douche ciel de pluie pommeau colonne hydromassante cascade Autre |
+| `I28` | Jets de l'émetteur | Facultatif | liste déroulante aucune pluie laminaire, aéré, brumisé, pulsé/massage, concentré/puissant, multi-jets |
+| `E41` | Présence d'un limiteur de débit | Obligatoire | Liste déroulante O/N |
+| `H41` | Particularités de la douche (encastrée, rideau, parois, siège rabattable, etc.) | Facultatif | Champ libre |
 
-**Jets du pommeau**
+## Douche — Mesures
 
-- aucune
-- pluie laminaire
-- aéré
-- brumisé
-- pulsé/massage
-- concentré/puissant
-- multi-jets
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E44` | Débit en sortie de l'émetteur (L/min) | Recommandé | — |
+| `G45` | Temps (s) | — | champ libre |
+| `I45` | Volume (L) | — | champ libre |
+| `K45` | Débit (L/min) | — | Calcul automatique : Débit = volume/temps/60 |
+| `L45` | Mesure directe débit (L/min) - bol | — | champ libre |
+| `E50` | Température max ECS (°C) | Recommandé | Champ libre |
+| `I50` | Temps d'obtention (s) ECS | Recommandé | Champ libre |
 
-**Numéro réseau ECS d'appartenance**
+## Douche — Etat lors de la visite
 
-- avec les choix de la liste des réseaux ECS
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E53` | Etat général | Recommandé | Liste déroulante Bon Moyen Mauvais |
+| `I53` | Date dernière maintenance | Facultatif | Champ Libre |
+| `E56` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, tartre, etc,…) | Recommandé | Champ Libre |
+| `E59` | Remarques | — | Champ libre |
 
-**Etat général**
+## Baignoire — Caractéristiques
 
-- Bon
-- Moyen
-- Mauvais
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E66` | Type de baignoire | Facultatif | liste déroulante sur pied, autoportante encastrée sabot îlot autre |
+| `I66` | Adaptée PMR ? | Recommandé | liste déroulante Oui / Non |
+| `E69` | Baignoire - Indiquer ses dimensions (cm) | Recommandé | Champ libre |
+| `I69` | Baignoire - Indiquer son volume (L) | Recommandé | Champ libre |
+| `E72` | Type d'émetteur | Obligatoire | cases à cocher Robinet seul Robinet + pommeau Pommeau seul Robinet + colonne de douche Robinet + buses hydromassante |
+| `I72` | Jets de l'émetteur | Facultatif | liste déroulante aucune pluie laminaire, aéré, brumisé, pulsé/massage, concentré/puissant, multi-jets |
+| `E80` | Présence d'un limiteur de débit | Obligatoire | Liste déroulante O/N |
+| `H80` | Particularités de la baignoire (porte latérale, forme ronde ou ovale, balnéo, etc.) | Facultatif | Champ libre |
 
-**Type de pommeau**
+## Baignoire — Mesures
 
-- Pommeau de douche classique
-- Pommeau de douche hydroéconome
-- Pommeau de douche anti-légionnelle
-- pommeau anti-calcaire
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E83` | Débit en sortie de l'émetteur (L/min) | Recommandé | — |
+| `G84` | Temps (s) | — | champ libre |
+| `I84` | Volume (L) | — | champ libre |
+| `K84` | Calcul débit (L/min) | — | Calcul automatique : Débit = volume/temps/60 |
+| `L84` | Mesure directe débit (L/min) - bol | — | champ libre |
+| `E89` | Température max ECS (°C) | Recommandé | Champ libre |
+| `I89` | Temps d'obtention (s) ECS | Recommandé | Champ libre |
 
-**Jets du pommeau**
+## Baignoire — Etat lors de la visite
 
-- aucune
-- pluie laminaire
-- aéré
-- brumisé
-- pulsé/massage
-- concentré/puissant
-- multi-jets
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E92` | Etat général* | Recommandé | Liste déroulante Bon Moyen Mauvais |
+| `I92` | Date dernière maintenance | Facultatif | Champ Libre |
+| `E95` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, tartre, etc,…) | Recommandé | Champ Libre |
+| `E98` | Remarques | — | Champ libre |
 
-**Numéro réseau ECS d'appartenance**
+## Robinet — Caractéristiques
 
-- avec les choix de la liste des réseaux ECS
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E105` | Type | Obligatoire | liste déroulante : Simple EF, Simple ECS Mélangeur, Mitigeur classique, Mitigeur thermostatique, |
+| `I105` | Commande du robinet | Obligatoire | Liste déroulante : manuelle, à détection de présence à effleurement à détection RFID |
+| `E108` | Temporisation | Obligatoire | Liste déroulante Aucune, Mécanique, Electronique |
+| `I108` | Temps de la temporisation (s) | Recommandé | Champ libre |
+| `E111` | Particularités du robinet (cold start, double butée, …) | Facultatif | Champ libre |
+| `E114` | Diamètre Nominal de l'alimentation (mm) | Recommandé | Champ libre |
+| `I114` | Matériau du tuyau d'alimentation | Recommandé | Liste déroulante : Cuivre, Multicouche PER, PEHD, PE, PVC pression inconnu |
 
-**Etat général***
+## Robinet — Etat lors de la visite
 
-- Bon
-- Moyen
-- Mauvais
-
-**Type**
-
-- Simple EF
-- Simple ECS
-- Mélangeur
-- Mitigeur classique
-- Mitigeur thermostatique
-
-**Temporisation**
-
-- Aucune
-- Mécanique
-- Electronique
-
-**Matériau du tuyau d'alimentation**
-
-- Cuivre
-- Multicouche
-- PER
-- PEHD
-- PE
-
-**Etat général***
-
-- Bon
-- Moyen
-- Mauvais
-
-## Comportements attendus
-
-Notes du classeur qui ne décrivent pas un champ mais une règle de navigation, d'enregistrement ou une question laissée ouverte par les auteurs.
-
-- `D1` Bouton Home pour retour à la page d'accueil - Message avertissement enregistrement
-- `H5` **Douche-Baignoire** — Incrémenter à chaque nouvelle page et l'inverse en cas de suppression
-- `J5` **Douche-Baignoire** — Retour à la page "Liste Douches-baignoires"  / - Message avertissement enregistrement
-- `E23` **Douche et pommeau** — Partie affichée en fonction du choix de l'équipement
-- `E48` **Mauvais état** — Partie affichée en fonction du choix de l'équipement
-- `E76` **Mauvais état** — Partie affichée systématiquement, indépendament du choix de l'équipement
-- `F112` **Enregistrer** — Enregistrement des données / bascule des infos dans la page "liste douches-baignoires"
-- `H113` **Enregistrer** — Prise de photo et ajout au dossier
-- `I113` **Enregistrer** — Ajout d'un page pour Douche / Baignoire / - Ajouter  un message de confirmation / - Message avertissement enregistrement
-- `J113` **Enregistrer** — Suppression de la page ? / Ajouter un message de confirmation
-
-## Contenu de l'onglet
-
-<details><summary>Cellules non vides</summary>
-
-| Cellule | Contenu |
-|---|---|
-| `E1` | Audit SOBRIEAU   PARTIE TECHNIQUE |
-| `G4` | Douche-Baignoire |
-| `H5` | Numéro |
-| `E7` | Type d'équipement |
-| `I7` | Emplacement |
-| `E10` | Précision emplacement |
-| `E14` | Utilisations (lavage du corps, nettoyage de matériel, etc.) |
-| `I14` | Année de pose |
-| `E17` | Usagers (personnels, public, enfants, patients, adultes, PMR, etc.) |
-| `E20` | Nombre d'utilisation/semaine |
-| `I20` | Nombre d'équipements identiques |
-| `E23` | Douche et pommeau |
-| `E24` | Particularités de la douche (pommeau manuel ou douchette, ciel de pluie, tête de douche fixe ou murale, colonne de douche seule,  système mixte (tête + douchette), encastrée, hydromassante (jet latéraux), etc.) |
-| `E27` | Type de pommeau |
-| `I27` | Jets du pommeau |
-| `E30` | Débit en sortie du pommeau (L/min) |
-| `I30` | Présence d'un limiteur de débit |
-| `E33` | Température max ECS (°C) |
-| `G33` | Temps d'obtention (s) |
-| `I33` | Numéro réseau ECS d'appartenance |
-| `E36` | Etat général |
-| `I36` | Date dernière maintenance |
-| `E39` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, tartre, etc,…) |
-| `E42` | Remarques |
-| `E45` | Bon état |
-| `F45` | équipement récent, pommeau fonctionnel, pas d'entartrage, pas de fuite, jet régulier, bon état joint receveur |
-| `E46` | Etat moyen |
-| `F46` | équipement plus ancien, léger entartrage, jet irrégulier par moment, flexible usé, légère fuite état des joints moyen |
-| `E47` | Mauvais état |
-| `F47` | équipement ancien, fuite permanente, entartrage important, flexible abîmé, jets irréguliers en permanence, mauvais état des joints du receveur |
-| `E48` | Baignoire et pommeau |
-| `E49` | Particularités de la baignoire (sur pieds, portante, encastrée, hydromassante (jet latéraux), etc.) |
-| `E52` | Type de pommeau |
-| `I52` | Jets du pommeau |
-| `E55` | Débit en sortie du pommeau (L/min) |
-| `I55` | Présence d'un réducteur de débit |
-| `E58` | Baignoire - Indiquer ses dimensions (cm) |
-| `I58` | Baignoire - Indiquer son volume (L) |
-| `E61` | Température max ECS (°C) |
-| `G61` | Temps d'obtention (s) |
-| `I61` | Numéro réseau ECS d'appartenance |
-| `E64` | Etat général* |
-| `I64` | Date dernière maintenance |
-| `E67` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, tartre, etc,…) |
-| `E70` | Remarques |
-| `E73` | Bon état |
-| `F73` | équipement récent, pommeau fonctionnel, pas d'entartrage, pas de fuite, jet régulier, bon état joint receveur |
-| `E74` | Etat moyen |
-| `F74` | équipement plus ancien, léger entartrage, jet irrégulier par moment, flexible usé, légère fuite état des joints moyen |
-| `E75` | Mauvais état |
-| `F75` | équipement ancien, fuite permanente, entartrage important, flexible abîmé, jets irréguliers en permanence, mauvais état des joints du receveur |
-| `E76` | Robinet |
-| `E77` | Type |
-| `I77` | Particularité (cold start, double butée, …) |
-| `E80` | Temporisation |
-| `I80` | Temps de la temporisation (s) |
-| `E83` | Informations sur le bec du robinet de la baignoire (hauteur, bec fixe, orientable, col de cygne, etc.) |
-| `E86` | Débit en sortie du robinet de la baignoire (L/min) |
-| `I86` | Présence d'un limiteur de débit |
-| `E89` | Diamètre Nominal de l'alimentation (mm) |
-| `I89` | Matériau du tuyau d'alimentation |
-| `E92` | Etat général* |
-| `I92` | Date dernière maintenance |
-| `E95` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, présences d'éclaboussures excessives, etc,…) |
-| `E98` | Remarques (infos complémentaires, etc..) |
-| `E101` | Bon état |
-| `F101` | équipement récent, pas de fuite, commande en bon état, propre visuellement, pas d'entartrage visible, pas de corrosion, pas de rayures |
-| `E102` | Etat moyen |
-| `F102` | équipement plus ancien, débit irrégulier, quelques rayures visibles, légère corrosion, goutte à goutte occasionnel, commande légèrement grippée |
-| `E103` | Mauvais état |
-| `F103` | équipement ancien, fuite permanente, commande gripée, sale visuellement, nombreuses rayures, corrosion forte |
-| `E105` | Remarques générales (eau adoucie, …) |
-| `F112` | Enregistrer |
-
-</details>
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `E117` | Etat général* | Recommandé | Liste déroulante Bon Moyen Mauvais |
+| `I117` | Date dernière maintenance | Facultatif | Champ Libre |
+| `E120` | Dysfonctionnements observés (fuites, goutte à goutte, bloqué, présences d'éclaboussures excessives, etc,…) | Recommandé | Champ Libre |
+| `E123` | Remarques | — | Champ libre |

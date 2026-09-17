@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { DataService } from '../core/services/data.service';
 import { PageHeaderComponent } from '../shared/components/page-header/page-header.component';
 import { DriveActionsComponent } from '../shared/components/drive-actions/drive-actions.component';
-import { LOGO_AGROPARISTECH, LOGO_CEREMA } from '../shared/logos';
+import { LOGO_AGROPARISTECH, LOGO_CEREMA, LOGO_FINANCEURS, LOGO_PONTS_IPPARIS } from '../shared/logos';
 import { AuditSummary } from '../models/data.models';
 
 /**
@@ -25,6 +25,8 @@ import { AuditSummary } from '../models/data.models';
 export class AccueilComponent implements OnInit {
   readonly logoCerema = LOGO_CEREMA;
   readonly logoAgro = LOGO_AGROPARISTECH;
+  readonly logoFinanceurs = LOGO_FINANCEURS;
+  readonly logoPonts = LOGO_PONTS_IPPARIS;
 
   audits: AuditSummary[] = [];
 

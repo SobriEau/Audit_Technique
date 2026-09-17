@@ -7,7 +7,11 @@
     "start": "ng serve",
     "build": "ng build --configuration standalone && node inline-build.js",
     "build:hosted": "ng build --configuration production",
-    "check:extract": "node tools/check-extract.js"
+    "check:extract": "node tools/check-extract.js",
+    "check:coverage": "node tools/check-coverage.js",
+    "check:smoke": "node tools/smoke-test.js",
+    "check:exigences": "node tools/check-exigences.js",
+    "gen": "node tools/xlsx-extract.js && node tools/gen-schema.js && node tools/gen-pages.js && node tools/gen-docs.js && node tools/gen-referentiel.js"
   },
   "dependencies": {
     "@angular/animations": "^18.2.0",

@@ -1,82 +1,123 @@
 /**
  * Génère `audit-schema.ts` depuis le classeur.
  *
- * Deux informations sont reprises telles quelles :
+ * Quatre informations sont reprises telles quelles :
  *  - les champs et leur type, décrits dans les notes de cellules ;
  *  - **la disposition** : les étiquettes situées sur une même ligne du tableau
- *    Excel restent sur une même ligne du formulaire.
+ *    Excel restent sur une même ligne du formulaire ;
+ *  - **les sections** qui découpent la fiche en blocs ;
+ *  - **l'exigence** de chaque question (obligatoire, recommandé, facultatif),
+ *    qui pilote la pastille, le niveau de remplissage et la validation.
+ *
+ * La lecture de la mise en page — ce qui est un libellé, une section, une
+ * priorité ou une cellule technique — vit dans `lib/classeur.js`, partagée
+ * avec les contrôles. Ce script n'en garde que ce qui lui est propre : les
+ * types de champ, les listes de valeurs et les clés de stockage.
+ *
+ * Régénérer avec `node tools/gen-schema.js` après modification du classeur.
  */
 const fs = require('fs');
 const path = require('path');
 const wb = require('./.cache/workbook.json');
+const {
+  colName,
+  normCell,
+  strip,
+  ENTITIES,
+  CHAMPS_FIGES,
+  lireFiche,
+} = require('./lib/classeur');
 
-const colOf = (r) => r.match(/^[A-Z]+/)[0];
-const rowOf = (r) => parseInt(r.match(/\d+$/)[0], 10);
-const colNum = (c) => [...c].reduce((a, ch) => a * 26 + (ch.charCodeAt(0) - 64), 0);
+const normLabel = (s) => normCell(s);
+
 /**
- * Certaines notes ne portent pas de signature d'auteur et commencent
- * directement par le marqueur de type (« Liste déroulante : », « O/N »).
- * Sans garde, la regexp qui retire la signature avale ce marqueur, et le
- * champ retombe en texte libre sans ses options — bug constaté sur 11 notes
- * de « Réseaux ECS » et « Production Stockage ECS » dans la V2 du classeur.
+ * Coquilles du classeur dans les **valeurs**, corrigées à la génération.
+ *
+ * Même raison que pour les titres de section : une faute dans une option se
+ * lit à l'écran par tous les auditeurs. Le moment de le faire est celui-ci —
+ * une valeur d'énumération est une donnée stockée, la corriger plus tard,
+ * quand des audits circuleront, rendrait illisibles les saisies faites sous
+ * l'ancienne graphie. À signaler au Cerema pour correction amont.
  */
-const NOTE_MARKER_RE = /^(liste\s*d[ée]roulante|champ[s]?\s*libre|oui\s*\/\s*non|o\s*\/\s*n\b)/i;
-const strip = (n) => {
-  const t = n.replace(/\r/g, '').trim();
-  if (NOTE_MARKER_RE.test(t)) return t;
-  return t.replace(/^[^:\n]{0,40}:\s*/, '').trim();
+const VALUE_FIXES = {
+  'à aproffondir': 'à approfondir',
+  "Extérieure avec possibilté d'être couverte": "Extérieure avec possibilité d'être couverte",
 };
-
-/**
- * Marqueur de niveau de remplissage introduit par la V3 du classeur
- * (2026-08-21) : sur la même ligne que l'étiquette d'un champ, la cellule
- * suivante (avant le champ suivant de la ligne) porte exactement
- * « Obligatoire », « Recommandé » ou « Facultatif ». Comparaison sur le
- * libellé normalisé (accents/casse) pour ne pas dépendre d'une orthographe
- * exacte du classeur.
- */
-const REQUIREMENT_MAP = { obligatoire: 'obligatoire', recommande: 'recommande', facultatif: 'facultatif' };
 
 // ── Correspondance option-set → constante du référentiel ───────────────────
+//
+// Une liste ne mérite une constante que si elle se répète, ou si elle est
+// assez centrale pour qu'on veuille la relire d'un seul endroit. Les autres
+// restent inlinées dans le schéma : les mettre en commun de force fusionnerait
+// des notions distinctes qui partagent un libellé (« Type » désigne un
+// compteur ici, un bassin là).
 const L = {
   TYPE_COMPTEUR: ['Compteur à jet unique','Compteur à jet multiple','Compteur à palettes','Compteur volumétrique','Compteur électromagnétique','Compteur ultrasonique','Compteur à pression différentielle','Compteur à insertion','Inconnu'],
-  CLASSE_METROLOGIQUE: ['Classe A','Classe B','Classe C','Classe D','Inconnue'],
-  TYPE_REDUCTEUR_PRESSION: ['Réducteur de pression à membrane','Réducteur de pression à piston','Réducteur de pression à cartouche','Inconnu'],
-  TYPE_ROBINET: ['Simple EF','Simple EF de puisage extérieur','Mélangeur','Mitigeur classique','Mitigeur à butée','Mitigeur thermostatique'],
-  COMMANDE_ROBINET: ['manuelle','au genou','à pédale','à détection'],
+  CLASSE_METROLOGIQUE: ['Classe A','Classe B','Classe C','Classe D','R40','R50','R63','R80','R100','R125','R160','R200','R250','R315','R400','R500','R630','R800','Inconnue'],
+  TYPE_ROBINET: ['Simple EF','Simple ECS','Mélangeur','Mitigeur classique','Mitigeur thermostatique'],
+  COMMANDE_ROBINET: ['manuelle','fémorale','à pédale','à détection'],
   TEMPORISATION: ['Aucune','Mécanique','Electronique'],
-  MATERIAU_TUYAU: ['Cuivre','Multicouche','PER','PEHD','PE'],
+  MATERIAU_TUYAU: ['Cuivre','Multicouche','PER','PEHD','PE','PVC pression','inconnu'],
   TYPE_EQUIPEMENT_DOUCHE: ['Douche','Baignoire'],
-  TYPE_POMMEAU: ['Pommeau de douche classique','Pommeau de douche hydroéconome','Pommeau de douche anti-légionnelle'],
-  TYPE_WC: ['WC à eau suspendu','WC à eau sur pied','Urinoir masculin à eau','Urinoir masculin sans eau','Urinoir féminin sans eau'],
+  JETS_EMETTEUR: ['aucune','pluie laminaire','aéré','brumisé','pulsé/massage','concentré/puissant','multi-jets'],
+  TYPE_WC: ['Urinoir masculin à eau','Urinoir masculin sans eau','Urinoir féminin sans eau','Urinoir féminin à eau',"Stalle d'urinoir",'Toilette à eau standard','Toilette avec broyeur','Toilette avec rince main intégré','Toilette japonaise','Toilette à la turque','Toilette à produit chimique','Toilette sans eau unitaire','Toilette sans eau à séparation','Toilette à eau à séparation','Latrine'],
   COMMANDE_CHASSE: ['manuelle double chasse','manuelle simple chasse','manuelle poussoir temporisé','à pédale','à détection','à pas de temps','écoulement en continu','non concerné'],
-  TEMPORISATION_ECOULEMENT: ['Non concerné','Volume','Mécanique','Electronique'],
   EMPLACEMENT_BASSIN: ['Intérieure','Extérieure',"Extérieure avec possibilité d'être couverte"],
   MODE_NETTOYAGE: ['auto laveuse','nettoyeur haute pression','tuyaux simple','autre'],
-  MODE_ARROSAGE: ['Arrosage goutte à goutte','Arrosage tuyaux poreux','Arrosage non sélectif','Autre'],
-  FONCTIONS_EAU_EXTERIEUR: ['arrosage','arrosage et nettoyage','arrosage et autre','nettoyage','nettoyage et autre','autre','arrosage, nettoyage et autre'],
+  MODE_ARROSAGE: ['Tuyau manuel','Arrosoir','Oyas','Micro asperseur','Arrosage goutte à goutte','Arrosage tuyaux poreux','Tuyères','Arrosage non sélectif','Autre'],
+  EXIGENCE_PROPRETE: ['faible','modéré','forte','réglementaire'],
+  MATERIAU_GOUTTIERE: ['PVC','Zinc','aluminium','béton','acier galvanisé','plomb','pierre','terre cuite','fonte','cuivre'],
+  CHEMINEMENT_RESEAU: ['des faux-plafonds','des gaines techniques','des vides sanitaires','des trémies','en apparent','la dalle','autre'],
+  POTENTIEL_TECHNIQUE: ['fort','moyen','faible','à approfondir'],
+  UTILISATION_ROBINET: ['Evier','Evier cuisine','Lave-main','Fontaine','Lavabo','Ménage/lavage du sol','Lavage poubelle','Lavage matériel (pinceau, ...)','Table à langer','Poste de plonge','Poste de rinçage','Robinet extérieur','Arrosage','Lavage de véhicule','Chaufferie/technique','Autre'],
+  USAGE_APPAREIL_LAVAGE: ['domestique','collectif','professionnel'],
+  ETAT_GENERAL: ['Bon','Moyen','Mauvais'],
+  OUI_NON_NSP: ['Oui','Non','Ne sait pas'],
+};
+
+/**
+ * Listes imposées à un champ, par cellule d'origine.
+ *
+ * Le classeur laisse cohabiter plusieurs versions d'une même liste, et l'écart
+ * est un défaut, non une intention. Corriger le classeur serait plus juste ;
+ * en attendant, la correction vit ici — sourcée, et limitée aux cas arbitrés
+ * (voir `arbitrages-v3.md`).
+ *
+ * **Ne rien ajouter ici sans arbitrage** : deux listes différentes décrivent le
+ * plus souvent deux notions différentes, et les fusionner effacerait une
+ * distinction voulue.
+ */
+const OPTION_OVERRIDES = {
+  // Les trois utilisations d'un même robinet n'offraient pas les mêmes choix :
+  // « Lavage matériel » manquait à la deuxième, et la troisième disait « Evier
+  // cuisine » là où les autres disaient « Evier ». Un auditeur ne pouvait donc
+  // pas saisir en usage secondaire ce qu'il venait de saisir en principal.
+  'Robinets!F15': 'UTILISATION_ROBINET',
+  'Robinets!I15': 'UTILISATION_ROBINET',
+  'Robinets!L15': 'UTILISATION_ROBINET',
+  // Lave-linge au féminin, lave-vaisselle au masculin, pour la même question.
+  'Appareils de lavage!E19': 'USAGE_APPAREIL_LAVAGE',
+  'Appareils de lavage!E50': 'USAGE_APPAREIL_LAVAGE',
 };
 const norm = (a) => a.map((s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim()).sort().join('|');
-const normLabel = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 const LOOKUP = new Map(Object.entries(L).map(([k, v]) => [norm(v), k]));
 
 /**
  * Clés de champs à figer par [onglet][libellé exact] → clé de stockage.
  *
- * Vide pour cette régénération (V2 du classeur, 2026-08) : aucun audit réel
- * n'est encore en circulation (confirmé avant de régénérer), donc rien ne
- * dépend encore des clés dérivées. La table reste prête à l'emploi : dès que
- * de vrais audits circuleront, toute régénération future devra y figer les
- * clés des entités concernées avant de faire tourner ce script, exactement
- * comme le faisait l'ancienne entrée `Robinet1` ici même — sans quoi un
- * libellé retouché dans le classeur ferait dériver une nouvelle clé et
- * orphelinerait silencieusement les données déjà saisies sous l'ancienne.
+ * Vide pour cette régénération (V3 du classeur, 2026-08) : aucun audit réel
+ * n'est en circulation — confirmé par l'auteur du projet avant de régénérer —
+ * donc rien ne dépend encore des clés dérivées. La V3 fait pourtant dériver
+ * 47 clés et en met 3 en collision (une clé qui survit mais change de sens,
+ * bien plus dangereux qu'une clé perdue). La table reste prête à l'emploi :
+ * dès que de vrais audits circuleront, toute régénération future devra y
+ * figer les clés des entités concernées **avant** de faire tourner ce script.
  */
 const KEY_OVERRIDES = {};
 
 /** Clé de stockage dérivée du libellé, stable et lisible. */
 function keyFor(sheet, label) {
-  const o = KEY_OVERRIDES[sheet]?.[label];
+  const o = KEY_OVERRIDES[sheet] && KEY_OVERRIDES[sheet][label];
   if (o) return o;
   const base = label
     .replace(/\([^)]*\)/g, ' ')
@@ -100,7 +141,7 @@ function keyFor(sheet, label) {
 const UNIT_RE = /\(\s*(l\/min|L\/min|l\/s|m3\/h|m3|m³|m²|m2|mm|cm|m|°C|bar|kWh|%|kg|s|L|h)\s*\)/;
 
 /**
- * Marqueur d'énumération dans une note. La V2 du classeur emploie plusieurs
+ * Marqueur d'énumération dans une note. Le classeur emploie plusieurs
  * formulations pour la même intention (liste déroulante, menu déroulant,
  * cases à cocher) — s'en tenir à « liste déroulante » seul avait fait perdre
  * 13 champs sur le seul onglet WC1.
@@ -130,30 +171,156 @@ function splitOptions(text) {
   return parts;
 }
 
+// ── Renvois d'une fiche vers une autre ─────────────────────────────────────
+
 /**
  * Note décrivant une référence croisée déguisée en liste déroulante — ex.
  * « Liste déroulante : avec les choix de la liste des réseaux ECS ». Sans
- * cette détection, le champ devient un select à une seule option absurde
- * (« avec les choix de la liste des réseaux ECS » comme valeur), au lieu
- * d'une vraie référence stockant l'Id de l'élément visé. `entityByPlural` fait
- * correspondre le nom cité au pluriel d'une entité du schéma (ex. « réseaux
- * ECS » → `reseaux_eau_chaude_sanitaire`).
+ * cette détection, le champ devient un select à une seule option absurde,
+ * au lieu d'une vraie référence stockant l'Id de l'élément visé.
  */
-const ENTITY_REF_RE = /avec\s+les\s+choix\s+de\s+la\s+liste\s+des?\s+([^.\n,;()]+)/i;
+const ENTITY_REF_RE =
+  /(?:avec\s+les\s+choix\s+de\s+la\s+liste\s+des?|choix\s+de\s+la\s+liste\s+des?|liste\s+des?)\s+([^.\n,;()]+)/i;
 
-function classify(note, cellBelow, label, entityByPlural) {
+/**
+ * Le renvoi est parfois porté par le seul libellé, la note se bornant à
+ * « Champ libre » — « Numéro de réseau ECS associé », « Numéro du robinet de
+ * remplissage ». Trois des cinq renvois simples de la V3 sont dans ce cas :
+ * s'en tenir à la note les rendrait en texte libre, et l'auditeur y saisirait
+ * à la main un numéro que la renumérotation d'une suppression fera pointer
+ * ailleurs (voir §3 de CLAUDE.md — `Numero` n'est jamais une clé).
+ */
+const LABEL_REF_RE = /^num[ée]ros?\s+(?:du|des|de\s+la|de|d')\s+(.+?)\s*$/i;
+
+/** Un libellé au pluriel — « Numéros des robinets » — désigne plusieurs cibles. */
+const MULTI_REF_RE = /^num[ée]ros\s/i;
+
+/**
+ * Compléments que le classeur ajoute au nom de l'entité visée et qui n'en font
+ * pas partie : « du robinet **de remplissage** », « de réseau ECS **associé** ».
+ */
+const REF_TAIL_RE = /\s*(?:correspondants?|associ[ée]s?|d'appartenance|de\s+remplissage|de\s+l'appareil)\s*$/i;
+
+/**
+ * Noms d'entités tels que le classeur les cite, ramenés à la clé visée.
+ * `entityByPlural` ne reconnaît que le pluriel exact du schéma ; le classeur
+ * écrit « réseau ECS » au singulier.
+ */
+const REF_ALIASES = {
+  'reseau ecs': 'reseaux_eau_chaude_sanitaire',
+  'reseaux ecs': 'reseaux_eau_chaude_sanitaire',
+  robinet: 'robinets',
+  robinets: 'robinets',
+};
+
+/** Pour résoudre « la liste des réseaux ECS » → `reseaux_eau_chaude_sanitaire`. */
+const entityByPlural = new Map(ENTITIES.map((e) => [normLabel(e.plural), e.key]));
+
+/**
+ * Nom d'entité cité par le classeur → clé de l'entité visée.
+ *
+ * Le nom est suivi d'un complément de longueur variable — « robinet **utilisé
+ * pour le remplissage** ». On retient le plus long préfixe qui désigne une
+ * entité, en partant de trois mots : au-delà, aucun nom d'entité du schéma.
+ */
+function resolveRef(nom) {
+  const mots = normLabel(String(nom).replace(REF_TAIL_RE, '')).split(' ').filter(Boolean);
+  for (let n = Math.min(3, mots.length); n >= 1; n--) {
+    const essai = mots.slice(0, n).join(' ');
+    if (REF_ALIASES[essai]) return REF_ALIASES[essai];
+    const e = entityByPlural.get(essai);
+    if (e) return e;
+  }
+  return null;
+}
+
+/**
+ * Met au propre une liste d'options brute, quelle que soit la façon dont elle
+ * a été trouvée — note marquée « liste déroulante » ou énumération implicite.
+ *
+ * Les deux chemins doivent nettoyer pareil : la liste des types de toilettes,
+ * quinze options, n'a aucun marqueur dans le classeur et gardait son
+ * astérisque de renvoi là où les listes marquées le perdaient.
+ */
+function cleanOptions(list) {
+  return list
+    // L'astérisque final renvoie à une légende du classeur, absente de
+    // l'écran : affiché tel quel il ressemble à une marque d'obligation.
+    .map((o) => o.trim().replace(/[.,;]+$/, '').replace(/\s*\*+$/, '').replace(/^["«»\s]+|["«»\s]+$/g, ''))
+    .map((o) => VALUE_FIXES[o] || o)
+    // « (plusieurs réponses possibles) » n'est pas une valeur mais une
+    // consigne, que le classeur écrit sur la ligne du marqueur.
+    .filter((o) => o && o.length < 80 && !/^\(.*\)$/.test(o) && !INTERFACE_NOTE_RE.test(o));
+}
+
+/**
+ * Note qui énumère sans le dire.
+ *
+ * Seize champs de la V3 portent une liste de valeurs sans aucun marqueur —
+ * dont « Type de toilette ou urinoir » et ses quinze options, pourtant
+ * obligatoire. Ils retombaient en texte libre. Une note faite de plusieurs
+ * lignes courtes, sans ponctuation de phrase ni consigne d'interface, est une
+ * énumération : c'est la même forme que les notes marquées.
+ */
+const INTERFACE_NOTE_RE = /affich|si\s+oui|si\s+non|bouton|page|onglet|incr[ée]menter|calcul/i;
+function looksEnumerated(note) {
+  const lignes = note.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lignes.length < 3) return null;
+  if (lignes.some((l) => l.length > 60)) return null;
+  if (INTERFACE_NOTE_RE.test(note)) return null;
+  if (lignes.filter((l) => /[.!?]$/.test(l)).length > 1) return null;
+  return cleanOptions(lignes);
+}
+
+function classify(note, cellBelow, label) {
   const n = note || '';
+
+  // Renvoi vers **plusieurs** éléments : `entity-ref` n'en stocke qu'un seul.
+  // À tester avant toute autre reconnaissance de renvoi, sinon la note (« avec
+  // les choix de la liste des robinets ») fait passer le champ pour une
+  // référence simple et l'auditeur perd les autres cibles sans le voir.
+  if (MULTI_REF_RE.test(label)) {
+    const lm = label.match(LABEL_REF_RE);
+    const cible = lm ? resolveRef(lm[1]) : null;
+    if (cible) {
+      return {
+        kind: 'text',
+        warn: `Le classeur attend ici plusieurs ${cible} ; la saisie multiple n'est pas encore gérée.`,
+      };
+    }
+  }
+
   const ref = n.match(ENTITY_REF_RE);
-  if (ref && entityByPlural) {
-    const target = entityByPlural.get(normLabel(ref[1]));
+  if (ref) {
+    const target = resolveRef(ref[1]);
     if (target) return { kind: 'entity-ref', refTo: target };
   }
+
+  // Renvoi porté par le seul libellé, la note se bornant à « Champ libre ».
+  const lref = label.match(LABEL_REF_RE);
+  if (lref) {
+    const target = resolveRef(lref[1]);
+    if (target) return { kind: 'entity-ref', refTo: target };
+  }
+
   if (/\bo\s*\/\s*n\b/i.test(n) || /^\s*oui\s*\/\s*non\s*$/i.test(cellBelow || '')) {
     return { kind: 'boolean' };
   }
+
   if (ENUM_MARKER_RE.test(n)) {
-    const after = n.replace(new RegExp('^[\\s\\S]*?(?:' + ENUM_MARKER_RE.source + ')\\s*:?\\s*', 'i'), '');
-    let opts = splitOptions(after).map((o) => o.trim().replace(/[.,;]+$/, '')).filter((o) => o && o.length < 80);
+    // Le classeur sépare d'une ligne vide la liste et le commentaire qui la
+    // suit : « liste déroulante douche ou baignoire ⏎⏎ Affiche ensuite la
+    // partie "Douche" ou "Baignoire" ». Sans cette coupe, la consigne
+    // d'interface devient deux options de plus.
+    const blocs = n.split(/\n\s*\n/);
+    let utile = blocs[0];
+    for (let i = 1; i < blocs.length; i++) {
+      if (INTERFACE_NOTE_RE.test(blocs[i])) break;
+      utile += '\n' + blocs[i];
+    }
+
+    const after = utile.replace(new RegExp('^[\\s\\S]*?(?:' + ENUM_MARKER_RE.source + ')\\s*:?\\s*', 'i'), '');
+    let opts = cleanOptions(splitOptions(after));
     // Un seul item retenu : les options sont peut-être jointes par « / » plutôt
     // que par une virgule (« Bon / Moyen / Mauvais », « oui/non/ne sait pas »).
     // Ne s'applique qu'à un item unique : un « / » à l'intérieur d'un item d'une
@@ -163,155 +330,40 @@ function classify(note, cellBelow, label, entityByPlural) {
     } else if (opts.length === 1 && opts[0].includes('/')) {
       opts = opts[0].split('/').map((o) => o.trim()).filter(Boolean);
     }
+    // Le classeur écrit ses doublons : « R160, R200, R400 » revient deux fois
+    // dans la classe métrologique. Dédoublonner en conservant l'ordre.
+    const vus = new Set();
+    opts = opts.filter((o) => {
+      const k = normLabel(o);
+      if (vus.has(k)) return false;
+      vus.add(k);
+      return true;
+    });
+
+    // Une liste déroulante à deux entrées « oui / non » est un booléen : le
+    // classeur l'écrit comme une énumération, mais la stocker en texte ferait
+    // cohabiter « oui », « Oui » et `true` selon la formulation de la note.
+    if (opts.length === 2 && norm(opts) === norm(['oui', 'non'])) {
+      return { kind: 'boolean' };
+    }
+
     return { kind: 'select', options: opts };
   }
+
   const unit = label.match(UNIT_RE);
   if (unit) return { kind: 'number', unit: unit[1].trim() };
   if (/^nombre|^nb\b|^dur[ée]e|^ann[ée]e|^volume|^temps|^fr[ée]quentation|^surface/i.test(label)) {
     return { kind: 'number' };
   }
   if (/remarques|dysfonctionnements|raisons|pr[ée]cisions?$/i.test(label)) return { kind: 'textarea' };
+
+  const implicites = looksEnumerated(n);
+  if (implicites) return { kind: 'select', options: implicites };
+
   return { kind: 'text' };
 }
 
-// ── Entités, dans l'ordre du classeur ──────────────────────────────────────
-//
-// Reconstruite pour la V2 du classeur (2026-08) : la plupart des onglets ont
-// été renommés (ex. Robinet1 → Robinets, Piscine → Bassin1) ou le cluster ECS
-// a été réorganisé. `key`/`route` reprennent ceux de la version précédente
-// quand le même onglet-fiche existe encore, pour rester lisibles ; seul
-// `sheet` a changé. Cinq entités de la version précédente n'ont plus
-// d'onglet correspondant dans cette V2 et ont donc disparu du schéma :
-// Réseau distribution EFS, Production ECS, Stockage ECS (fusionnées avec
-// Production Stockage ECS ci-dessous), équipements ECS (v0), et Collecte eau
-// de pluie. Voir le rapport de régénération pour le détail.
-//
-// La V3 (2026-08-21, « allégée logiciel ») retire à son tour les onglets
-// « Réducteur de pression1 » et « Surpresseur1 ». Les deux ont été traités
-// différemment après relecture du classeur : « Réducteur de pression1 » n'a
-// pas juste disparu, son contenu a été intégré à un bloc conditionnel dans
-// Compteur général (« Présence d'un réducteur de pression à proximité ? » →
-// Réglage, Pression de consigne, Etat général…, déjà capturé plus haut) — la
-// fiche à part est donc retirée du schéma (décision Sacha, 2026-09) plutôt que
-// dupliquée. « Surpresseur1 », lui, n'a aucun équivalent intégré : il reste
-// référencé ci-dessous, `LEGACY_FIELD_LINES` lui fournit des champs de repli
-// figés (repris de la V2) tant qu'aucun onglet ne le décrit plus.
-const ENTITIES = [
-  { sheet: 'Compteur général', key: 'releve_compteur_general', route: 'compteur-general', singular: 'Compteur général', plural: 'Compteur général', single: true, cols: [] },
-  { sheet: 'Sous-compteur1', key: 'sous_compteurs', route: 'sous-compteurs', singular: 'Sous-compteur', plural: 'Sous-compteurs', cols: ['Numero', 'Emplacement', 'AnneeDePose', 'Teletransmission'] },
-  { sheet: 'Surpresseur1', key: 'surpresseurs', route: 'surpresseurs', singular: 'Surpresseur', plural: 'Surpresseurs', cols: ['Numero', 'Emplacement', 'AnneeDePose'] },
-  { sheet: 'Réseaux ECS', key: 'reseaux_eau_chaude_sanitaire', route: 'reseaux-ecs', singular: 'Réseau ECS', plural: 'Réseaux ECS', cols: ['Numero', 'MateriauPrincipalDesCanalisations', 'DiametreDesGaines', 'Bouclage'] },
-  { sheet: 'Production Stockage ECS', key: 'production_stockage_ecs', route: 'production-stockage-ecs', singular: 'Production / Stockage ECS', plural: 'Production / Stockage ECS', cols: ['Numero', 'TypeDeSystemeDeProduction', 'SystemesDeProduction'] },
-  { sheet: 'Robinets', key: 'robinets', route: 'robinets', singular: 'Robinet', plural: 'Robinets', cols: ['Numero', 'Emplacement', 'Type', 'Debit'] },
-  { sheet: 'Douche-baignoire1', key: 'douches_baignoires', route: 'douches-baignoires', singular: 'Douche / Baignoire', plural: 'Douches et baignoires', cols: ['Numero', 'TypeDEquipement', 'Emplacement'] },
-  { sheet: 'WC1', key: 'wc', route: 'wc', singular: 'WC', plural: 'WC', cols: ['Numero', 'TypeDeToiletteOuUrinoir', 'Emplacement', 'NombreDEquipementsIdentiques'] },
-  { sheet: 'Appareils de lavage', key: 'appareils_lavage', route: 'appareils-lavage', singular: 'Appareil de lavage', plural: 'Appareils de lavage', cols: ['Numero', 'Emplacement', 'Type'] },
-  { sheet: 'Structure1', key: 'structure', route: 'structure', singular: 'Structure', plural: 'Structures', cols: ['Numero', 'Emplacement', 'TypeDeLaStructure'] },
-  { sheet: 'Ventilation1', key: 'ventilation_batiment', route: 'ventilation', singular: 'Ventilation', plural: 'Ventilation', cols: ['Numero', 'SystemeDeVentilation', 'EmplacementDuSysteme'] },
-  { sheet: 'Incendie', key: 'incendie', route: 'incendie', singular: 'Incendie', plural: 'Incendie', cols: ['Numero', 'Emplacement', 'PrecisionEmplacement'] },
-  { sheet: 'Toiture1', key: 'toitures', route: 'toitures', singular: 'Toiture', plural: 'Toitures', cols: ['Numero', 'Emplacement', 'SurfaceDeToiture', 'ToitureAccessible'] },
-  { sheet: 'Bassin1', key: 'piscines', route: 'piscines', singular: 'Bassin', plural: 'Piscines', cols: ['Numero', 'Nom', 'Emplacement', 'VolumeDuBassin'] },
-  { sheet: 'Extérieur1', key: 'espace_vert_exterieur', route: 'espaces-exterieurs', singular: 'Espace extérieur', plural: 'Espaces extérieurs', cols: ['Numero', 'Emplacement'] },
-  { sheet: 'Opportunités1', key: 'opportunites', route: 'opportunites', singular: 'Opportunité', plural: 'Opportunités', cols: ['Numero', 'Emplacement'] },
-  { sheet: 'Autre1', key: 'autre', route: 'autre', singular: 'Autre', plural: 'Autres', cols: ['Numero', 'Choix', 'Nom', 'Emplacement'] },
-];
-
-/**
- * Champs de repli pour les entités dont l'onglet a disparu du classeur sans
- * équivalent intégré ailleurs (V3 : Surpresseur1 — voir la note sur
- * `ENTITIES` ci-dessus pour « Réducteur de pression1 », traité différemment).
- * Copie figée du dernier schéma généré depuis un onglet réel (V2, 2026-08) —
- * aucun de ces champs ne porte de `requirement`, cette notion n'existant pas
- * encore dans ce classeur-là.
- *
- * Cette entité est par ailleurs masquée par défaut sur l'accueil du projet
- * (voir `home.component.ts`) : conserver ses champs ici permet de la
- * réactiver sans perte si un onglet réapparaît, ou si l'auditeur l'affiche
- * malgré tout, sans dépendre d'un onglet que le classeur ne fournit plus.
- * À retirer si cette entité est un jour officiellement abandonnée.
- */
-const LEGACY_FIELD_LINES = {
-  surpresseurs: [
-    '      { key: "Emplacement", label: "Emplacement", kind: "text", row: 8 },',
-    '      { key: "ConditionDAcces", label: "Condition d\'accès", kind: "text", row: 12 },',
-    '      { key: "Marque", label: "Marque", kind: "text", row: 15 },',
-    '      { key: "Modele", label: "Modèle", kind: "text", row: 15 },',
-    '      { key: "Type", label: "Type", kind: "text", row: 18 },',
-    '      { key: "DiametreNominal", label: "Diamètre Nominal", kind: "number", row: 18, unit: "mm" },',
-    '      { key: "AnneeDePose", label: "Année de pose", kind: "number", row: 21 },',
-    '      { key: "PressionAfficheeSiManometre", label: "Pression affichée si manomètre", kind: "number", row: 21, unit: "bar" },',
-    '      { key: "PressionDeConsigneActuelle", label: "Pression de consigne actuelle", kind: "number", row: 24, unit: "bar" },',
-    '      { key: "PlageDeReglageDeLa", label: "Plage de réglage de la pression", kind: "number", row: 24, unit: "bar" },',
-    '      { key: "EtatGeneral", label: "Etat général", kind: "select", row: 27, options: ["Bon","Moyen","Mauvais"] },',
-    '      { key: "DateDerniereMaintenance", label: "Date dernière maintenance", kind: "text", row: 27 },',
-    '      { key: "OrganesDeReseauAProximite", label: "Organes de réseau à proximité", kind: "text", row: 30 },',
-    '      { key: "DysfonctionnementsObserves", label: "Dysfonctionnements observés", kind: "textarea", row: 33, wide: true },',
-    '      { key: "DispositifRelieAuGtbGtc", label: "Dispositif relié au GTB/GTC ?", kind: "boolean", row: 36 },',
-    '      { key: "Remarques", label: "Remarques", kind: "textarea", row: 39, wide: true },',
-  ],
-};
-
-const IGNORE = /^(audit sobrieau|enregistrer|valider|num[ée]ro$)/i;
-
-/**
- * Une cellule qui vaut exactement « Obligatoire »/« Recommandé »/« Facultatif »
- * n'est jamais un libellé de champ — c'est le marqueur de niveau de remplissage
- * lui-même (voir `REQUIREMENT_MAP`). Sans cette exclusion, la V3 du classeur
- * le fait remonter comme un « champ » à part entière : sa ligne porte souvent
- * une note (celle du champ voisin), ce qui suffit à le faire passer le test
- * d'étiquette ci-dessous.
- */
-const isRequirementMarker = (v) => !!REQUIREMENT_MAP[normLabel(v)];
-
-/**
- * Titres de sous-section du classeur V3, jamais des champs de saisie — la V2
- * ne les faisait pas ressortir, la disposition de la V3 leur donne parfois une
- * ligne suivante notée, ce qui suffit à les faire passer pour un champ (même
- * mécanisme que `isRequirementMarker` ci-dessus). Repéré à la relecture du
- * schéma régénéré : 34 occurrences sur 15 des 16 onglets, dont « Ouvrir le
- * plan » — déjà couvert par le bouton dédié de `app-plan-locator`, jamais un
- * champ.
- *
- * Les exclure ne peut qu'élargir la fenêtre de recherche de note du champ
- * voisin, jamais la restreindre (voir `classify`) : sur Bassin1, exclure
- * « Ouvrir le plan » réattribue correctement au champ « Emplacement » qui le
- * précède la liste déroulante Intérieure/Extérieure que « Ouvrir le plan »
- * captait à sa place.
- *
- * « Utilisations » et « Ventilation » n'y figurent volontairement pas : dans
- * au moins un onglet chacun est le libellé exact d'un vrai champ (liste
- * déroulante « domestique »/« collective »/… pour le premier ; question
- * « Ventilation » avec ses propres options sur WC1 pour le second — sa seule
- * occurrence purement décorative, le bandeau de titre de l'onglet
- * Ventilation1 en ligne 6, est laissée telle quelle plutôt que de risquer d'en
- * détruire une vraie ailleurs). Les exclure aveuglément y détruirait un champ
- * réel — vérifié en le faisant, à l'origine de l'entrée « ventilation » avant
- * qu'elle ne soit retirée d'ici.
- *
- * « ou » (WC1, Douche-baignoire1) : connecteur isolé entre deux champs sur la
- * même ligne (« Indiquer ses dimensions (cm) ou son volume (L) »), jamais un
- * champ en lui-même.
- *
- * Le reste de la liste (matériel, structure, réseaux, réserve, tests, purges,
- * organes de réseau, opportunités) suit le même motif : un mot générique en
- * colonne E/D, le vrai champ juste après en colonne F. Vérifié un à un à la
- * relecture classeur par classeur, `check-coverage.js` à l'appui (aucune note
- * orpheline supplémentaire) — chacun a par ailleurs son homonyme réel plus
- * spécifique ailleurs (ex. « Organes de réseau à proximité » sur Compteur
- * général, distinct du « Organes de réseau » nu d'Incendie).
- *
- * Un intitulé réduit à un chiffre (« 1 », « 2 », « 3 ») est le repère d'une
- * ligne dans un tableau de mesures répétées (voir `Robinets`/`Douche-
- * baignoire1`, lignes « Mesure / Temps / Volume / Calcul débit ») — jamais un
- * champ. Cela ne résout pas la répétition elle-même (une seule mesure sur les
- * trois prévues est capturée) : limite connue, non traitée ici.
- */
-const SECTION_HEADER_RE =
-  /^(localisation|ouvrir le plan|caract[ée]ristiques|connexion|etat lors de la visite|mesures?|ou|materiel|structure|reseaux|reserve|tests|purges|organes de reseau|opportunites|\d+)$/i;
-const isSectionHeader = (v) => SECTION_HEADER_RE.test(normLabel(v));
-
-/** Pour résoudre « la liste des réseaux ECS » → `reseaux_eau_chaude_sanitaire`. */
-const entityByPlural = new Map(ENTITIES.map((e) => [normLabel(e.plural), e.key]));
+// ── Écriture du schéma ─────────────────────────────────────────────────────
 
 const out = [];
 out.push(`import { EntityDef } from './field.models';`);
@@ -322,137 +374,116 @@ out.push(` * Schéma de la partie technique — GÉNÉRÉ depuis \`audit_techniq
 out.push(` *`);
 out.push(` * \`row\` reproduit le numéro de ligne du tableau Excel : les champs partageant`);
 out.push(` * la même valeur sont affichés côte à côte, comme le prescrit le classeur.`);
-out.push(` * Les clés de stockage des robinets sont conservées à l'identique.`);
-out.push(` *`);
-out.push(` * \`requirement\` (obligatoire/recommande/facultatif) vient de la V3 du classeur`);
-out.push(` * et pilote le niveau de remplissage choisi par l'auditeur, ainsi que la`);
-out.push(` * validation à l'enregistrement pour les champs obligatoires.`);
+out.push(` * \`section\` reprend les blocs du classeur, \`requirement\` le niveau d'exigence`);
+out.push(` * porté par la cellule voisine du libellé, et \`source\` la cellule d'origine.`);
 out.push(` *`);
 out.push(` * Régénérer avec \`node tools/gen-schema.js\` après modification du classeur.`);
+out.push(` * **Ne pas l'éditer à la main** : la prochaine régénération écraserait tout.`);
 out.push(` */`);
 out.push(`export const AUDIT_SCHEMA: EntityDef[] = [`);
 
 const report = [];
 
 for (const ent of ENTITIES) {
-  const s = wb.sheets.find((x) => x.name === ent.sheet);
+  const sheet = wb.sheets.find((x) => x.name === ent.sheet);
+  const fields = [];
+  const seen = new Set();
 
-  let fieldLines;
-  if (!s) {
-    const legacy = LEGACY_FIELD_LINES[ent.key];
-    if (!legacy) {
+  if (!sheet) {
+    // Onglet disparu : l'entité n'est conservée que si des champs figés la
+    // décrivent (voir `CHAMPS_FIGES`). Sinon c'est un oubli dans `ENTITIES`.
+    const figes = CHAMPS_FIGES[ent.key];
+    if (!ent.horsClasseur || !figes) {
       report.push(`  ⚠ onglet absent : ${ent.sheet}`);
       continue;
     }
-    report.push(`  ${ent.sheet.padEnd(26)} onglet absent — champs conservés depuis l'ancien schéma`);
-    fieldLines = legacy;
-  } else {
-    const noteRows = new Set(Object.keys(s.notes).map(rowOf));
-    const cellAt = (r, c) => {
-      for (const [ref, cell] of Object.entries(s.cells)) {
-        if (rowOf(ref) === r && colNum(colOf(ref)) === c) return String(cell.v ?? '').trim();
+    for (const c of figes) {
+      const f = { ...c, source: `${ent.sheet} (V2, champs figés)` };
+      if (Array.isArray(c.options)) {
+        const constant = LOOKUP.get(norm(c.options));
+        f.options = constant ? `L.${constant}` : JSON.stringify(c.options);
       }
-      return '';
-    };
-
-    // Étiquettes : cellules texte dont la ligne suivante porte des notes.
-    // Le plafond de longueur écarte les bandeaux/titres (un vrai libellé,
-    // même verbeux avec ses exemples entre parenthèses, ne dépasse pas 250
-    // caractères dans ce classeur — mesuré, le plus long en fait 219).
-    const MAX_LABEL_LEN = 250;
-    const rows = {};
-    for (const [ref, cell] of Object.entries(s.cells)) {
-      const v = String(cell.v ?? '').trim();
-      if (!v || v.length > MAX_LABEL_LEN || IGNORE.test(v) || isRequirementMarker(v) || isSectionHeader(v)) continue;
-      const r = rowOf(ref);
-      if (r < 6) continue; // lignes 1 à 5 : bandeau, titre de la fiche, Numéro
-      if (!noteRows.has(r + 1)) continue;
-      (rows[r] ??= []).push({ col: colNum(colOf(ref)), label: v.replace(/\s+/g, ' ') });
+      if (c.kind === 'textarea') f.wide = true;
+      fields.push(f);
     }
-
-    // Onglets dépourvus de notes : on déduit les étiquettes de la disposition.
-    if (Object.keys(rows).length === 0) {
-      const occupied = new Set(Object.keys(s.cells).map((ref) => rowOf(ref) + ':' + colNum(colOf(ref))));
-      for (const [ref, cell] of Object.entries(s.cells)) {
-        const v = String(cell.v ?? '').trim();
-        const r = rowOf(ref), c = colNum(colOf(ref));
-        if (!v || v.length > MAX_LABEL_LEN || r < 6 || IGNORE.test(v) || isRequirementMarker(v) || isSectionHeader(v)) continue;
-        if (occupied.has((r + 1) + ':' + c)) continue; // suivi de contenu → pas une étiquette
-        (rows[r] ??= []).push({ col: c, label: v.replace(/\s+/g, ' ') });
-      }
-    }
-
-    const fields = [];
-    const seen = new Set();
-    for (const r of Object.keys(rows).map(Number).sort((a, b) => a - b)) {
-      const cells = rows[r].sort((a, b) => a.col - b.col);
-      for (const c of cells) {
-        const next = cells.find((x) => x.col > c.col);
-
-        // Note portée par la cellule de saisie, sous l'étiquette
-        let note = '';
-        for (const [ref, raw] of Object.entries(s.notes)) {
-          if (rowOf(ref) !== r + 1) continue;
-          const nc = colNum(colOf(ref));
-          if (nc >= c.col && (!next || nc < next.col)) { note = strip(raw); break; }
-        }
-
-        // Marqueur de priorité de remplissage : même ligne que l'étiquette,
-        // entre elle et le champ suivant (voir `REQUIREMENT_MAP` ci-dessus).
-        //
-        // Certains onglets (Bassin1, une bonne moitié d'Extérieur1) le
-        // portent plutôt sur la ligne du dessus, en colonne à peu près — mais
-        // pas exactement — alignée avec le champ. Une tentative de repli sur
-        // la ligne voisine (même fenêtre de colonnes que la ligne courante) a
-        // été essayée et abandonnée : sur les 4 champs d'une même ligne 20 de
-        // Bassin1 pour 3 marqueurs sur la ligne 19, un seul retombait dans la
-        // bonne fenêtre — les trois autres restaient sans marqueur, et rien
-        // ne garantit que celui qui « marchait » pointait au bon endroit
-        // plutôt qu'un chevauchement de fenêtre coïncidant. Mieux vaut ces
-        // champs sans `requirement` (jamais bloquants, juste masqués hors
-        // Complet) qu'une majorité correcte et une exception silencieuse.
-        let requirement;
-        for (const [ref, cell] of Object.entries(s.cells)) {
-          if (rowOf(ref) !== r) continue;
-          const cc = colNum(colOf(ref));
-          if (cc <= c.col || (next && cc >= next.col)) continue;
-          const v = String(cell.v ?? '').trim();
-          const req = REQUIREMENT_MAP[normLabel(v)];
-          if (req) { requirement = req; break; }
-        }
-
-        const below = cellAt(r + 1, c.col);
-        const { kind, options, unit, refTo } = classify(note, below, c.label, entityByPlural);
-
-        let key = keyFor(ent.sheet, c.label);
-        while (seen.has(key)) key += 'Bis';
-        seen.add(key);
-
-        const f = { key, label: c.label.replace(/\s*\([^)]*\)\s*$/, '').trim() || c.label, kind, row: r };
-        if (unit) f.unit = unit;
-        if (refTo) f.refTo = refTo;
-        if (options?.length) {
-          const constant = LOOKUP.get(norm(options));
-          f.options = constant ? `L.${constant}` : JSON.stringify(options);
-        }
-        if (kind === 'textarea') f.wide = true;
-        if (requirement) f.requirement = requirement;
-        fields.push(f);
-      }
-    }
-
-    report.push(`  ${ent.sheet.padEnd(26)} ${String(fields.length).padStart(3)} champs, ${new Set(fields.map(f=>f.row)).size} lignes`);
-
-    fieldLines = fields.map((f) => {
-      const parts = [`key: ${JSON.stringify(f.key)}`, `label: ${JSON.stringify(f.label)}`, `kind: ${JSON.stringify(f.kind)}`, `row: ${f.row}`];
-      if (f.unit) parts.push(`unit: ${JSON.stringify(f.unit)}`);
-      if (f.refTo) parts.push(`refTo: ${JSON.stringify(f.refTo)}`);
-      if (f.options) parts.push(`options: ${f.options}`);
-      if (f.wide) parts.push(`wide: true`);
-      if (f.requirement) parts.push(`requirement: ${JSON.stringify(f.requirement)}`);
-      return `      { ${parts.join(', ')} },`;
-    });
   }
+
+  const { champs } = sheet ? lireFiche(wb, sheet) : { champs: [] };
+
+  for (const c of champs) {
+    const { kind, options, unit, refTo, warn } = classify(c.note, c.below, c.label);
+
+    let key = keyFor(ent.sheet, c.label);
+    while (seen.has(key)) key += 'Bis';
+    seen.add(key);
+
+    const f = {
+      key,
+      // L'astérisque renvoie à une légende du classeur, absente de l'écran :
+      // affiché tel quel, il ressemble à une marque de champ obligatoire.
+      label: c.label.replace(/\s*\([^)]*\)\s*$/, '').replace(/\s*\*+\s*$/, '').trim() || c.label,
+      kind,
+      row: c.r,
+      source: `${ent.sheet}!${colName(c.c)}${c.r}`,
+    };
+    if (unit) f.unit = unit;
+    if (refTo) f.refTo = refTo;
+    if (warn) f.warn = warn;
+    const impose = OPTION_OVERRIDES[f.source];
+    if (impose) {
+      f.options = `L.${impose}`;
+      // Le champ devient un choix même si la note ne le disait pas clairement.
+      if (f.kind !== 'select') f.kind = 'select';
+    } else if (options && options.length) {
+      const constant = LOOKUP.get(norm(options));
+      f.options = constant ? `L.${constant}` : JSON.stringify(options);
+    }
+    if (kind === 'textarea') f.wide = true;
+    if (c.section) f.section = c.section;
+    if (c.bloc) f.bloc = c.bloc;
+    if (c.requirement) f.requirement = c.requirement;
+
+    fields.push(f);
+  }
+
+  // ── Blocs conditionnels ────────────────────────────────────────────────
+  //
+  // Déclarés dans `lib/classeur.js` par cellule d'origine du champ qui les
+  // commande, résolus ici en clé. Tout écart **arrête la génération** : un bloc
+  // mal résolu désactiverait en silence l'exigence de ses champs obligatoires,
+  // ou au contraire bloquerait la validation d'une fiche pour un bloc qui ne
+  // la concerne pas — le défaut que cette table corrige.
+  const blocs = [];
+  for (const b of ent.blocs || []) {
+    const commande = fields.find((f) => f.source === `${ent.sheet}!${b.champSource}`);
+    if (!commande) throw new Error(`${ent.sheet} : bloc « ${b.bloc} », champ ${b.champSource} introuvable`);
+    if (!fields.some((f) => f.bloc === b.bloc)) {
+      throw new Error(`${ent.sheet} : bloc « ${b.bloc} » introuvable parmi les sections`);
+    }
+    const valeurs = b.valeurs.filter((v) => {
+      if (commande.kind === 'boolean') return typeof v === 'boolean';
+      if (typeof v !== 'string') return false;
+      const opts = commande.options && commande.options.startsWith('[')
+        ? JSON.parse(commande.options)
+        : L[String(commande.options).replace(/^L\./, '')] || [];
+      return opts.includes(v);
+    });
+    if (!valeurs.length) {
+      throw new Error(
+        `${ent.sheet} : bloc « ${b.bloc} », aucune valeur de ${JSON.stringify(b.valeurs)} ` +
+          `ne correspond au champ ${commande.key} (${commande.kind}, ${commande.options || 'sans options'})`
+      );
+    }
+    blocs.push({ bloc: b.bloc, champ: commande.key, valeurs, source: b.source });
+  }
+
+  const sansExigence = fields.filter((f) => !f.requirement).length;
+  report.push(
+    `  ${ent.sheet.padEnd(26)} ${String(fields.length).padStart(3)} champs, ` +
+      `${new Set(fields.map((f) => f.section || '—')).size} sections, ${sansExigence} sans exigence` +
+      (blocs.length ? `, ${blocs.length} bloc(s) conditionnel(s)` : '') +
+      (ent.horsClasseur ? '  [hors classeur, champs figés]' : '')
+  );
 
   out.push(`  {`);
   out.push(`    key: ${JSON.stringify(ent.key)},`);
@@ -460,9 +491,39 @@ for (const ent of ENTITIES) {
   out.push(`    singular: ${JSON.stringify(ent.singular)},`);
   out.push(`    plural: ${JSON.stringify(ent.plural)},`);
   if (ent.single) out.push(`    single: true,`);
+  if (ent.embedded) out.push(`    embedded: ${JSON.stringify(ent.embedded)},`);
+  if (ent.preambule) out.push(`    preambule: ${JSON.stringify(ent.preambule)},`);
+  if (ent.horsClasseur) out.push(`    horsClasseur: true,`);
+  if (blocs.length) {
+    out.push(`    blocsConditionnels: [`);
+    for (const b of blocs) {
+      out.push(
+        `      { bloc: ${JSON.stringify(b.bloc)}, champ: ${JSON.stringify(b.champ)}, ` +
+          `valeurs: ${JSON.stringify(b.valeurs)}, source: ${JSON.stringify(b.source)} },`
+      );
+    }
+    out.push(`    ],`);
+  }
   out.push(`    listColumns: ${JSON.stringify(ent.cols)},`);
   out.push(`    fields: [`);
-  out.push(...fieldLines);
+  for (const f of fields) {
+    const parts = [
+      `key: ${JSON.stringify(f.key)}`,
+      `label: ${JSON.stringify(f.label)}`,
+      `kind: ${JSON.stringify(f.kind)}`,
+      `row: ${f.row}`,
+    ];
+    if (f.unit) parts.push(`unit: ${JSON.stringify(f.unit)}`);
+    if (f.refTo) parts.push(`refTo: ${JSON.stringify(f.refTo)}`);
+    if (f.options) parts.push(`options: ${f.options}`);
+    if (f.section) parts.push(`section: ${JSON.stringify(f.section)}`);
+    if (f.bloc) parts.push(`bloc: ${JSON.stringify(f.bloc)}`);
+    if (f.requirement) parts.push(`requirement: ${JSON.stringify(f.requirement)}`);
+    if (f.source) parts.push(`source: ${JSON.stringify(f.source)}`);
+    if (f.warn) parts.push(`warn: ${JSON.stringify(f.warn)}`);
+    if (f.wide) parts.push(`wide: true`);
+    out.push(`      { ${parts.join(', ')} },`);
+  }
   out.push(`    ],`);
   out.push(`  },`);
 }
@@ -480,5 +541,5 @@ out.push(`  return AUDIT_SCHEMA.find((e) => e.route === route);`);
 out.push(`}`);
 out.push('');
 
-fs.writeFileSync(path.join(__dirname,'..','src','app','models','audit-schema.ts'), out.join('\n'), 'utf8');
+fs.writeFileSync(path.join(__dirname, '..', 'src', 'app', 'models', 'audit-schema.ts'), out.join('\n'), 'utf8');
 console.log(report.join('\n'));

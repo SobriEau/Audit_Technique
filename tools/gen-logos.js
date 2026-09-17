@@ -25,6 +25,11 @@ const LOGOS = [
   { match: /sobrieau/i, name: 'LOGO_SOBRIEAU', desc: "Logotype SobriEau : symbole, nom et signature. Tient lieu de titre." },
   { match: /cerema/i, name: 'LOGO_CEREMA', desc: 'République Française — Cerema, climat & territoires de demain.' },
   { match: /agro/i, name: 'LOGO_AGROPARISTECH', desc: 'AgroParisTech Innovation SAS.' },
+  // Repris de la maquette du classeur V3 (onglet « Accueil », image ancrée sous
+  // « Ce projet est financé par : »). PNG faute de SVG : ~100 Ko une fois
+  // inliné, alourdissement accepté (arbitrages-v3.md, Q19).
+  { match: /financeurs/i, name: 'LOGO_FINANCEURS', desc: 'Financé par : République Française, France 2030, ADEME.' },
+  { match: /ponts/i, name: 'LOGO_PONTS_IPPARIS', desc: 'École nationale des Ponts et Chaussées — Institut Polytechnique de Paris.' },
 ];
 
 /**

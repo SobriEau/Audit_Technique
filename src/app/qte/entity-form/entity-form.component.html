@@ -1,39 +1,35 @@
 @if (def) {
   <app-page-header [pageTitle]="title" [backTo]="backTo" [crumbs]="crumbs" />
 
-  <div class="panel">
-    <!-- Une ligne du formulaire = une ligne du tableau Excel -->
-    @for (row of visibleRowsBeforeLocation; track $index) {
-      <div class="field-row">
-        @for (f of row; track f.key) {
-          <app-audit-field
-            [def]="f"
-            [ngModel]="valueOf(f)"
-            (ngModelChange)="onFieldChange(f, $event)"
-            [ngModelOptions]="{ standalone: true }"
-          />
-        }
-      </div>
-    }
+  <!-- Un bloc par section du classeur : une fiche peut compter 77 champs. -->
+  @for (bloc of sections; track $index) {
+    <div class="panel">
+      @if (bloc.title) {
+        <h2>{{ bloc.title }}</h2>
+      }
 
-    <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
+      <!-- Une ligne du formulaire = une ligne du tableau Excel -->
+      @for (row of bloc.rows; track $index) {
+        <div class="field-row">
+          @for (f of row; track f.key) {
+            <app-audit-field
+              [def]="f"
+              [ngModel]="valueOf(f)"
+              (ngModelChange)="onFieldChange(f, $event)"
+              [ngModelOptions]="{ standalone: true }"
+            />
+          }
+        </div>
+      }
 
-    @for (row of visibleRowsAfterLocation; track $index) {
-      <div class="field-row">
-        @for (f of row; track f.key) {
-          <app-audit-field
-            [def]="f"
-            [ngModel]="valueOf(f)"
-            (ngModelChange)="onFieldChange(f, $event)"
-            [ngModelOptions]="{ standalone: true }"
-          />
-        }
-      </div>
-    }
-  </div>
+      @if (bloc.withLocator) {
+        <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
+      }
+    </div>
+  }
 
   <div class="panel">
-    <label>Photos</label>
+    <h2>Photos</h2>
     <app-photo-editor
       [ngModel]="photos"
       (ngModelChange)="onPhotosChange($event)"

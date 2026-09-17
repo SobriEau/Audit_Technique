@@ -1,245 +1,181 @@
 # Référentiel des listes de valeurs
 
-Le classeur ne contient **aucune validation de données Excel**. Les valeurs autorisées y sont décrites en langage naturel, dans les notes de cellules — seule source depuis la V2 : l'onglet catalogue de la V1 (« Infos audit partie technique ») n'existe plus.
+⚠️ **Fichier généré** par `node tools/gen-referentiel.js`, à partir de
+`src/app/models/audit-schema.ts`. Ne pas l’éditer à la main.
 
-## Listes de valeurs, par onglet
+144 champ(s) à choix, dont 63 adossés à une constante partagée de `value-lists.ts` et 81 avec une liste propre.
 
-| Onglet | Cellule | Libellé | Valeurs |
-|---|---|---|---|
-| Compteur général | `H17` | Type | Compteur à jet unique · Compteur à jet multiple · Compteur à palettes · Compteur volumétrique · Compteur électromagnétique · Compteur ultrasonique · Compteur à pression différentielle · Compteur à insertion · Inconnu |
-| Compteur général | `L17` | Classe métrologique | Classe A · Classe B · Classe C · Classe D · R40 · R50 · R63 · R80 · R100 · R125 · R160 · R200 · R250 · R315 · R400 · R160 · R200 · R400 · R500 · R630 · R800 · Inconnue |
-| Compteur général | `H26` | Télétransmission | O · N |
-| Compteur général | `L29` | Etat général* | Bon · Moyen · Mauvais |
-| Compteur général | `H44` | Dispositif relié au GTB/GTC ? | O · N |
-| Sous-compteur1 | `F18` | Type | Compteur à jet unique · Compteur à jet multiple · Compteur à palettes · Compteur volumétrique · Compteur électromagnétique · Compteur ultrasonique · Compteur à pression différentielle · Compteur à insertion · Inconnu |
-| Sous-compteur1 | `J18` | Classe métrologique | Classe A · Classe B · Classe C · Classe D · R40 · R50 · R63 · R80 · R100 · R125 · R160 · R200 · R250 · R315 · R400 · R160 · R200 · R400 · R500 · R630 · R800 · Inconnue |
-| Sous-compteur1 | `F27` | Télétransmission | O · N |
-| Sous-compteur1 | `J30` | Etat général* | Bon · Moyen · Mauvais |
-| Sous-compteur1 | `F45` | Dispoisitif relié au GTB/GTC ? | O · N |
-| Réducteur de pression1 | `F19` | Type | Réducteur de pression à membrane · Réducteur de pression à piston · Réducteur de pression à cartouche · Inconnu |
-| Réducteur de pression1 | `F28` | Etat général* | Bon · Moyen · Mauvais |
-| Réducteur de pression1 | `F37` | Dispoisitif relié au GTB/GTC ? | O · N |
-| Surpresseur1 | `F28` | Etat général | Bon · Moyen · Mauvais |
-| Surpresseur1 | `F37` | Dispositif relié au GTB/GTC ? | O · N |
-| Réseaux ECS | `F12` | Matériau principal des canalisations | Cuivre · Multicouche · PER · PEHD · PE · pvc sous pression · acier galvanisé · fonte |
-| Réseaux ECS | `F25` | Calorifugeage des canalisations | oui · non · ne sait pas |
-| Réseaux ECS | `F31` | Matériaux de l'isolant | laine de verre · laine de roche · papier et platre · polyruéthane · Mousse synthétique (armaflex,PE…) |
-| Réseaux ECS | `F34` | Continuité de l'isolation | oui · non · ne sait pas |
-| Réseaux ECS | `F37` | Etat de l'isolant* | Bon · Moyen · Mauvais |
-| Réseaux ECS | `F47` | Bouclage | oui · non · ne sait pas |
-| Réseaux ECS | `F66` | Mode de fonctionnement du circulateur | continu · horloge programmable · piloté par la température · aquastat · GTB · GTC |
-| Réseaux ECS | `F69` | Variation de vitesse du circulateur possible | O · N |
-| Réseaux ECS | `F80` | Présence d'une vanne thermostatique | manuelle · motorisée · non · ne sait pas |
-| Réseaux ECS | `F83` | Présence d'un clapet anti-retour | oui · non · ne sait pas |
-| Réseaux ECS | `F86` | Présence d'un vase d'expansion | oui · non · ne sait pas |
-| Réseaux ECS | `F97` | Présence de bras mort connus | oui · non · ne sait pas |
-| Réseaux ECS | `F104` | Présence d'une purge automatique | oui · non · ne sait pas |
-| Réseaux ECS | `F107` | Protocole pour le risque légionnelle déjà mis en place ? | oui · non · ne sait pas |
-| Production Stockage ECS | `F24` | Systèmes de production | Chauffe-eau gaz instantané · Accumulateur gaz · Chaudière · Ballon électrique · Chauffe-eau électrique · Chauffe-eau solaire thermique · Solaire photovoltaïque · Système solaire combiné chauffage + ECS · Chauffe-eau thermodynamique individuel (ie PAC) · PAC (indiviuuelle ou collective) · Module thermique d'appartements (MTA) · Kit robinetterie avec module chaufffant · Autre (préciser dans remarques) · Ne sait pas |
-| Production Stockage ECS | `F27` | Combustible (si chaudière) | gaz · fioul · bois · biomasse · réseau de chaleur urbain · ne sait pas · autre |
-| Production Stockage ECS | `F36` | Etat apparent du générateur* | Bon · Moyen · Mauvais |
-| Production Stockage ECS | `F82` | Continuité de l'isolant sur tout le (les) ballons | oui · non · ne sait pas |
-| Production Stockage ECS | `F85` | Etat de l'isolant* | bon · moyen · mauvais |
-| Production Stockage ECS | `F101` | Présence d'une soupape de sécurité | oui · non · ne sait pas |
-| Production Stockage ECS | `F104` | Présence d'un vase d'expansion entre la soupape de sécurité et le stockage | oui · non · ne sait pas |
-| Robinets | `F21` | Type | Simple EF · Simple ECS · Mélangeur · Mitigeur classique · Mitigeur thermostatique |
-| Robinets | `K21` | Commande | manuelle · fémorale · à pédale · à détection |
-| Robinets | `F24` | Temporisation | Aucune · Mécanique · Electronique |
-| Robinets | `M32` | Présence d'un limiteur de débit | O · N |
-| Robinets | `M44` | Matériau du tuyau d'alimentation | Cuivre · Multicouche · PER · PEHD · PE |
-| Robinets | `F47` | Etat général* | Bon · Moyen · Mauvais |
-| Douche-baignoire1 | `G8` | Type d'équipement | douche ou baignoire · Affiche ensuite la partie · "Douche et pommeau" · ou · "Baignoire et pommeau" |
-| Douche-baignoire1 | `G28` | Type de pommeau | Pommeau de douche classique · Pommeau de douche hydroéconome · Pommeau de douche anti-légionnelle · pommeau anti-calcaire |
-| Douche-baignoire1 | `K28` | Jets du pommeau | aucune · pluie laminaire · aéré · brumisé · pulsé/massage · concentré/puissant · multi-jets |
-| Douche-baignoire1 | `K31` | Présence d'un limiteur de débit | O · N |
-| Douche-baignoire1 | `E37` | Etat général | Bon · Moyen · Mauvais |
-| Douche-baignoire1 | `G53` | Type de pommeau | Pommeau de douche classique · Pommeau de douche hydroéconome · Pommeau de douche anti-légionnelle · pommeau anti-calcaire |
-| Douche-baignoire1 | `K53` | Jets du pommeau | aucune · pluie laminaire · aéré · brumisé · pulsé/massage · concentré/puissant · multi-jets |
-| Douche-baignoire1 | `K56` | Présence d'un réducteur de débit | O · N |
-| Douche-baignoire1 | `E65` | Etat général* | Bon · Moyen · Mauvais |
-| Douche-baignoire1 | `E78` | Type | Simple EF · Simple ECS · Mélangeur · Mitigeur classique · Mitigeur thermostatique |
-| Douche-baignoire1 | `E81` | Temporisation | Aucune · Mécanique · Electronique |
-| Douche-baignoire1 | `K87` | Présence d'un limiteur de débit | O · N |
-| Douche-baignoire1 | `K90` | Matériau du tuyau d'alimentation | Cuivre · Multicouche · PER · PEHD · PE |
-| Douche-baignoire1 | `E93` | Etat général* | Bon · Moyen · Mauvais |
-| WC1 | `G8` | Type de pose | suspendu · sur pied |
-| WC1 | `E18` | Type d'assise | Adulte non PMR · PMR · Enfants |
-| WC1 | `K18` | Utilisateurs | (plusieurs réponses possibles) · Public extérieur · Personnel · Autres adultes · Enfants · Adolescents · Personnes âgées · PMR |
-| WC1 | `G27` | Volume chasse | <3 · 2/4 · 3/6 · 6/9 · 6 · 9 · >9 · Inconnu · Non concerné |
-| WC1 | `K27` | Volume chasse estimé ou connu | Connu · Estimé · Non connu/non estimé · Non concerné |
-| WC1 | `F30` | Commande de la chasse | manuelle double chasse · manuelle simple chasse · manuelle poussoir temporisé · à pédale · à détection · à pas de temps · écoulement en continu · non concerné |
-| WC1 | `K30` | Temporisation de l'écoulement | Non concerné · Volume · Mécanique · Electronique |
-| WC1 | `G36` | Origine de l'eau | Eau potable · Eau de pluie · Eau souterraine · Eau grise · écrire toutes les eaux utilisées en cas de possibilité de changement |
-| WC1 | `G39` | Ventilation ? | pas de ventilation · en continu · intermittente · à détection · indépendante du reste du bâtiment |
-| WC1 | `G42` | Test de la feuille de papier sur la bouche d'extraction | Feuille aspirée · Feuille repoussée · Rien ne se passe |
-| WC1 | `G45` | Dysfonctionnements | Fuite de la chasse · Bouton chasse cassé ou bloqué · Bruits de la chasse en continu · Entartrage · Odeurs · WC bouché |
-| WC1 | `K45` | Disponibilité d'un local à proximité | non · oui à côté · derrière un des murs · oui à l'aplomb aux étages inférieurs |
-| Appareils de lavage | `G15` | Type | lave linge · lave vaisselle · autolaveuse · lavage du sol manuel |
-| Appareils de lavage | `M19` | Utilisations | domestique · collectif · professionnel |
-| Appareils de lavage | `M22` | Classe énergétique (si visible) | A · B · C · D · E · F · G |
-| Appareils de lavage | `M25` | Type de textiles | à cocher (plusieurs réponses possibles) : · vêtements quotidien mixte (coton, mélange, soie, laine, synthétique) · vêtements de sport (synthétique) · vêtements laine · textile hébergement (literie, peignoirs, serviette) · textile ameublement (rideaux, housse) · textile de restauration (nappes, torchons, serviettes de table) · textile médical (tenues, draps) · textile de nettoyage (franges, chiffons, microfibres) · vêtements professionnels très sales · textiles à risques infectieux |
-| Appareils de lavage | `F28` | Type d'alimentation en eau | EF seul · EF + ECS · Eau de pluie |
-| Appareils de lavage | `F31` | Taux de remplissage | peu rempli · semi-rempli · plein |
-| Appareils de lavage | `M44` | Utilisations | domestique · collectif · professionnel |
-| Appareils de lavage | `F50` | Type de chargement | frontal · à capot · à avancement automatique · à convoyeur/tunnel |
-| Appareils de lavage | `I50` | Type d'alimentation en eau | EF seul · ECS seul · EF + ECS |
-| Appareils de lavage | `M70` | Utilisations | nettoyage ponctuel · nettoyage régulier · nettoyage quotidien |
-| Appareils de lavage | `I73` | Type d'autolaveuse | autotractée · autoportée · industrielle |
-| Appareils de lavage | `F76` | Type d'alimentation électrique | sur batterie · câble d'alimentation |
-| Appareils de lavage | `I76` | Type de brosses | disque · rouleau · autre |
-| Appareils de lavage | `K88` | Personnel formé | Oui · Non |
-| Appareils de lavage | `F108` | Type de surface | carrelage (grès, faïence) · pierre (marbre, granit, travertin) · résine époxy / polyuréthane · béton ciré · béton brut · parquet massif · parquet contrecollé · bois stratifié · Linoléum · PVC / vinyle · Moquette en rouleau · dalles de moquette · autre |
-| Appareils de lavage | `L108` | Type de matériel de lavage | balai serpillère à franges (ou balai espagnol) · balai à plat classique · balai à plat avec microfibres pré-imprégnées · balai à plat avec microfibre jetables · balai brosse · balai avec réservoir (spray mop) · Nettoyeur haute-pression (Karcher) · balais à vapeur · Nettoyage au jet · autre |
-| Appareils de lavage | `F123` | Rinçage du sol | pas de rinçage · rinçage systématique · rinçage ponctuel |
-| Appareils de lavage | `I123` | Un protocole de lavage écrit est communiqué au salarié ? | Oui · Non |
-| Appareils de lavage | `K123` | Personnel formé | Oui · Non |
-| Structure1 | `F8` | Type de la structure | Structure du bâtiment et réseaux · Espace technique aménageable · Ouvrir la suite en fonction du choix |
-| Structure1 | `F19` | Type de planchers | dalle béton · dalle poutrelle/hourdis · bois · plancher surélevé · dalle structurelle · plots · dalle amovibles · planchers chauffants |
-| Structure1 | `F25` | Présence de gaines techniques ? | aucune · horizontales · verticales |
-| Structure1 | `K25` | Type de cloisons | légère sur ossature (placo) · maçonnée (brique, parpaing, carreau de plâtre) · alvéolaire (prêtes à poser) · techniques (coupe-feu, acoustique renforcé, hydrofuge) · vitrées · démontable/modulaire · bois |
-| Structure1 | `F28` | Présence de colonnes de chute séparées pour les eaux grises ? | oui · non |
-| Structure1 | `K28` | Présence d'une évacuation séparée des eaux de lavage, de process et autres ? | Oui · Non |
-| Structure1 | `F31` | Présence de Té de visite à intervalles réguliers sur le réseau de collecte | oui · non |
-| Structure1 | `K31` | Accessibilité du réseau de collecte (gaine technique, faux-plafond, etc.) | Oui · Non |
-| Structure1 | `F34` | — | oui · non |
-| Structure1 | `K34` | Le réseau d'eau potable actuel passe actuellement dans | des faux-plafonds · des gaines techniques · des vides sanitaires · des trémies · en apparent |
-| Structure1 | `F45` | Présence d'un local technique ou sous-sol aménageable ? | oui/non · si oui afficher les questions suivantes |
-| Structure1 | `K45` | Un camion de livraison de cuve et de vidange peut-il se garer à côté de cet espace ? | oui · non |
-| Structure1 | `K51` | Cet espace technique est-il accessible aux engins de livraison de cuve et de vidange ? | oui · non |
-| Structure1 | `F54` | Cet espace est-il équipé d'un alimentation électrique ? | oui · non |
-| Structure1 | `K54` | L'espace est-il ventilé ? | oui · non |
-| Structure1 | `F57` | Le réseau 4G/5G est-il disponible dans cet espace ? | oui · non |
-| Structure1 | `K57` | Un système de relevage est il obligatoire entre la collecte et l'espace de stockage ? | oui · non |
-| Structure1 | `F60` | Cet espace est-il équipé d'un siphon de sol pour faciliter le nettoyage (débordements) ? | oui · non |
-| Structure1 | `K60` | Un by-pass vers le réseau d'eaux usées est-il possible ? | oui · non |
-| Structure1 | `F63` | Cet espace est-il protégé du gel ? | oui · non |
-| Structure1 | `K63` | Cet espace est-il équipé d'un point d'eau potable ? | oui · non |
-| Structure1 | `F66` | — | oui · non |
-| Structure1 | `K66` | Cet espace est-il ouvert au public ? | oui · non |
-| Structure1 | `K69` | Le local est-il éloigné de la verticale des toilettes présente dans les étages ? | oui · non |
-| Ventilation1 | `B11` | Système de ventilation | insuflation · ventilation naturelle · VMC simple flux autoréglable · VMC simple flux hygroréglable · VMC double flux · CTA simple flux · CTA double flux · Ne sait pas · Autre |
-| Ventilation1 | `H27` | Système en fonctionnement le jour de l'audit | O · N |
-| Incendie | `F16` | Présence de RIA (Robinets d'Incendie Armés) ? | oui · non |
-| Incendie | `K16` | Présence de sprinkler ? | Oui · Non |
-| Incendie | `F19` | Présence d'un sous-compteur sur le réseau incendie ? | oui · non |
-| Incendie | `K19` | Présence d'une réservie incendie ? | Oui · Non |
-| Incendie | `K22` | Type d'eau réserve incendie | eau potable · eau de pluie · eau pluviale |
-| Incendie | `K25` | Fréquence des tests | hebdomadaire · mensuelle · semestriel · annuelle |
-| Incendie | `F31` | Présence de purges régulièrs du réseau incendie? | Oui · Non |
-| Incendie | `K31` | Fréquence des purges | hebdomadaire · mensuelle · semestrielle · biannuelle · annuelle |
-| Incendie | `K34` | Destination des eaux de tests/purges | rejet au réseau d'assainissement · rejet au réseau pluvial · infiltration à la parcelle |
-| Incendie | `F37` | Présence d'un carnet de suivi des tests/purges ? | Oui · Non |
-| Toiture1 | `G16` | Toiture accessible ? | Oui · Non |
-| Toiture1 | `J16` | Type de toiture | terrasse · pente · multiple pans |
-| Toiture1 | `G19` | Matériaux de couverture | tuiles terre cuite · ardoises · bac acier · zinc · aluminium · membrane bitumineuse · PVC/EPDM · fibrociment |
-| Toiture1 | `G25` | Si fibrociment, présence d'amiante ? | O · N |
-| Toiture1 | `J25` | Présence de plomb ou métaux lourds | Oui · Non |
-| Toiture1 | `L25` | Présence de traitement (hydrofuge, biocide, cool roof) | oui · non |
-| Toiture1 | `G31` | Arbres à proximité pouvant apporter des feuilles ? | Oui · Non |
-| Toiture1 | `J31` | Sources de pollution à proximité (axe routier, industries, cheminées, port, etc.) | oui · non |
-| Toiture1 | `G35` | Type de gouttières | pendante · nantaise · havraise · anglaise |
-| Toiture1 | `J35` | Type de cheneau | encaissé · posé · rampant · noue |
-| Toiture1 | `N35` | Matériau | PVC · Zinc · aluminium · acier galvanisé · fonte · cuivre |
-| Toiture1 | `I41` | Accessibilité des gouttières pour entretien | oui · non |
-| Toiture1 | `G45` | Type de descentes | apparente (façade) · encastrée (mur ou gaine technique) |
-| Toiture1 | `N45` | Matériau | PVC · Zinc · aluminium · acier galvanisé · fonte · cuivre |
-| Toiture1 | `F55` | Présence de regards accessibles en pied de descente | Oui · Non |
-| Toiture1 | `K55` | Présence d'avaloirs en pied de descente | Oui · Non |
-| Toiture1 | `F58` | Les évacuations des descentes se regoupent-elles en un seul point ? | Oui · Non |
-| Toiture1 | `L58` | Présence d'une grille ou crapaudine sur les gouttières | Oui · Non |
-| Toiture1 | `I61` | Dispositif de prétraitement existant | aucun · séparateur premières pluies · filtre sur descente · filtre au sein d'un regard |
-| Toiture1 | `I64` | Evacuation actuelle des eaux de pluie | réseau séparatif pluvial · réseau unitaire · rejet en surface · rejet dans un fossé · noue d'infiltration · puits d'infiltrtion · bassin · autre |
-| Liste Piscines | `E27` | Type | passif · à renouvellement continu · avec rampes de lavage · avec injection automatique de désinfectant |
-| Liste Piscines | `I41` | Mode de nettoyage | auto laveuse · nettoyeur haute pression · tuyaux simple · autre |
-| Liste Piscines | `F44` | Utlisation d'eau NC | O · N |
-| Bassin1 | `N8` | Emplacement | Intérieure · Extérieure · Extérieure avec possibilté d'être couverte |
-| Bassin1 | `G14` | Type | Enterré · Semi-enterrée · Hors sol avec structure · Hors sol tubulaire · Hors sol autoportée |
-| Bassin1 | `N14` | Matériaux de revêtement | Carrelage · Résine · Liner · Coque · Plaques aluminium |
-| Bassin1 | `G17` | Type de couverture | bâches à bulles (été) · bâche d'hivernage · couverture à barres (4saisons) · volet roulant automatique · volet roulant manuel · abri · terrasse mobile · autre précisé dans remarques |
-| Bassin1 | `G20` | Présence connue de fuites | O · N |
-| Bassin1 | `G23` | Etat général* | Bon · Moyen · Mauvais |
-| Bassin1 | `N26` | Mode de remplissage du bassin | manuel · automatique avec flotteur |
-| Bassin1 | `F29` | Origine eau du bassin | eau potable · eau de mer · eau souterraine · eau de pluie · eau pluviale · eau de surface |
-| Bassin1 | `L32` | Traitements automatisé | O · N |
-| Bassin1 | `F38` | Possibilité de créer une zone de stockage des eaux rejetées | O · N · existe déjà |
-| Liste Extérieur | `G11` | Fonctions de l'eau sur ces espaces | arrosage · arrosage et nettoyage · arrosage et autre · nettoyage · nettoyage et autre · autre · arrosage · nettoyage et autre |
-| Extérieur1 | `N15` | Type de gestion des eaux pluviales (ruissellement) | aucune (ruissellement libre) · infiltration à la parcelle directe · stockage + infiltraion à la parcelle · stockage + réutilisation · rejet au réseau pluvial enterré · rejet au réseau unitaire enterré · rejet vers le milieu superficiel (fossé, cours d'eau) |
-| Extérieur1 | `J22` | Possibilité de rediriger ces eaux pour infiltration sur la parcelle | O · N |
-| Extérieur1 | `J25` | Possibilité de rediriger ces eaux pour stockage sur la parcelle | O · N |
-| Extérieur1 | `G35` | Exposition de la parcelle | Ensoleillée · Ombragée · Mi-ombragée |
-| Extérieur1 | `J35` | Pente de la parcelle | nulle · faible · moyenne · forte |
-| Extérieur1 | `M35` | Présence de paillage | O · N |
-| Extérieur1 | `G38` | Mode d'arrosage | Tuyau manuel · Arrosoir · Oyas · Micro asperseur · Arrosage goutte à goutte · Arrosage tuyaux poreux · Tuyères · Arrosage non sélectif · Autre |
-| Extérieur1 | `J38` | Pilotage de l'arrosage | Manuel · En fonction de la météo · Horloge · Sonde humidité · Connecté |
-| Extérieur1 | `G41` | Signes de surarrosage | aucun · ruissellement · flaques · mousse · sol détrempé |
-| Extérieur1 | `J41` | Signes de sous-arrosage | aucun · végétaux stressés · zones sèches · jaunissement |
-| Extérieur1 | `N41` | Période d'arrosage dans la journée | Matin · Soir · En pleine journée |
-| Extérieur1 | `F44` | Origine eau pour l'arrosage | eau potable · eau de pluie · eau pluviale · eau grise · eau souterraine |
-| Extérieur1 | `J57` | Mode de nettoyage | auto laveuse · nettoyeur haute pression · tuyaux simple · autre |
-| Extérieur1 | `N57` | Motif du nettoyage | esthétique · hygiène · sécurité · entretien · autre |
-| Extérieur1 | `F63` | Origine eau pour le nettoyage | eau potable · eau de pluie · eau pluviale · eau grise · eau souterraine |
-| Extérieur1 | `F79` | Origine eau | eau potable · eau de pluie · eau pluviale · eau grise · eau souterraine |
-| Opportunités1 | `G17` | Utilisations extérieures potentielles | arrosage · nettoyage surface · nettoyage véhicule · bassin · fontaine · piscine · autre |
-| Opportunités1 | `J17` | Utilisations intérieures potentielles | chasse d'eau · lavage de sol · lavage de linge · process technique · autre |
-| Opportunités1 | `F20` | Possibilité d'implanter une cuve sur la parcelle ? | Non · Entérée · Aérienne |
-| Opportunités1 | `K20` | Espace disponible pour une cuve en toiture ? | Oui · Non |
-| Opportunités1 | `F26` | Accès possible aux engins et camion de livraison de cuve | Oui · Non |
-| Opportunités1 | `K26` | By-pass possible de la cuve vers une aire d'infiltration ou le réseau pluvial | Oui · Non |
-| Opportunités1 | `F29` | Quel est le potentiel technique de réutilisation de l'eau de pluie sur ce bâtiment ? | fort · moyen · faible · à aproffondir |
-| Opportunités1 | `K37` | L'évacuation du lave-linge peut elle être dissociée des autres évacuations d'eaux grises ? | Oui · Non |
-| Opportunités1 | `G46` | Utilisations extérieures potentielles | arrosage · nettoyage surface · nettoyage véhicule · bassin · fontaine · autre |
-| Opportunités1 | `J46` | Utilisations intérieures potentielles | chasse d'eau · lavage de sol · process · tours de refroidissement · autre |
-| Opportunités1 | `F49` | Est-ce que le bâtiment est innocupé pendant de longue période (>3 semaines) ? | oui · non |
-| Opportunités1 | `F52` | Quel est le potentiel technique de recyclage des eaux ménagères sur ce bâtiment ? | fort · moyen · faible · à aproffondir |
-| Opportunités1 | `F60` | Valorisation des nutriments sur place intéressante (espaces verts, potager, etc.) ? | oui · non |
-| Opportunités1 | `K60` | Valorisation des nutriments sur place intéressante (espaces verts, potager, etc.) ? | faible · moyen · élevé |
-| Opportunités1 | `F63` | Quel est le potentiel technique de collecte des urines dans ce bâtiment ? | fort · moyen · faible · à aproffondir |
-| Opportunités1 | `K63` | Quel est le potentiel technique de collecte des urines dans ce bâtiment ? | Oui · Non |
-| Autre1 | `F8` | Choix | ouvrant les champs à la suite en question : · Autre information · Autre utilisation de l'eau |
+## Constantes partagées
 
-## Divergences à arbitrer
+| Constante | Valeurs | Champs qui l’emploient |
+|---|---|---|
+| `TYPE_COMPTEUR` | 9 | `Compteur général!H14`, `Sous-compteur1!F18` |
+| `CLASSE_METROLOGIQUE` | 19 | `Compteur général!L14`, `Sous-compteur1!J18` |
+| `TYPE_ROBINET` | 5 | `Robinets!F24`, `Douche-baignoire1!E105` |
+| `COMMANDE_ROBINET` | 4 | `Robinets!K24` |
+| `TEMPORISATION` | 3 | `Robinets!F27`, `Douche-baignoire1!E108` |
+| `UTILISATION_ROBINET` | 16 | `Robinets!F15`, `Robinets!I15`, `Robinets!L15` |
+| `MATERIAU_TUYAU` | 7 | `Robinets!K30`, `Douche-baignoire1!I114` |
+| `TYPE_EQUIPEMENT_DOUCHE` | 2 | `Douche-baignoire1!G8` |
+| `JETS_EMETTEUR` | 7 | `Douche-baignoire1!I28`, `Douche-baignoire1!I72` |
+| `TYPE_WC` | 15 | `WC1!F18` |
+| `COMMANDE_CHASSE` | 8 | `WC1!F36` |
+| `EMPLACEMENT_BASSIN` | 3 | `Bassin1!K8` |
+| `MODE_NETTOYAGE` | 4 | `Extérieur1!I54`, `Liste Piscines!H41` |
+| `MODE_ARROSAGE` | 9 | `Extérieur1!F41` |
+| `USAGE_APPAREIL_LAVAGE` | 3 | `Appareils de lavage!E19`, `Appareils de lavage!E50` |
+| `EXIGENCE_PROPRETE` | 4 | `Appareils de lavage!K97`, `Appareils de lavage!J141` |
+| `MATERIAU_GOUTTIERE` | 10 | `Toiture1!L35`, `Toiture1!L45` |
+| `CHEMINEMENT_RESEAU` | 7 | `Structure1!F28`, `Structure1!F37` |
+| `POTENTIEL_TECHNIQUE` | 4 | `Opportunités1!F27`, `Opportunités1!F54`, `Opportunités1!F69` |
+| `ETAT_GENERAL` | 3 | `Compteur général!L29`, `Compteur général!H53`, `Surpresseur1 (V2, champs figés)`, `Sous-compteur1!J30`, `Réseaux ECS!F41`, `Production Stockage ECS!F42`, `Production Stockage ECS!F65`, `Production Stockage ECS!F82`, `Robinets!F51`, `Douche-baignoire1!E53`, `Douche-baignoire1!E92`, `Douche-baignoire1!E117`, `WC1!F51`, `Appareils de lavage!E37`, `Appareils de lavage!E68`, `Appareils de lavage!E115`, `Appareils de lavage!E153`, `Bassin1!L32` |
+| `OUI_NON_NSP` | 3 | `Réseaux ECS!F29`, `Réseaux ECS!F38`, `Réseaux ECS!F51`, `Réseaux ECS!F87`, `Réseaux ECS!F90`, `Réseaux ECS!F101`, `Réseaux ECS!F108`, `Réseaux ECS!F111`, `Production Stockage ECS!F79`, `Production Stockage ECS!F98`, `Production Stockage ECS!F101` |
 
-Un même libellé de champ apparaît parfois à plusieurs endroits du classeur — sur plusieurs onglets, ou plusieurs fois sur le même onglet quand une page a des sections répétées (ex. « Opportunités1 » traite successivement l'eau de pluie et les eaux ménagères) — avec des jeux d'options qui ne concordent pas toujours. Ces écarts sont signalés plutôt qu'arbitrés : trancher revient à choisir quelle saisie de terrain future sera acceptée, ce qui dépasse une régénération mécanique.
+## Divergences internes au classeur
+
+10 libellé(s) portent des valeurs différentes selon l’endroit. Ce sont des arbitrages à remonter au Cerema, pas des défauts de transcription.
 
 ### Type
 
-- **Compteur général** `H17` — Compteur à jet unique · Compteur à jet multiple · Compteur à palettes · Compteur volumétrique · Compteur électromagnétique · Compteur ultrasonique · Compteur à pression différentielle · Compteur à insertion · Inconnu
-- **Sous-compteur1** `F18` — Compteur à jet unique · Compteur à jet multiple · Compteur à palettes · Compteur volumétrique · Compteur électromagnétique · Compteur ultrasonique · Compteur à pression différentielle · Compteur à insertion · Inconnu
-- **Réducteur de pression1** `F19` — Réducteur de pression à membrane · Réducteur de pression à piston · Réducteur de pression à cartouche · Inconnu
-- **Robinets** `F21` — Simple EF · Simple ECS · Mélangeur · Mitigeur classique · Mitigeur thermostatique
-- **Douche-baignoire1** `E78` — Simple EF · Simple ECS · Mélangeur · Mitigeur classique · Mitigeur thermostatique
-- **Appareils de lavage** `G15` — lave linge · lave vaisselle · autolaveuse · lavage du sol manuel
-- **Liste Piscines** `E27` — passif · à renouvellement continu · avec rampes de lavage · avec injection automatique de désinfectant
-- **Bassin1** `G14` — Enterré · Semi-enterrée · Hors sol avec structure · Hors sol tubulaire · Hors sol autoportée
+- `Compteur général!H14` (releve_compteur_general) — `L.TYPE_COMPTEUR`
+- `Sous-compteur1!F18` (sous_compteurs) — `L.TYPE_COMPTEUR`
+- `Production Stockage ECS!F27` (production_stockage_ecs) — « Chauffage + ECS », « ECS seule », « Ne sait pas »
+- `Douche-baignoire1!E105` (douches_baignoires) — `L.TYPE_ROBINET`
+- `Appareils de lavage!E8` (appareils_lavage) — « lave linge », « lave vaisselle », « autolaveuse », « lavage du sol manuel »
+- `Bassin1!F14` (piscines) — « Enterré », « Semi-enterrée », « Hors sol avec structure », « Hors sol tubulaire », « Hors sol autoportée »
+- `Liste Piscines!E27` (zone_piscine) — « passif », « à renouvellement continu », « avec rampes de lavage », « avec injection automatique de désinfectant »
+- `Structure1!I8` (structure) — « Structure et réseaux », « Espace technique aménageable », « Ouvrir la suite en fonction du choix »
+
+### Commande du robinet
+
+- `Robinets!K24` (robinets) — `L.COMMANDE_ROBINET`
+- `Douche-baignoire1!I105` (douches_baignoires) — « manuelle », « à détection de présence », « à effleurement », « à détection RFID »
+
+### Type d'emetteur
+
+- `Douche-baignoire1!E28` (douches_baignoires) — « tête de douche », « ciel de pluie », « pommeau », « colonne hydromassante », « cascade », « Autre »
+- `Douche-baignoire1!E72` (douches_baignoires) — « Robinet seul », « Robinet + pommeau », « Pommeau seul », « Robinet + colonne de douche », « Robinet + buses hydromassante »
+
+### Utilisateurs
+
+- `WC1!F15` (wc) — « Public extérieur », « Personnel », « Autres adultes », « Enfants », « Adolescents », « Personnes âgées », « PMR »
+- `Bassin1!K11` (piscines) — « Tout public », « Adultes », « Enfants », « Adolescents », « Personnes âgées », « Patients »
+
+### Origine de l'eau
+
+- `WC1!J36` (wc) — « Eau potable », « Eau de pluie », « Eau forage brute », « Eau grise »
+- `Extérieur1!F60` (espace_vert_exterieur) — « eau potable », « eau de pluie », « eau pluviale », « eau grise », « eau souterraine »
+- `Liste Piscines!E30` (zone_piscine) — « eau potable », « eau de mer », « eau souterraine », « eau de pluie », « eau pluviale », « eau de surface »
 
 ### Utilisations
 
-- **Appareils de lavage** `M19` — domestique · collectif · professionnel
-- **Appareils de lavage** `M44` — domestique · collectif · professionnel
-- **Appareils de lavage** `M70` — nettoyage ponctuel · nettoyage régulier · nettoyage quotidien
+- `Appareils de lavage!E19` (appareils_lavage) — `L.USAGE_APPAREIL_LAVAGE`
+- `Appareils de lavage!E50` (appareils_lavage) — `L.USAGE_APPAREIL_LAVAGE`
+- `Appareils de lavage!E82` (appareils_lavage) — « interne », « prestataire externe »
 
 ### Type d'alimentation en eau
 
-- **Appareils de lavage** `F28` — EF seul · EF + ECS · Eau de pluie
-- **Appareils de lavage** `I50` — EF seul · ECS seul · EF + ECS
+- `Appareils de lavage!K31` (appareils_lavage) — « EF seul », « EF + ECS », « Eau de pluie »
+- `Appareils de lavage!K62` (appareils_lavage) — « EF seul », « ECS seul », « EF + ECS »
+
+### Type de zone lavée
+
+- `Appareils de lavage!K94` (appareils_lavage) — « bureaux », « sanitaire », « salle de cours », « cuisine », « espace de restauration », « zone technique (garage, atelier, etc.) », « zone sportive », « circulation du publique »
+- `Appareils de lavage!E138` (appareils_lavage) — « logement », « bureaux », « sanitaire », « salle de cours », « cuisine », « espace de restauration », « zone technique (garage, atelier, etc.) », « zone sportive », « circulation du publique »
 
 ### Utilisations extérieures potentielles
 
-- **Opportunités1** `G17` — arrosage · nettoyage surface · nettoyage véhicule · bassin · fontaine · piscine · autre
-- **Opportunités1** `G46` — arrosage · nettoyage surface · nettoyage véhicule · bassin · fontaine · autre
+- `Opportunités1!F15` (opportunites) — « arrosage », « nettoyage surface », « lavage de véhicule », « bassin », « fontaine », « piscine », « autre »
+- `Opportunités1!F48` (opportunites) — « arrosage », « nettoyage surface », « lavage de véhicule », « bassin », « fontaine », « autre »
 
 ### Utilisations intérieures potentielles
 
-- **Opportunités1** `J17` — chasse d'eau · lavage de sol · lavage de linge · process technique · autre
-- **Opportunités1** `J46` — chasse d'eau · lavage de sol · process · tours de refroidissement · autre
+- `Opportunités1!I15` (opportunites) — « chasse d'eau », « lavage de sol », « lavage de linge », « process technique », « autre »
+- `Opportunités1!I48` (opportunites) — « chasse d'eau », « lavage de sol », « process », « tours de refroidissement », « autre »
 
-### Valorisation des nutriments sur place intéressante (espaces verts, potager, etc.) ?
 
-- **Opportunités1** `F60` — oui · non
-- **Opportunités1** `K60` — faible · moyen · élevé
+## Listes propres à un seul champ
 
-### Quel est le potentiel technique de collecte des urines dans ce bâtiment ?
-
-- **Opportunités1** `F63` — fort · moyen · faible · à aproffondir
-- **Opportunités1** `K63` — Oui · Non
-
+| Cellule | Champ | Valeurs |
+|---|---|---|
+| `Réseaux ECS!F35` | Matériaux de l'isolant | laine de verre · laine de roche · papier et platre · polyruéthane · Mousse synthétique (armaflex,PE…) |
+| `Réseaux ECS!F70` | Mode de fonctionnement du circulateur | continu · horloge programmable · piloté par la température · aquastat · GTB · GTC |
+| `Réseaux ECS!F84` | Présence d'une ou plusieurs vanne(s) thermostatique | manuelle · motorisée · non · ne sait pas |
+| `Production Stockage ECS!F27` | Type | Chauffage + ECS · ECS seule · Ne sait pas |
+| `Production Stockage ECS!F30` | Systèmes de production | Chauffe-eau gaz instantané · Accumulateur gaz · Chaudière · Ballon électrique · Chauffe-eau électrique · Chauffe-eau solaire thermique · Solaire photovoltaïque · Système solaire combiné chauffage + ECS · Chauffe-eau thermodynamique individuel (ie PAC) · PAC (indiviuuelle ou collective) · Module thermique d'appartements (MTA) · Kit robinetterie avec module chaufffant · Autre (préciser dans remarques) · Ne sait pas |
+| `Production Stockage ECS!F33` | Combustible | gaz · fioul · bois · biomasse · réseau de chaleur urbain · ne sait pas · autre |
+| `Production Stockage ECS!F39` | Régulation / pilotage de la production | Pas de pilotage · Pilotage par la température · Pilotage par horloge programmable · Pilotage horaire et température · Pilotage par GTB/GTC · Pilotage intelligent · Ne sait pas · Autre |
+| `Production Stockage ECS!F62` | Montage des ballons | série · parallèle · ne sait pas |
+| `Douche-baignoire1!E25` | Type de sol | receveur · à l'italienne carrellée · à l'italienne pierre naturelle · chape béton étanche |
+| `Douche-baignoire1!E28` | Type d'emetteur | tête de douche · ciel de pluie · pommeau · colonne hydromassante · cascade · Autre |
+| `Douche-baignoire1!E66` | Type de baignoire | sur pied · autoportante · encastrée · sabot · îlot · autre |
+| `Douche-baignoire1!E72` | Type d'émetteur | Robinet seul · Robinet + pommeau · Pommeau seul · Robinet + colonne de douche · Robinet + buses hydromassante |
+| `Douche-baignoire1!I105` | Commande du robinet | manuelle · à détection de présence · à effleurement · à détection RFID |
+| `WC1!F15` | Utilisateurs | Public extérieur · Personnel · Autres adultes · Enfants · Adolescents · Personnes âgées · PMR |
+| `WC1!J15` | Mixte ou genré ? | Homme · Femme · Mixte |
+| `WC1!F33` | Type de chasse | Réservoir apparent · Réservoir encastré · Sans réservoir · Non concerné |
+| `WC1!J36` | Origine de l'eau | Eau potable · Eau de pluie · Eau forage brute · Eau grise |
+| `WC1!F39` | Volume chasse estimé ou connu | <3 · 2/4 · 3/6 · 6/9 · 6 · 9 · >9 · Inconnu · Non concerné |
+| `WC1!F42` | Teste de la feuille de papier toilette dans la cuvette | feuille mouillée - fuite observée · feuille semi-mouillée - fuite suspectée · feuille sèche - pas de fuite |
+| `WC1!F45` | Ventilation | pas de ventilation · en continu · intermittente · à détection · indépendante du reste du bâtiment |
+| `WC1!J45` | Test de la feuille de papier sur la bouche d'extraction | Feuille aspirée · Feuille repoussée · Rien ne se passe |
+| `WC1!F48` | Est-ce que les toilettes ont un mur qui donne sur l'extérieur (sur la parcelle du bâtiment uniquement) ? | non · oui · oui toutes · oui certaines |
+| `WC1!J48` | Disponibilité d'un local à proximité pour accueillir un composteur | non · oui à côté · derrière un des murs · oui à l'aplomb aux étages inférieurs |
+| `WC1!F54` | Dysfonctionnements observés | Fuite de la chasse · Traces de fuite · Bruits de la chasse en continu · Entartrage · Odeurs · WC bouché · Lunette cassée |
+| `Appareils de lavage!E8` | Type | lave linge · lave vaisselle · autolaveuse · lavage du sol manuel |
+| `Appareils de lavage!E22` | Taux de remplissage | peu rempli · semi-rempli · plein |
+| `Appareils de lavage!K28` | Classe énergétique | A · B · C · D · E · F · G |
+| `Appareils de lavage!K31` | Type d'alimentation en eau | EF seul · EF + ECS · Eau de pluie |
+| `Appareils de lavage!K34` | Type de textiles lavés | à cocher (plusieurs réponses possibles) : · vêtements quotidien mixte (coton, mélange, soie, laine, synthétique) · vêtements de sport (synthétique) · vêtements laine · textile hébergement (literie, peignoirs, serviette) · textile ameublement (rideaux, housse) · textile de restauration (nappes, torchons, serviettes de table) · textile médical (tenues, draps) · textile de nettoyage (franges, chiffons, microfibres) · vêtements professionnels très sales · textiles à risques infectieux |
+| `Appareils de lavage!K59` | Type de chargement | frontal · à capot · à avancement automatique · à convoyeur/tunnel |
+| `Appareils de lavage!K62` | Type d'alimentation en eau | EF seul · ECS seul · EF + ECS |
+| `Appareils de lavage!E82` | Utilisations | interne · prestataire externe |
+| `Appareils de lavage!K94` | Type de zone lavée | bureaux · sanitaire · salle de cours · cuisine · espace de restauration · zone technique (garage, atelier, etc.) · zone sportive · circulation du publique |
+| `Appareils de lavage!E100` | Type d'autolaveuse | autotractée · autoportée · industrielle |
+| `Appareils de lavage!J100` | Type de brosses | disque · rouleau · autre |
+| `Appareils de lavage!J103` | Largeur de travail | <40cm · 40-70cm · 70cm |
+| `Appareils de lavage!J106` | Type d'alimentation électrique | sur batterie · câble d'alimentation |
+| `Appareils de lavage!E129` | Type de matériel de lavage | balai serpillère à franges (ou balai espagnol) · balai à plat classique · balai à plat avec microfibres pré-imprégnées · balai à plat avec microfibre jetables · balai brosse · balai avec réservoir (spray mop) · Nettoyeur haute-pression (Karcher) · balais à vapeur · Nettoyage au jet · autre |
+| `Appareils de lavage!E138` | Type de zone lavée | logement · bureaux · sanitaire · salle de cours · cuisine · espace de restauration · zone technique (garage, atelier, etc.) · zone sportive · circulation du publique |
+| `Appareils de lavage!H138` | Type de surface | carrelage (grès, faïence) · pierre (marbre, granit, travertin) · résine époxy / polyuréthane · béton ciré · béton brut · parquet massif · parquet contrecollé · bois stratifié · Linoléum · PVC / vinyle · Moquette en rouleau · dalles de moquette · autre |
+| `Appareils de lavage!E150` | Rinçage du sol | pas de rinçage · rinçage systématique · rinçage ponctuel |
+| `Incendie!K22` | Type d'eau de la réserve incendie | eau potable · eau de pluie · eau pluviale · mare |
+| `Incendie!K28` | Fréquence des tests | hebdomadaire · mensuelle · semestriel · annuelle |
+| `Incendie!K34` | Fréquence des purges | hebdomadaire · mensuelle · semestrielle · biannuelle · annuelle · autre |
+| `Incendie!K37` | Destination des eaux de tests/purges | rejet au réseau d'assainissement · rejet au réseau pluvial · infiltration à la parcelle |
+| `Extérieur1!F38` | Exposition de la parcelle | Ensoleillée · Ombragée · Mi-ombragée |
+| `Extérieur1!I38` | Pente de la parcelle | nulle · faible · moyenne · forte |
+| `Extérieur1!N38` | Type de paillage | broyat · minéral · copeaux · paille · autre |
+| `Extérieur1!I41` | Pilotage de l'arrosage | Manuel · En fonction de la météo · Horloge · Sonde humidité · Connecté |
+| `Extérieur1!L41` | Période d'arrosage dans la journée | Matin · Soir · En pleine journée |
+| `Extérieur1!F44` | Origine eau pour l'arrosage | eau potable · eau de pluie · eau pluviale · eau grise · eau souterraine · eau de surface |
+| `Extérieur1!L54` | Motif du nettoyage | esthétique · hygiène · sécurité · entretien · autre |
+| `Extérieur1!F60` | Origine de l'eau | eau potable · eau de pluie · eau pluviale · eau grise · eau souterraine |
+| `Bassin1!K11` | Utilisateurs | Tout public · Adultes · Enfants · Adolescents · Personnes âgées · Patients |
+| `Bassin1!F14` | Type | Enterré · Semi-enterrée · Hors sol avec structure · Hors sol tubulaire · Hors sol autoportée |
+| `Bassin1!M14` | Matériaux de revêtement | Carrelage · Résine · Liner · Coque · Plaques aluminium · autre |
+| `Bassin1!F17` | Type de couverture | aucune · bâches à bulles (été) · bâche d'hivernage · couverture à barres (4saisons) · volet roulant automatique · volet roulant manuel · abri · terrasse mobile · autre précisé dans remarques |
+| `Bassin1!K17` | Origine eau du bassin | eau potable · eau de mer · eau souterraine · eau de pluie · eau pluviale · eau de surface |
+| `Bassin1!M17` | Mode de remplissage du bassin | manuel · automatique avec flotteur |
+| `Liste Piscines!E27` | Type | passif · à renouvellement continu · avec rampes de lavage · avec injection automatique de désinfectant |
+| `Liste Piscines!E30` | Origine de l'eau | eau potable · eau de mer · eau souterraine · eau de pluie · eau pluviale · eau de surface |
+| `Liste Piscines!E44` | Eau utilisée pour le lavage | eau potable · eau de mer · eau souterraine · eau de pluie · eau pluviale · eau de surface |
+| `Toiture1!I16` | Type de toiture | terrasse · pente · multiple pans |
+| `Toiture1!F19` | Matériau de couverture | tuiles terre cuite · tuiles béton · ardoises · bac acier · zinc · aluminium · membrane bitumineuse · PVC/EPDM · fibrociment · toiture végétalisée · chaume · verre/vitre · polycarbonate · gravier |
+| `Toiture1!F35` | Type de gouttières | pendante · nantaise · havraise · anglaise |
+| `Toiture1!F45` | Type de cheneaux | sur un versant · contre un mur · sur entablement · entre deux pans de toiture |
+| `Toiture1!F60` | Type de descentes | apparente (façade) · encastrée (mur ou gaine technique) |
+| `Toiture1!L60` | Matériau | PVC · Zinc · aluminium · acier galvanisé · fonte · cuivre |
+| `Toiture1!F76` | Dispositif de prétraitement existant | aucun · séparateur premières pluies · filtre sur descente · filtre au sein d'un regard |
+| `Toiture1!F79` | Evacuation actuelle des eaux de pluie | réseau séparatif pluvial · réseau unitaire · rejet en surface · rejet dans un fossé · noue d'infiltration · puits d'infiltrtion · bassin · autre |
+| `Structure1!I8` | Type | Structure et réseaux · Espace technique aménageable · Ouvrir la suite en fonction du choix |
+| `Structure1!F19` | Type de planchers | dalle béton · dalle poutrelle/hourdis · bois · plancher surélevé · dalle structurelle · plots · dalle amovibles · planchers chauffants |
+| `Structure1!F25` | Type de cloisons | légère sur ossature (placo) · maçonnée (brique, parpaing, carreau de plâtre) · alvéolaire (prêtes à poser) · techniques (coupe-feu, acoustique renforcé, hydrofuge) · vitrées · démontable/modulaire · bois |
+| `Structure1!F42` | Présence d'un local technique ou sous-sol aménageable ? | oui · oui si on réorganise les espaces · oui avec réserve · non |
+| `Opportunités1!F15` | Utilisations extérieures potentielles | arrosage · nettoyage surface · lavage de véhicule · bassin · fontaine · piscine · autre |
+| `Opportunités1!I15` | Utilisations intérieures potentielles | chasse d'eau · lavage de sol · lavage de linge · process technique · autre |
+| `Opportunités1!F18` | Possibilité d'implanter une ou plusieurs cuves sur la parcelle ? | Non · Entérée · Aérienne |
+| `Opportunités1!F48` | Utilisations extérieures potentielles | arrosage · nettoyage surface · lavage de véhicule · bassin · fontaine · autre |
+| `Opportunités1!I48` | Utilisations intérieures potentielles | chasse d'eau · lavage de sol · process · tours de refroidissement · autre |
+| `Opportunités1!K63` | La majorité des toilettes sont-elles positionnées les unes au-dessus des autres dans le bâtiment ? | non · oui toutes les toilettes · oui certaines toilettes |
+| `Opportunités1!K66` | A première vue, quel est la taille du gisement urine estimé (nombre de passage dans les toilettes) ? | faible · moyen · élevé · ne sait pas |

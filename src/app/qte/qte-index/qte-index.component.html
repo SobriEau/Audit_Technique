@@ -1,5 +1,24 @@
 <app-page-header pageTitle="Audit Technique" [crumbs]="[{ label: 'Audit technique' }]" />
 
+<div class="panel">
+  <h2>Le bâtiment</h2>
+  <p class="muted">
+    Le contexte du bâtiment, utile à la lecture de tout ce qui suit. Ces champs
+    s'enregistrent au fur et à mesure.
+  </p>
+
+  @for (f of champsContexte; track f.key) {
+    <div class="field-row">
+      <app-audit-field
+        [def]="f"
+        [ngModel]="valeurContexte(f)"
+        (ngModelChange)="changerContexte(f, $event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </div>
+  }
+</div>
+
 @for (group of visibleGroups; track group.label) {
   <div class="panel">
     <h2>{{ group.label }}</h2>
@@ -15,3 +34,9 @@
     </div>
   </div>
 }
+
+<footer class="muted">
+  <button type="button" class="lien" (click)="nav('/glossaire')">
+    Glossaire des sigles employés
+  </button>
+</footer>

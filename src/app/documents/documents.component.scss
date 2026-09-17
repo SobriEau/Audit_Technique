@@ -1,0 +1,25 @@
+.documents {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+
+  li + li {
+    margin-top: var(--sp-2);
+  }
+}
+
+/* Case et libellé alignés en haut : un intitulé de document tient souvent
+   sur trois lignes, et la case doit rester en regard de la première. */
+.document {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  cursor: pointer;
+
+  input {
+    margin-top: 3px;
+    flex: none;
+  }
+}
+
+/* La pastille de priorité vient de styles.scss, comme sur les fiches. */
