@@ -5,7 +5,7 @@
   Sauvegarde dans le localStorage via DataService.
 </p>
 
-<textarea class="json-editor" [(ngModel)]="jsonText"></textarea>
+<app-dictation-field [multiline]="true" fieldClass="json-editor" [(ngModel)]="jsonText" />
 
 <div class="actions">
   <button class="primary" (click)="save()">Enregistrer</button>

@@ -30,14 +30,13 @@
 
         <div class="plan-fields">
           <label [attr.for]="'plan-titre-' + i">Titre du plan</label>
-          <input
+          <app-dictation-field
             [id]="'plan-titre-' + i"
-            type="text"
-            class="plan-name"
+            fieldClass="plan-name"
             [(ngModel)]="plan.name"
-            (change)="rename()"
+            (fieldBlur)="rename()"
             placeholder="Nom du plan"
-            [attr.aria-label]="'Nom du plan ' + (i + 1)"
+            [ariaLabel]="'Nom du plan ' + (i + 1)"
           />
           <p class="muted field-help">
             Un nom représentatif (étage, bâtiment…) aide à s'y retrouver depuis les fiches.

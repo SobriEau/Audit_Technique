@@ -1,0 +1,98 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.dictation-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
+
+.dictation-wrap input,
+.dictation-wrap textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Dictée vocale ──────────────────────────────────────────────── */
+
+.mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--c-primary);
+  transition: background var(--transition), box-shadow var(--transition),
+    color var(--transition);
+}
+
+.mic-btn:hover {
+  background: var(--c-surface-hover);
+  border-color: var(--c-border);
+  opacity: 1;
+}
+
+.mic-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.mic-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Dictée active : carré rouge pulsant */
+.mic-btn.listening {
+  color: var(--c-danger);
+  background: var(--c-danger-bg);
+  border-color: var(--c-danger-border);
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+
+.mic-btn.mic-error {
+  width: auto;
+  border-radius: var(--r-sm);
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--c-danger);
+  border: 1px dashed var(--c-danger-border);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.mic-btn.mic-error:hover {
+  background: var(--c-danger-bg);
+  opacity: 1;
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(185, 64, 64, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(185, 64, 64, 0);
+  }
+}
+
+/* Texte provisoire, avant que la phrase soit finalisée */
+.interim-text {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  font-style: italic;
+  color: var(--c-text-muted);
+}
+
+.mic-error-text {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}

@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../core/services/data.service';
 import { PageHeaderComponent } from '../shared/components/page-header/page-header.component';
+import { DictationFieldComponent } from '../shared/components/dictation-field/dictation-field.component';
 import { DOCUMENTS_A_COLLECTER, DocumentACollecter } from '../models/documents-collectes';
 import { REQUIREMENT_LABEL } from '../models/field-priority';
 import { FieldRequirement } from '../models/field.models';
@@ -24,7 +25,7 @@ const LIGNE_LIBRE = /^autre-(\d+)$/;
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [FormsModule, PageHeaderComponent],
+  imports: [FormsModule, PageHeaderComponent, DictationFieldComponent],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.scss',
 })

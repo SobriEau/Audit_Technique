@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { DataService } from '../core/services/data.service';
 import { PageHeaderComponent } from '../shared/components/page-header/page-header.component';
 import { RichEditorComponent } from '../shared/components/rich-editor/rich-editor.component';
+import { DictationFieldComponent } from '../shared/components/dictation-field/dictation-field.component';
 import { PlanManagerComponent } from '../shared/components/plan-manager/plan-manager.component';
 import { PhotoEditorComponent } from '../shared/components/photo-editor/photo-editor.component';
 import { AssetRef, AuditSummary, NiveauRemplissage } from '../models/data.models';
@@ -31,6 +32,7 @@ type Arbitrage =
     FormsModule,
     PageHeaderComponent,
     RichEditorComponent,
+    DictationFieldComponent,
     PlanManagerComponent,
     PhotoEditorComponent,
   ],

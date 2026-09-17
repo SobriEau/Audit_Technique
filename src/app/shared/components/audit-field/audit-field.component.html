@@ -40,22 +40,16 @@
 
   @switch (def.kind) {
     @case ('text') {
-      <input
-        [id]="uid"
-        type="text"
-        [value]="value ?? ''"
-        (input)="onInput($any($event.target).value)"
-        (blur)="onTouchedFn()"
-      />
+      <app-dictation-field [id]="uid" [ngModel]="value ?? ''" (ngModelChange)="onInput($event)" />
     }
 
     @case ('textarea') {
-      <textarea
+      <app-dictation-field
         [id]="uid"
-        [value]="value ?? ''"
-        (input)="onInput($any($event.target).value)"
-        (blur)="onTouchedFn()"
-      ></textarea>
+        [multiline]="true"
+        [ngModel]="value ?? ''"
+        (ngModelChange)="onInput($event)"
+      />
     }
 
     @case ('number') {

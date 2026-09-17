@@ -1,0 +1,89 @@
+<div class="dictation-wrap">
+  @if (multiline) {
+    <textarea
+      #field
+      [id]="id"
+      [class]="fieldClass"
+      [placeholder]="placeholder"
+      [attr.aria-label]="ariaLabel"
+      [value]="value"
+      (input)="onNativeInput($any($event.target).value)"
+      (blur)="onBlur()"
+    ></textarea>
+  } @else {
+    <input
+      #field
+      type="text"
+      [id]="id"
+      [class]="fieldClass"
+      [placeholder]="placeholder"
+      [attr.list]="list || null"
+      [attr.aria-label]="ariaLabel"
+      [value]="value"
+      (input)="onNativeInput($any($event.target).value)"
+      (blur)="onBlur()"
+    />
+  }
+
+  @switch (micState) {
+    @case ('unsupported') {
+      <button
+        type="button"
+        class="mic-btn"
+        disabled
+        title="Dictée indisponible : ce navigateur ne gère pas la reconnaissance vocale (utilisez Chrome ou Edge)."
+        aria-label="Dictée indisponible"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+          <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-6 11a6 6 0 0 0 12 0h2a8 8 0 0 1-7 7.93V22h-2v-2.07A8 8 0 0 1 4 12h2z"/>
+        </svg>
+      </button>
+    }
+
+    @case ('idle') {
+      <button
+        type="button"
+        class="mic-btn"
+        (mousedown)="toggleMic($event)"
+        title="Dicter en français"
+        aria-label="Démarrer la dictée"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+          <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-6 11a6 6 0 0 0 12 0h2a8 8 0 0 1-7 7.93V22h-2v-2.07A8 8 0 0 1 4 12h2z"/>
+        </svg>
+      </button>
+    }
+
+    @case ('listening') {
+      <button
+        type="button"
+        class="mic-btn listening"
+        (mousedown)="toggleMic($event)"
+        title="Arrêter la dictée"
+        aria-label="Arrêter la dictée"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+          <rect x="6" y="6" width="12" height="12" rx="2"/>
+        </svg>
+      </button>
+    }
+
+    @case ('error') {
+      <button
+        type="button"
+        class="mic-btn mic-error"
+        (mousedown)="retry($event)"
+        [title]="errorMessage ?? 'Réessayer'"
+      >
+        ⚠
+      </button>
+    }
+  }
+</div>
+
+@if (micState === 'listening' && interimText) {
+  <p class="interim-text" aria-live="polite">{{ interimText }}</p>
+}
+@if (micState === 'error' && errorMessage) {
+  <p class="mic-error-text" role="alert">{{ errorMessage }}</p>
+}

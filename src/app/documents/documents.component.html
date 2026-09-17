@@ -41,11 +41,10 @@
   </p>
 
   @for (id of lignesLibres; track id) {
-    <input
-      type="text"
-      [value]="precision(id)"
+    <app-dictation-field
+      [ngModel]="precision(id)"
       placeholder="Autre document, préciser lequel"
-      (blur)="preciser(id, $any($event.target).value)"
+      (fieldBlur)="preciser(id, $event)"
     />
   }
 

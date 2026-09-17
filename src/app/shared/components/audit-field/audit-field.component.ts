@@ -4,6 +4,7 @@ import { FieldDef } from '../../../models/field.models';
 import { DataService } from '../../../core/services/data.service';
 import { AuditEntity } from '../../../models/data.models';
 import { RichEditorComponent } from '../rich-editor/rich-editor.component';
+import { DictationFieldComponent } from '../dictation-field/dictation-field.component';
 import { PhotoEditorComponent } from '../photo-editor/photo-editor.component';
 import { REQUIREMENT_LABEL } from '../../../models/field-priority';
 
@@ -57,7 +58,7 @@ function normalize(s: string): string {
 @Component({
   selector: 'app-audit-field',
   standalone: true,
-  imports: [FormsModule, RichEditorComponent, PhotoEditorComponent],
+  imports: [FormsModule, RichEditorComponent, DictationFieldComponent, PhotoEditorComponent],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

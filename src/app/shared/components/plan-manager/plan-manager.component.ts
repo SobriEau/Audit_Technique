@@ -7,6 +7,7 @@ import {
   PDF_PAGE_CONFIRM_THRESHOLD,
 } from '../../../core/services/pdf-raster.service';
 import { AssetRef } from '../../../models/data.models';
+import { DictationFieldComponent } from '../dictation-field/dictation-field.component';
 
 /**
  * Gestion des plans du bâtiment, depuis l'accueil.
@@ -17,7 +18,7 @@ import { AssetRef } from '../../../models/data.models';
 @Component({
   selector: 'app-plan-manager',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DictationFieldComponent],
   templateUrl: './plan-manager.component.html',
   styleUrl: './plan-manager.component.scss',
 })

@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../core/services/data.service';
 import { PageHeaderComponent } from '../shared/components/page-header/page-header.component';
+import { DictationFieldComponent } from '../shared/components/dictation-field/dictation-field.component';
 
 @Component({
   selector: 'app-qge',
   standalone: true,
-  imports: [FormsModule, PageHeaderComponent],
+  imports: [FormsModule, PageHeaderComponent, DictationFieldComponent],
   templateUrl: './qge.component.html',
 })
 export class QgeComponent implements OnInit {

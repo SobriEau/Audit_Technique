@@ -4,12 +4,11 @@
   <h2>Audit</h2>
 
   <label for="nomProjet">Nom du projet</label>
-  <input
+  <app-dictation-field
     id="nomProjet"
-    type="text"
     placeholder="Ex. Rénovation groupe scolaire Jean Moulin"
     [(ngModel)]="nomProjet"
-    (blur)="autoSave()"
+    (fieldBlur)="autoSave()"
   />
   <p class="muted field-help">Facultatif : sert à identifier le projet dans la liste des audits.</p>
 
@@ -17,12 +16,11 @@
     Nom du site audité
     <span class="priority priority--obligatoire">Obligatoire</span>
   </label>
-  <input
+  <app-dictation-field
     id="nomSite"
-    type="text"
     placeholder="Ex. École Jean Moulin, bâtiment B"
     [(ngModel)]="nomSite"
-    (blur)="autoSave()"
+    (fieldBlur)="autoSave()"
   />
   <p class="muted field-help">Nom usuel du site, et nom du bâtiment.</p>
 
@@ -36,37 +34,34 @@
     Nom de l'auditeur
     <span class="priority priority--recommande">Recommandé</span>
   </label>
-  <input
+  <app-dictation-field
     id="auditeur"
-    type="text"
     [(ngModel)]="auditeur"
     placeholder="Jean Dupont"
-    (blur)="autoSave()"
+    (fieldBlur)="autoSave()"
   />
 
   <label for="accompagnant">
     Nom et fonction de l'accompagnant
     <span class="priority priority--recommande">Recommandé</span>
   </label>
-  <input
+  <app-dictation-field
     id="accompagnant"
-    type="text"
     [(ngModel)]="accompagnant"
     placeholder="Marie Durand - responsable technique"
-    (blur)="autoSave()"
+    (fieldBlur)="autoSave()"
   />
 
   <label for="adresse">
     Adresse
     <span class="priority priority--facultatif">Facultatif</span>
   </label>
-  <input
+  <app-dictation-field
     id="adresse"
-    type="text"
     list="adresses-connues"
     placeholder="12 rue des Lilas, Créteil"
     [(ngModel)]="adresse"
-    (blur)="onAdresseBlur()"
+    (fieldBlur)="onAdresseBlur()"
   />
   <p class="muted field-help">Voie et numéro, code postal, commune.</p>
   <!-- Les adresses déjà saisies sont proposées : on choisit au lieu de retaper,
@@ -116,12 +111,11 @@
     Effectif
     <span class="priority priority--obligatoire">Obligatoire</span>
   </label>
-  <input
+  <app-dictation-field
     id="effectif"
-    type="text"
     [(ngModel)]="effectif"
     placeholder="Ex. 320 élèves, 28 personnels"
-    (blur)="autoSave()"
+    (fieldBlur)="autoSave()"
   />
   <p class="muted field-help">
     Salariés, visiteurs, élèves, spectateurs, clients — selon le bâtiment.
