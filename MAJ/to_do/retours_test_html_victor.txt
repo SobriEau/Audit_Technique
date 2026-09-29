@@ -1,0 +1,169 @@
+
+
+
+Victor
+
+L’extraction en JSON sur l’ordinateur et sa réintégration sur le téléphone portable fonctionne.
+Je n'arrive pas à comprendre comment je peux télécharger l'application depuis mon ordinateur via le bouton "télécharger l'application"... Le bouton "télécharger index" apparait bien sur le chrome de mon téléphone mais pas sur le chrome de mon ordinateur. 
+Intégration photos fichiers à côté de la page : je confirme que l'intégration de photos ne fonctionne pas depuis mon ordinateur avec le navigateur Mozzila. Mais ça fonctionne avec Chrome sur l'ordinateur. 
+En revanche, l'intégration de photos (fichiers à côté de la page) ne fonctionne pas sur chrome sur mon téléphone, voici un screenshot en pièce jointe.
+Je n’ai pas pu tester la fonctionnalité “micro” avec mon téléphone. J’ai l’impression que je n’ai pas cela avec le système d’exploitation e/os. 
+C'est un détail mais quand on passe d'une page à l'autre, ça serait top d’arriver en haut de la page suivante et pas en plein milieu car ça demande de scroller pour cherche où on se trouve dans la page. 
+Tous les champs "Etat général" disposent normalement d'un petit texte (légende) qui explique ce que veut dire : état bon, moyen, mauvais. C'est dans le fichier excel mais je ne le vois pas apparaitre ici. 
+Même commentaire avec les champs dysfonctionnements observés. Il y avait la plupart du temps des exemples indiqués entre parenthèses. Là ils n'y sont plus...
+Dès qu’il y a une option “autre” dans les cases à cocher, ça serait bien de pouvoir remplir un champ libre qui s’affiche si tu peux. 
+Globalement, les champs où l’on avait indiqué dans le excel “plusieurs choix possibles” ne fonctionnent pas. On ne peut sélectionner qu’un seul champ à chaque fois…
+effectivement mais contrairement aux autre rouge celui-ci sera surement publié avec tout les orange
+Onglet Documents collectés :
+peux-tu ajouter dans la liste des documents collectés ce point là stp : Suivi des interventions de plomberie des 3 dernières années (extraction des outils de suivi)
+Onglet Audit technique :
+Il serait bien d'ajouter un bouton qui permet d'accéder à la liste des documents collectés aussi. Tout comme dans l'onglet Projet si possible, en-dessous du glossaire.
+Je n'ai pas très bien compris ce que tu avais fais avec l'onglet "Surpresseur". Il me semble qu'on l'a finalement supprimé. Pourquoi le laisser dans ce cas ?
+pardon, j’attendais juste confirmation (puis je l’ai oublié) et en attendant je l’ai gardé au cas ou mais comme finalement il n’y avait pas trop de doute je l’ai déjà retiré 
+Onglet compteur général :
+La rubrique "réducteur de pression" ne doit apparaitre que si l'on coche "oui" à la question "présence d'une compteur général" ;
+Est-il possible d'ajouter une page intermédiaire pour "compteur général" stp car finalement, il est possible qu'un établissement dispose de plusieurs compteurs généraux. Il faudrait une page intermédiaire comme pour les sous-compteurs si tu peux. 
+il manque les indications entre parenthèses dans le champ “condition d’accès”.
+il manque les indications entre parenthèses dans le champ “précisions télétransmission” 
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+Onglet sous-compteurs :
+il faudrait dissocier ce qui relève de la rubrique "localisation" (emplacement, utilisations, conditions d'accès), de la rubrique "caractéristiques" stp (type, année d epose, classe métrologique, propriétaire du compteur). Ainsi, le bouton "localiser sur plan" et "prévisualisation" doivent être en-dessous ou à côté de "emplacement". 
+il manque les indications entre parenthèses dans le champ “condition d’accès”.
+il manque les indications entre parenthèses dans le champ “précisions télétransmission” 
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+Onglet Réseaux ECS :
+Idem pour l'onglet "réseaux ECS", le bouton "prévisualisation" et "localisation sur plan" doivent être à côté du champ "emplacement". 
+dans la rubrique “bras morts légionelles”, il n’y a pas les indications entre parenthèses pour le champ “précisions” et le champ “présence d’un traitement complémentaire" contre la légionelle”.
+il manque les indications entre parenthèses dans le champ “remarques”. 
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+dans la rubrique “calorifugeage”, il faudrait ajouter le champ “Présence d’un traçage : Oui / Non / Ne sait pas” si tu peux. On a oublié d’ajouter ce type de réseau ECS.
+la “sous-partie bouclage” ne doit apparaitre que si la case oui a été cochée dans la partie “bouclage”. Idem pour tous les champs de la partie “bouclage” finalement. 
+Onglet liste Production/stockage ECS :
+peux-tu ajouter une case en haut du tableau qui indique le nombre total de générateur et de ballon de stockage qui est renseigné stp ? Il faut faire la somme du nombre de lignes du tableau où il y a un générateur. Idem pour le stockage. 
+Onglet Production / stockage ECS :
+il faut mettre le champ “numéro de réseau ECS associé” en “recommandé” stp. C’est un erreur de ma part mais je pense que ça peut nous bloquer dans le remplissage s’il est en “obligatoire”. 
+il manque les indications entre parenthèses dans le champ “combustible”. Et il faut mettre ce champ en “facultatif” stp.
+il manque les indications entre parenthèses dans les champ “dégradation / dysfonctionnements” pour la production, le stockage et autres.
+il manque la description de “bon/moyen/mauvais” dans les champ “état apparent général” pour le générateur, le ballon, l’isolant.
+il manque les indications entre parenthèses dans le champ “volume total de stockage”.
+il manque les indications entre parenthèses dans le champs “remarques” pour l’isolation.
+Onglet liste Robinets  :
+peux-tu ajouter une case en haut du tableau qui indique le nombre total de robinets qui est renseigné stp ? Il faut faire la somme du nombre de lignes du tableau + du nombre d’équipements identiques (colonne 4). 
+Onglet Robinets :
+Idem dans l'onglet "robinet", le champ" réseau ECS d'appartenance" doit être en "recommandé". pas obligatoire ?
+il manque les indications entre parenthèses dans le champ “précision emplacement”. 
+il manque les indications entre parenthèses dans le champs “usagers”.
+il faut mettre le champ “numéro de réseau ECS d’appartenance” en “recommandé” stp. C’est un erreur de ma part mais je pense que ça peut nous bloquer dans le remplissage s’il est en “obligatoire”. 
+il manque les indications entre parenthèses dans le champ “particularité”.
+il manque les indications entre parenthèses dans le champ “informations sur le bec du robinet”.
+Pour les mesures de débit, j’ai vu que tu n’avais pu indiquer qu’une seule mesure de débit. Tu n’as pas réussi à reproduire un format tableau ici ? Je pense avoir compris mais on vérifiera une fois fait si ça convient Je pense tout de même qu’il faudrait se laisser la possibilité de faire 3 mesures de temps + volume et d’avoir 3 débits qui se calculent automatiquement. On peut s’appeler par téléphone sur ce point car j’ai l’impression que le fichier excel n’était pas très clair sur ce que l’on attendait. 
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+Il manque les indications entre parenthèses dans le champ” remarques”. 
+Onglet liste douche/baignoire :
+peux-tu ajouter une case en haut du tableau qui indique le nombre total de douche et de biagnoire qui est renseigné stp ? Il faut faire la somme du nombre de lignes du tableau + du nombre d’équipements identiques (colonne 4). 
+Onglet Douche/baignoire :
+La rubrique douche ne doit apparaitre que si l'on coche "douche" dans le champ "type". Idem pour la baignoire.
+La question "présence d'un limiteur de débit" doit être mise en facultatif stp. C'est une erreur de mon côté. On n'aura surement pas le temps de démonter chaque douche pour vérifier cela. 
+Le champ "réseau ECS d'appartenance" ne doit pas être rendu obligatoire mais "recommandé". C'est une erreur de ma part. Je me rends compte que si on le rend obligatoire, c'est bloquant car dans certains bâtiments, il est possible que nous ne rentrerions pas les réseaux ECS. 
+tu n’as pas réussi à intégrer les photos pour indiquer les “types d’émetteur” ? 
+tu n’as pas réussi à intégrer les photos pour indiquer les différents “types de jet” ?
+il manque les indications entre parenthèses pour le champ “usagers.
+il manque les indications entre parenthèses dans le champ “particularités de la douche”.
+même remarque que pour l’onglet robinet sur les mesures de débits. 
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+il manque les indications entre parenthèses dans le champ “particularités de la baignoire”.
+même remarque, il manque la photo des différents types de jet. 
+même remarque que pour l’onglet robinet sur les mesures de débits. 
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+il manque les indications entre parenthèses dans le champ “particularités du robinet”.
+tu peux mettre le champ “diamètre nominal de l’alimentation” en “facultatif” en fait.
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+Onglet liste WC :
+peux-tu ajouter une case en haut du tableau qui indique le nombre total de toilette qui est renseigné stp ? Il faut faire la somme du nombre de lignes du tableau + du nombre d’équipements identiques (colonne 4). 
+Onglet WC :
+Dans le champ” utilisateurs”, on ne peut cocher qu’une seule réponse pour le moment alors que plusieurs réponses sont possibles normalement… (oui, le tag a du être mal géré par mon composant, c’est aussi le cas des autres)
+il manque les photos expliquant les différents types de toilettes ou d’urinoirs.
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+il manque les indications suivantes pour le champ “remarques” : “le cas échéant, précisez le débit du lave-main présent au-dessus de la chasse d’eau
+Ongel Appareil de lavage :
+peux-tu ajouter plusieurs cases en haut du tableau qui indiquent le nombre total de lave-linge, lave-vaisselle et autolaveuse  qui est renseigné stp ? Il faut faire la somme du nombre de lignes correspondant à chacun de ces trois types équipements. 
+Les rubriques en dessous ne doivent apparaitre qu'en fonction du remplissage du champ" type". Si je coche "lave-linge", seules les rubriques relatives au lave-linge doivent apparaitre en-dessous ;
+il manque les indications entre parenthèses dans le champ ‘lister les programmes les plus utilisés” du lave-linge.
+il manque les indications entre parenthèses dans les champs “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans les champs “état visuel”. 
+il manque les indications entre parenthèses dans le champ “remarque” du lave-linge.
+il manque les indications entre parenthèses dans le champ ‘lister les programmes les plus utilisés” du lave-vaisselle.
+il manque les indications entre parenthèses dans le champ “capacité” du lave-vaisselle. 
+il manque les indications entre parenthèses dans le champ “remarque” du lave-vaisselle. 
+il manque les indications entre parenthèses dans le champ “réglage le plus utilisé sur le débit d’eau”.
+il manque les indications entre parenthèses dans le champ “dosage et nom du détergent”.
+dans le champ “type de zone lavée”, il faudrait pouvoir cocher plusieurs choix. C’est vrai pour la rubrique autolaveuse mais aussi pour la rubrique lavage manuel du sol.
+idem pour le type de surface stp
+Onglet Incendie :
+il y a un “e” en trop dans le champ “présence d’une réserve incendie”.
+il manque les indications entre parenthèses dans le champs “dysfonctionnements observés”
+Onglet liste espaces extérieurs :
+il manque le champ “surface espace extérieur” qui doit compiler toutes les surfaces renseignées dans le tableau et faire la somme des m² renseignés.
+Idem pour le champ “surface imperméables”.
+dans la deuxième colonne du tableau, tu peux te contenter d’écrire “emplacement” je pense. Cela laissera de la place pour ajouter les “surfaces nettoyées”
+Onglet espaces extérieurs :
+il manque les indications entre parenthèses dans le premier champ “précision”.
+le bouton “localiser sur plan” et “prévisualisation” doivent apparaitre à côté du champ “emplacement”.
+les rubriques “arrosage” et “nettoyage” ne doivent apparaitre que si l’on a coché le champ “utilisations d’eau sur cet espace”. 
+il manque les indications entre parenthèses dans le champ “type de surface à arroser”. 
+il faut que l’on puisse cocher plusieurs réponses possibles dans le champ “type de paillage”. 
+idem pour le champ “mode d’arrosage”. 
+dans le champ “période d’arrosage dans la journée” il faut ajouter les réponses suivants stp : nuit et variable.
+plusieurs réponses possibles dans le champ “origine eau pour l’arrosage”.
+ajouter “en minutes” pour le champ “durée d’un arrosage
+il manque les indications entre parenthèses dans le champ “utilisation” de la rubrique “nettoyage”.
+plusieurs réponses possibles dans '“motif du nettoyage”.
+idem, ajouter “en minutes” pour le champ “durée d’un nettoyage”.
+Onglet liste piscines :
+ ajouter “en minutes” pour le champ “durée d’un nettoyage”.
+il manque les indications entre parenthèses dans le champ “remarques générales”. 
+Onglet bassin : 
+plusieurs choix possibles dans le champ “utilisateurs”. 
+il n’y a pas la liste déroulante dans le champ “matériaux de construction”. Pourtant il y a pas mal de choix possible dans le excel. 
+plusieurs choix possible dans le champ “type de couverture”.
+il manque les indications entre parenthèses dans le champ “désinfection de l’eau”. 
+il manque les indications entre parenthèses dans le champ “dysfonctionnements”
+il manque la description de “bon/moyen/mauvais” dans le champ “état général”. 
+Onglet Liste Toiture :
+il manque le champ “surface total de toiture en m²” qui doit compiler toutes les surfaces renseignées dans le tableau et faire la somme des m² renseignés. Idem pour le nombre de pans de toiture.
+il manque l’unité (%) du champ “pente de toiture”.
+il manque les indications entre parenthèses pour le champ “présence d’obstacles”. 
+il manque les indications entre parenthèses pour le champ “présence de traitement”. 
+il manque les indications entre parenthèses pour le champ “état de la toiture”.
+il manque les indications entre parenthèses pour le champ “sources de pollution à proximité”.
+il manque les photos présentant les différents types de gouttières. 
+il manque les photos présentant les différents types de cheneaux.
+il manque les indications entre parenthèses pour le champ “état des gouttières et cheneaux”. 
+idem pour “état des descentes”. 
+Onglet Structure :
+Il y a un souci dans le champ “type”. Il n’y a que deux réponses possibles : “structure et réseaux” / “espace technique aménageable”. Les rubriques correspondant à ces deux réponses s’ouvrent en fonction de la réponse qui a été cochée. 
+dans le champ “Possibilité d'installer un réseau supplémentaire dans les gaines techniques ou le faux-plafond ?”, il faut une liste déroulante avec Oui / Non
+il manque les indications entre parenthèses dans le champ “Est-ce que tous les réseaux EU arrivent au même endroit dans le bâtiment ?”.
+supprimer le champ “emplacement” dans la rubrique “espace technique aménageable car il sera déjà rempli juste avant. 
+Onglet Ventilation :
+il manque les indications entre parenthèses dans le champ “emplacement du système”. 
+il manque les indications entre parenthèses dans le champ “remarques”.
+le bouton “localiser sur plan” et “prévisualisation” doivent apparaitre à côté du champ “emplacement”.
+Onglet Opportunités :
+Les rubriques “eau de pluie”, “eaux ménagères et de lavage” et “urines” ne doivent apparaitrent que si elles ont été sélectionnées dans le champ “opportunités à documenter”. 
+il manque les indications entre parenthèses dans le champ “contraintes d’implantation d’une cuve”. 
+il manque la description des différents niveaux de potentiel technique pour l’eau de pluie : fort, moyen, faible, à approfondir.
+il manque les indications entre parenthèses dans le champ “Lister les eaux de lavage produites dans le bâtiment pouvant être réutilisées”. 
+plusieurs choix possibles dans “utilisations extérieures potentielles” et “utilisations intérieurs potentielles” pour la rubrique “eau de pluie” et la rubrique “eaux ménagères et de lavage”. 
+il manque la description des différents niveaux de potentiel technique pour les eaux ménagères et de lavage : fort, moyen, faible, à approfondir.
+il manque la description des différents niveaux de potentiel technique pour les urines : fort, moyen, faible, à approfondir.
+Onglet Autre :
+Il y a un souci dans le champ “Choix”. Il n’y a que deux réponses possibles normalement : “Autre information” / “Auyre utilisation de l’eau”. Les rubriques correspondant à ces deux réponses s’ouvrent en fonction de la réponse qui a été cochée. 
+il n’y a pas de rubrique “autre information”. 
