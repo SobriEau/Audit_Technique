@@ -2,7 +2,7 @@
 
 Entité `autre` — route `#/qte/autre`.
 
-5 champ(s), 2 section(s). Colonnes du tableau : `Choix`, `Nom`, `Emplacement`.
+7 champ(s), 2 section(s). Colonnes du tableau : `Choix`, `Nom`, `Emplacement`.
 
 
 ## En tête de fiche (aucune section)
@@ -14,8 +14,15 @@ Entité `autre` — route `#/qte/autre`.
 | `F14` | Emplacement | Obligatoire | Champ libre |
 | `F17` | Précision emplacement | Facultatif | Champ libre |
 
-## Autre utilisation de l'eau (procédés particuliers,…)
+## Autre information
 
 | Cellule | Libellé | Priorité | Note du classeur |
 |---|---|---|---|
+| `F23` | Autre information (traitement de l'eau, adoucisseurs, fuites, CTA adiabatique, …) | — | — |
+
+## Autre utilisation de l'eau
+
+| Cellule | Libellé | Priorité | Note du classeur |
+|---|---|---|---|
+| `F40` | Autre utilisation de l'eau (procédés particuliers,…) | — | — |
 | `F56` | Remarques | — | Champ libre |

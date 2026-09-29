@@ -1,6 +1,6 @@
 # Outils de transcription du classeur
 
-`audit_technique.xlsx` est la **spécification de référence** de la partie
+`MAJ/done/audit_technique.xlsx` est la **spécification de référence** de la partie
 technique. Le schéma de l'application et la documentation en sont dérivés par
 ces scripts : ne pas les modifier à la main, sinon la prochaine régénération
 écrasera le travail.
@@ -23,10 +23,16 @@ Décompression du classeur (un .xlsx est une archive ZIP) :
 $dst = "tools\.cache\xlsx"
 Remove-Item -Recurse -Force $dst -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $dst | Out-Null
-Copy-Item audit_technique.xlsx "$dst\book.zip"
+Copy-Item MAJ\done\audit_technique.xlsx "$dst\book.zip"
 Expand-Archive "$dst\book.zip" -DestinationPath $dst -Force
 Remove-Item "$dst\book.zip"
 ```
+
+Sous Linux : `mkdir -p tools/.cache/xlsx && unzip -o MAJ/done/audit_technique.xlsx -d tools/.cache/xlsx`.
+
+Les classeurs, archives datées comprises, et les notes d'arbitrage
+(`arbitrages-v3.md`, `fusion-origin-main.md`) sont rangés dans `MAJ/done/`
+depuis 2026-09-29 ; les retours de test à traiter dans `MAJ/to_do/`.
 
 `xlsx-extract.js` accepte un dossier source et un fichier de sortie en
 arguments, ce qui permet de garder deux versions du classeur côte à côte pour
@@ -43,7 +49,8 @@ node tools/xlsx-extract.js tools/.cache/xlsx-v2 tools/.cache/workbook-v2.json
 | `lib/classeur.js` | **Lecture de la mise en page** : ce qui est un libellé, une section, une priorité ou une cellule technique. Partagée par le générateur et les contrôles. Porte aussi la table des entités. |
 | `xlsx-extract.js` | Lit le XML du classeur — cellules, **notes de cellules**, **styles**, plages nommées — et produit un JSON exploitable. Utilise `sax`, pas des expressions régulières : les chaînes partagées OOXML contiennent du texte enrichi et des entités échappées. |
 | `gen-schema.js` | Produit le schéma des entités : champs, types, unités, listes de valeurs, **la disposition** (les champs d'une même ligne du tableau restent alignés), les **sections** et les **priorités**. |
-| `gen-pages.js` | Produit `glossaire.ts` et `documents-collectes.ts` — les contenus que le classeur donne mot pour mot, sans arbitrage à faire. |
+| `gen-pages.js` | Produit `glossaire.ts` et `documents-collectes.ts` — les contenus que le classeur donne mot pour mot, plus les documents ajoutés hors classeur (`DOCUMENTS_AJOUTES`). |
+| `gen-illustrations.js` | Produit `illustrations.ts` : les images du classeur qui expliquent une liste de choix, recadrées comme dans Excel, réduites et réencodées en JPEG par Chrome, inlinées. Le rattachement image → champ est la table `ILLUSTRATIONS` de `lib/classeur.js`. Sans Chrome, le fichier existant est laissé tel quel. |
 | `gen-docs.js` | Un Markdown par onglet. Les fiches sont documentées **depuis le schéma produit**, cellule d'origine comprise : la documentation décrit ainsi l'application telle qu'elle est, et non une seconde lecture du classeur qui pourrait diverger. Les autres onglets sont restitués tels quels. |
 | `gen-referentiel.js` | Recense les listes de valeurs **depuis le schéma** et signale les libellés qui portent des valeurs différentes d'un endroit à l'autre. |
 | `check-coverage.js` | **Contrôle** : ce que le classeur contient et que le schéma n'a pas retenu. Signale aussi les **faux champs** (à zéro attendu), les **priorités orphelines** — qui pointent chacune un champ non vu — et les **colonnes de liste introuvables**. À lancer après toute régénération. |
@@ -144,10 +151,20 @@ cherché aux emplacements usuels, sinon renseigner `CHROME_PATH`.
   pas : un bloc mal résolu bloquerait l'enregistrement d'une fiche pour des
   champs qui ne la concernent pas, ou cesserait d'exiger ceux qui la
   concernent. `node tools/check-exigences.js` rejoue ensuite, pour chaque
-  entité et chaque valeur, une saisie complète qui doit être validable.
+  entité et chaque valeur, une saisie complète qui doit être validable. Un
+  bloc désigne un intitulé de premier niveau **ou une section** (le bouclage
+  d'un réseau ECS) ; un bloc inactif est masqué à l'écran.
+- **Les corrections du retour de test (2026-09) sont des tables sourcées**
+  dans `gen-schema.js` — `REQUIREMENT_OVERRIDES`, `UNIT_OVERRIDES`,
+  `HELP_OVERRIDES`, `MULTIPLES_IMPOSES`, `CHAMPS_RETIRES`, `CHAMPS_DETACHES` —
+  et dans `lib/classeur.js` (`MESURES_DEBIT`, `SECTIONS_AJOUTEES`,
+  `LEGENDES_AJOUTEES`). Une entrée qui ne retrouve plus sa cellule **arrête
+  la génération** : le classeur a bougé, la table doit suivre. À reporter
+  dans le classeur, qui reste la référence.
 - **`CHAMPS_FIGES` dans `lib/classeur.js` fige les champs des entités dont
-  l'onglet a disparu du classeur sans équivalent ailleurs** (V3 : Surpresseur1
-  seul, marqué `horsClasseur`). Tant qu'aucun onglet ne le redécrit, une
+  l'onglet a disparu du classeur sans équivalent ailleurs.** Vide depuis le
+  retrait du surpresseur (retour de Victor Ledoux, 2026-09). Historique :
+  Surpresseur1 y était, marqué `horsClasseur`. Tant qu'aucun onglet ne le redécrit, une
   régénération conserve ses champs à l'identique (copie de la V2) plutôt que de
   faire disparaître l'entité — elle reste masquée par défaut sur l'accueil du
   projet, réactivable d'une case. Si un onglet réapparaît un jour sous ce nom,

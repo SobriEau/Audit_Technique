@@ -2,7 +2,7 @@
 
 Entité `reseaux_eau_chaude_sanitaire` — route `#/qte/reseaux-ecs`.
 
-33 champ(s), 5 section(s). Colonnes du tableau : `Emplacement`, `MateriauPrincipalDesCanalisations`, `Bouclage`.
+34 champ(s), 5 section(s). Colonnes du tableau : `Emplacement`, `MateriauPrincipalDesCanalisations`, `Bouclage`.
 
 
 ## En tête de fiche (aucune section)
@@ -21,6 +21,7 @@ Entité `reseaux_eau_chaude_sanitaire` — route `#/qte/reseaux-ecs`.
 | Cellule | Libellé | Priorité | Note du classeur |
 |---|---|---|---|
 | `F29` | Calorifugeage des canalisations | Recommandé | Liste déroulante : oui / non / ne sait pas |
+| `F30` | Présence d'un traçage | — | Liste déroulante : oui / non / ne sait pas |
 | `F32` | Epaisseur de l'isolant (mm) | Facultatif | Champ libre |
 | `F35` | Matériaux de l'isolant | Facultatif | liste déroulante laine de verre laine de roche papier et platre polyruéthane Mousse synthétique (armaflex,PE…) |
 | `F38` | Continuité de l'isolation | Facultatif | liste déroulante oui / non / ne sait pas |

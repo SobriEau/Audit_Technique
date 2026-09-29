@@ -1,8 +1,8 @@
 # Compteur général
 
-Entité `releve_compteur_general` — route `#/qte/compteur-general` (fiche unique).
+Entité `releve_compteur_general` — route `#/qte/compteur-general`.
 
-22 champ(s), 7 section(s). Colonnes du tableau : —.
+22 champ(s), 7 section(s). Colonnes du tableau : `Emplacement`, `Type`, `Teletransmission`.
 
 
 ## Localisation

@@ -46,7 +46,7 @@ export class DocumentsComponent {
    * déjà remplies au-delà, et celles ajoutées à l'instant.
    *
    * Le classeur en fixe six ; l'arbitrage du projet a levé la limite
-   * (`arbitrages-v3.md`, Q22). Les six du classeur restent affichées même
+   * (`MAJ/done/arbitrages-v3.md`, Q22). Les six du classeur restent affichées même
    * vides, pour que la page garde la forme prévue.
    */
   get lignesLibres(): string[] {

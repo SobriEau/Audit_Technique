@@ -2,7 +2,7 @@
 
 Entité `espace_vert_exterieur` — route `#/qte/espaces-exterieurs`.
 
-37 champ(s), 2 section(s). Colonnes du tableau : `EmplacementDeLEspaceExterieur`, `TypeDeGestionDesEaux`, `SurfaceArrosee`.
+37 champ(s), 2 section(s). Colonnes du tableau : `EmplacementDeLEspaceExterieur`, `TypeDeGestionDesEaux`, `SurfaceArrosee`, `Utilisation`.
 
 
 ## En tête de fiche (aucune section)

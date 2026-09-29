@@ -36,6 +36,21 @@ export interface Faisabilite {
 }
 
 /**
+ * Ressource injectée par une extension du navigateur (gestionnaire de mots de
+ * passe, correcteur, bloqueur…). Elle ne fait pas partie du fichier.
+ *
+ * Sans ce filtre, la page refusait de produire une copie sur un Chrome de
+ * bureau équipé d'extensions, en les prenant pour des fichiers séparés — alors
+ * que le même fichier la produisait sur téléphone, où Chrome n'en a pas
+ * (retour de Victor Ledoux, 2026-09).
+ */
+const EXTENSION_RE = /^(?:chrome|moz|safari-web|ms-browser)-extension:/i;
+
+function urlDe(n: Element): string {
+  return n.getAttribute('src') ?? n.getAttribute('href') ?? '';
+}
+
+/**
  * Une ressource restée externe casserait le fichier hors connexion sans erreur
  * visible. La refuser ici évite de distribuer une copie muette — et sert de
  * témoin si un jour une ressource échappe à l'inlinage.
@@ -44,12 +59,14 @@ function ressourcesExternes(): string[] {
   const out: string[] = [];
   document.querySelectorAll('script[src]').forEach((n) => {
     const v = n.getAttribute('src') ?? '';
-    if (!v.startsWith('data:')) out.push('script ' + v.slice(0, 60));
+    if (!v.startsWith('data:') && !EXTENSION_RE.test(v)) out.push('script ' + v.slice(0, 60));
   });
   document.querySelectorAll('link[href]').forEach((n) => {
     const rel = (n.getAttribute('rel') ?? '').toLowerCase();
     const v = n.getAttribute('href') ?? '';
-    if (rel === 'stylesheet' && !v.startsWith('data:')) out.push('feuille ' + v.slice(0, 60));
+    if (rel === 'stylesheet' && !v.startsWith('data:') && !EXTENSION_RE.test(v)) {
+      out.push('feuille ' + v.slice(0, 60));
+    }
   });
   return out;
 }
@@ -106,6 +123,15 @@ export function reconstituer(): string {
   };
   purger(clone.querySelector('head'), enTrop.head);
   purger(clone.querySelector('body'), enTrop.body);
+
+  // Ce qu'une extension a glissé avant la photographie du document, ou à côté
+  // de `<head>` et `<body>` : rien de cela n'est dans le fichier d'origine.
+  clone.querySelectorAll('[src], [href]').forEach((n) => {
+    if (EXTENSION_RE.test(urlDe(n))) n.remove();
+  });
+  Array.from(clone.children).forEach((n) => {
+    if (n.tagName !== 'HEAD' && n.tagName !== 'BODY') n.remove();
+  });
 
   const racine = clone.querySelector('app-root');
   if (!racine) throw new Error('<app-root> est introuvable dans le document.');

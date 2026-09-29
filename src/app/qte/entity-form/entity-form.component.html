@@ -8,8 +8,12 @@
         <h2>{{ bloc.title }}</h2>
       }
 
+      @if (bloc.withLocator && bloc.locatorApres === -1) {
+        <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
+      }
+
       <!-- Une ligne du formulaire = une ligne du tableau Excel -->
-      @for (row of bloc.rows; track $index) {
+      @for (row of bloc.rows; track $index; let i = $index) {
         <div class="field-row">
           @for (f of row; track f.key) {
             <app-audit-field
@@ -17,12 +21,19 @@
               [ngModel]="valueOf(f)"
               (ngModelChange)="onFieldChange(f, $event)"
               [ngModelOptions]="{ standalone: true }"
+              [autre]="autreDe(f)"
+              (autreChange)="onAutreChange(f, $event)"
             />
           }
         </div>
+
+        <!-- La localisation suit la ligne de l'emplacement. -->
+        @if (bloc.withLocator && bloc.locatorApres === i) {
+          <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
+        }
       }
 
-      @if (bloc.withLocator) {
+      @if (bloc.withLocator && bloc.locatorApres === undefined) {
         <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
       }
     </div>

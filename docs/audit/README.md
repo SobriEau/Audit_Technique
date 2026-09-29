@@ -14,8 +14,8 @@ Un fichier par onglet de `audit_technique.xlsx`. La spécification réelle vit d
 | Onglet | Champs | Sections |
 |---|---|---|
 | [Compteur général](compteur-general.md) | 22 | 7 |
-| [Sous-compteur1](sous-compteur1.md) | 15 | 3 |
-| [Réseaux ECS](reseaux-ecs.md) | 33 | 5 |
+| [Sous-compteur1](sous-compteur1.md) | 15 | 4 |
+| [Réseaux ECS](reseaux-ecs.md) | 34 | 5 |
 | [Production Stockage ECS](production-stockage-ecs.md) | 27 | 5 |
 | [Robinets](robinets.md) | 30 | 5 |
 | [Douche-baignoire1](douche-baignoire1.md) | 54 | 13 |
@@ -29,7 +29,7 @@ Un fichier par onglet de `audit_technique.xlsx`. La spécification réelle vit d
 | [Structure1](structure1.md) | 32 | 4 |
 | [Ventilation1](ventilation1.md) | 7 | 0 |
 | [Opportunités1](opportunites1.md) | 28 | 3 |
-| [Autre1](autre1.md) | 5 | 2 |
+| [Autre1](autre1.md) | 7 | 2 |
 
 ## Autres onglets
 

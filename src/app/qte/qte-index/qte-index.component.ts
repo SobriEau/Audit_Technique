@@ -19,10 +19,7 @@ import { sectionsDemandees } from '../../models/utilisations-eau';
  * section ne doit jamais disparaître de l'écran faute d'y figurer.
  */
 const GROUPS: { label: string; keys: string[] }[] = [
-  // Le surpresseur n'a plus d'onglet dans le classeur V3 : origin/main le
-  // conserve (champs figés, masqué par défaut) et le range à l'arrivée d'eau,
-  // près du compteur dont il relève la pression.
-  { label: 'Arrivée d’eau', keys: ['releve_compteur_general', 'sous_compteurs', 'surpresseurs'] },
+  { label: 'Arrivée d’eau', keys: ['releve_compteur_general', 'sous_compteurs'] },
   { label: 'Distribution d’eau', keys: ['reseaux_eau_chaude_sanitaire', 'production_stockage_ecs'] },
   {
     label: 'Points d’eau intérieurs',
@@ -174,9 +171,9 @@ export class QteIndexComponent {
     if ((this.count(section) ?? 0) > 0) return true;
     if (section.single) return true;
 
-    // Hors classeur (le surpresseur) : aucun usage de l'eau ne le commande.
-    // Masqué tant que l'auditeur ne l'a pas explicitement affiché depuis
-    // l'accueil du projet — décision reprise d'origin/main.
+    // Hors classeur (aucune depuis le retrait du surpresseur) : aucun usage de
+    // l'eau ne la commande. Masquée tant que l'auditeur ne l'a pas affichée
+    // depuis l'accueil du projet.
     if (section.horsClasseur) return d.EquipementsPresents?.[section.key] === true;
 
     if (d.UtilisationsEau) return sectionsDemandees(d.UtilisationsEau).has(section.key);

@@ -32,6 +32,7 @@ export const DOCUMENTS_A_COLLECTER: DocumentACollecter[] = [
   { id: "doc-20", libelle: "Factures d’eau des 3 dernières années", libre: false, requirement: "obligatoire" },
   { id: "doc-22", libelle: "Export de la télérelève sur les 3 dernières années", libre: false },
   { id: "doc-24", libelle: "Données issues des sous-compteurs d’eau sur les 3 dernières années si existant", libre: false, requirement: "facultatif" },
+  { id: "doc-interventions-plomberie", libelle: "Suivi des interventions de plomberie des 3 dernières années (extraction des outils de suivi)", libre: false },
   { id: "doc-26", libelle: "Factures d’énergie (électricité, fioul, biomasse, gaz, solaire, réseau de chaleur…) des 3 dernières années", libre: false, requirement: "obligatoire" },
   { id: "doc-28", libelle: "Planning d’occupation du bâtiment : horaires d’ouverture / fermeture du bâtiment ; planning du personnel si pertinent", libre: false, requirement: "obligatoire" },
   { id: "doc-30", libelle: "Tableau de données annuelles de fréquentation (visiteurs, spectateurs, etc.)", libre: false, requirement: "obligatoire" },

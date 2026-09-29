@@ -1,4 +1,28 @@
-@if (useRadio) {
+@if (isMulti) {
+  <!-- Plusieurs réponses possibles : des cases à cocher, toutes visibles. -->
+  <fieldset class="radio-field">
+    <legend>
+      {{ def.label }}
+      @if (requirementLabel) {
+        <span class="priority" [class]="'priority--' + def.requirement">{{ requirementLabel }}</span>
+      }
+    </legend>
+    <p class="muted multi-note">Plusieurs réponses possibles.</p>
+
+    <div class="radio-group">
+      @for (c of choices; track c.label) {
+        <label class="radio" [class.checked]="estCoche(c)">
+          <input type="checkbox" [checked]="estCoche(c)" (change)="basculer(c)" (blur)="onTouchedFn()" />
+          <span>{{ c.label }}</span>
+        </label>
+      }
+    </div>
+
+    @for (o of orphelinsMulti; track o) {
+      <p class="field-warn">Valeur enregistrée hors liste : « {{ o }} ». Conservée telle quelle.</p>
+    }
+  </fieldset>
+} @else if (useRadio) {
   <!-- Peu d'options : un groupe de boutons radio, avec une légende plutôt
        qu'une étiquette, puisqu'aucun contrôle unique ne la porte. -->
   <fieldset class="radio-field">
@@ -144,11 +168,86 @@
     @case ('photos') {
       <app-photo-editor [ngModel]="value ?? []" (ngModelChange)="onInput($event)" />
     }
+
+    @case ('mesures-debit') {
+      <!-- Trois essais, comme le tableau du classeur. Le débit se calcule :
+           volume (L) ÷ temps (s) × 60. -->
+      <div class="table-wrapper mesures">
+        <table>
+          <thead>
+            <tr>
+              <th>Essai</th>
+              <th>Temps (s)</th>
+              <th>Volume (L)</th>
+              <th>Débit calculé (L/min)</th>
+              <th>Mesure directe au bol (L/min)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of mesures; track $index; let i = $index) {
+              <tr>
+                <td>{{ i + 1 }}</td>
+                <td>
+                  <input type="number" step="any" min="0" [value]="m.temps ?? ''" [attr.aria-label]="'Temps, essai ' + (i + 1)"
+                    (input)="onMesure(i, 'temps', $any($event.target).value)" (blur)="onTouchedFn()" />
+                </td>
+                <td>
+                  <input type="number" step="any" min="0" [value]="m.volume ?? ''" [attr.aria-label]="'Volume, essai ' + (i + 1)"
+                    (input)="onMesure(i, 'volume', $any($event.target).value)" (blur)="onTouchedFn()" />
+                </td>
+                <td class="calcule">{{ debit(m) ?? '—' }}</td>
+                <td>
+                  <input type="number" step="any" min="0" [value]="m.direct ?? ''" [attr.aria-label]="'Mesure directe, essai ' + (i + 1)"
+                    (input)="onMesure(i, 'direct', $any($event.target).value)" (blur)="onTouchedFn()" />
+                </td>
+              </tr>
+            }
+          </tbody>
+          @if (moyenneCalculee !== null || moyenneDirecte !== null) {
+            <tfoot>
+              <tr>
+                <th colspan="3">Moyenne</th>
+                <td class="calcule">{{ moyenneCalculee ?? '—' }}</td>
+                <td class="calcule">{{ moyenneDirecte ?? '—' }}</td>
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+    }
   }
+}
+
+@if (autreChoisi) {
+  <label class="autre" [attr.for]="uid + '-autre'">Préciser « autre »</label>
+  <app-dictation-field [id]="uid + '-autre'" [ngModel]="autre ?? ''" (ngModelChange)="onAutre($event)" />
 }
 
 @if (effectiveHelp) {
   <p class="muted field-help">{{ effectiveHelp }}</p>
+}
+@if (def.legend?.length) {
+  <dl class="legende">
+    @for (e of def.legend; track e.terme) {
+      <div>
+        <dt>{{ e.terme }}</dt>
+        <dd>{{ e.definition }}</dd>
+      </div>
+    }
+  </dl>
+}
+@if (illustrations.length) {
+  <details class="illustrations">
+    <summary>Voir les illustrations ({{ illustrations.length }})</summary>
+    <div class="illustrations-grille">
+      @for (i of illustrations; track i.legende) {
+        <figure>
+          <img [src]="i.src" [alt]="i.legende" loading="lazy" />
+          <figcaption>{{ i.legende }}</figcaption>
+        </figure>
+      }
+    </div>
+  </details>
 }
 @if (def.unit) {
   <p class="muted field-help">Unité : {{ def.unit }}</p>

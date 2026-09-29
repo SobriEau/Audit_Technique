@@ -163,3 +163,123 @@
   font-style: italic;
   cursor: default;
 }
+
+/* ── Choix multiple ─────────────────────────────────────────────────── */
+
+.multi-note {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
+}
+
+/* ── Précision d'une option « Autre » ───────────────────────────────── */
+
+.autre {
+  display: block;
+  margin: var(--sp-2) 0 var(--sp-1);
+  font-weight: normal;
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
+
+/* ── Légende des termes (« Bon état : … ») ──────────────────────────── */
+
+.legende {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
+
+.legende div {
+  margin: 2px 0;
+}
+
+.legende dt {
+  display: inline;
+  font-weight: 700;
+}
+
+.legende dt::after {
+  content: ' : ';
+}
+
+.legende dd {
+  display: inline;
+  margin: 0;
+}
+
+/* ── Illustrations du classeur ──────────────────────────────────────── */
+
+.illustrations {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+
+.illustrations summary {
+  cursor: pointer;
+  color: var(--c-primary);
+}
+
+.illustrations-grille {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.illustrations figure {
+  margin: 0;
+  max-width: 100%;
+}
+
+.illustrations img {
+  display: block;
+  height: 120px;
+  max-width: 100%;
+  object-fit: contain;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  background: var(--c-surface);
+}
+
+.illustrations figcaption {
+  margin-top: var(--sp-1);
+  color: var(--c-text-muted);
+}
+
+/* ── Tableau de mesure de débit ─────────────────────────────────────── */
+
+.mesures {
+  overflow-x: auto;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+}
+
+.mesures table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mesures th,
+.mesures td {
+  padding: var(--sp-1) var(--sp-2);
+  border-bottom: 1px solid var(--c-border-soft);
+  text-align: left;
+  font-size: var(--fs-sm);
+}
+
+.mesures th {
+  background: var(--c-surface-alt);
+  color: var(--c-primary);
+}
+
+.mesures input {
+  width: 100%;
+  min-width: 70px;
+}
+
+.mesures .calcule {
+  font-weight: 700;
+  color: var(--c-primary);
+  white-space: nowrap;
+}

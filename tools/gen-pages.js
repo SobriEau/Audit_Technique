@@ -82,6 +82,21 @@ function genGlossaire() {
 
 // ── Documents à collecter ──────────────────────────────────────────────────
 
+/**
+ * Documents demandés hors classeur, insérés après la ligne indiquée.
+ *
+ * L'`id` est écrit en toutes lettres : il ne doit dépendre ni du libellé ni de
+ * la ligne, pour que la case reste cochée si le classeur l'intègre un jour.
+ */
+const DOCUMENTS_AJOUTES = [
+  {
+    apres: 'doc-24',
+    id: 'doc-interventions-plomberie',
+    // Victor Ledoux, retour de test (2026-09). À reporter dans le classeur.
+    libelle: 'Suivi des interventions de plomberie des 3 dernières années (extraction des outils de suivi)',
+  },
+];
+
 function genDocuments() {
   const sheet = sheetByName('Documents collectés');
   if (!sheet) throw new Error('onglet « Documents collectés » absent');
@@ -118,6 +133,13 @@ function genDocuments() {
       libre: false,
       requirement,
     });
+  }
+
+  for (const a of DOCUMENTS_AJOUTES) {
+    if (docs.some((d) => normCell(d.libelle) === normCell(a.libelle))) continue; // repris par le classeur
+    const i = docs.findIndex((d) => d.id === a.apres);
+    if (i === -1) throw new Error(`document ajouté : ligne « ${a.apres} » introuvable`);
+    docs.splice(i + 1, 0, { id: a.id, libelle: a.libelle, libre: false, requirement: null });
   }
 
   const out = [];

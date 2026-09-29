@@ -9,8 +9,8 @@ import { PhotoEditorComponent } from '../../shared/components/photo-editor/photo
 import { entityByRoute } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
 import { AssetRef, NiveauRemplissage, PlanLocation } from '../../models/data.models';
-import { FormSection, buildSections, formFields } from '../form-layout';
-import { NIVEAU_LABELS, champsManquants, champsMasques, requirementVisible } from '../exigences';
+import { FormSection, buildSections, champEmplacement, cleAutre, formFields } from '../form-layout';
+import { NIVEAU_LABELS, blocActif, champsManquants, champsMasques, requirementVisible } from '../exigences';
 
 type Record_ = Record<string, unknown>;
 
@@ -26,7 +26,7 @@ function normalizeSearch(s: string): string {
  * uniques (compteur général), signalées par `single` dans le schéma.
  *
  * Trois mécanismes se superposent, et viennent de deux migrations V3 menées en
- * parallèle puis fusionnées (voir `fusion-origin-main.md`) :
+ * parallèle puis fusionnées (voir `MAJ/done/fusion-origin-main.md`) :
  *  - le **découpage en sections** du classeur (migration locale) ;
  *  - le **niveau de remplissage**, qui masque les champs les moins exigés, et
  *    la **validation** des champs obligatoires (migration d'origin/main) ;
@@ -149,48 +149,62 @@ export class EntityFormComponent implements OnInit {
    * côte à côte à l'intérieur de leur bloc. Une section dont tous les champs
    * sont masqués disparaît, sauf si elle porte la localisation sur plan.
    *
-   * La localisation s'insère à la fin de la section qui porte l'emplacement —
-   * c'est-à-dire « Localisation » quand le classeur la nomme.
+   * La localisation s'insère **juste sous la ligne de l'emplacement**, avec
+   * ses boutons « Localiser sur le plan » et « Prévisualisation » : les avoir
+   * en fin de rubrique les éloignait du champ qu'ils complètent (Victor
+   * Ledoux, 2026-09).
+   *
+   * Les rubriques qui ne concernent pas l'élément — la baignoire d'une douche,
+   * le bouclage d'un réseau qui n'en a pas — sont masquées (`blocActif`).
    */
   get sections(): FormSection[] {
-    const blocs = buildSections(this.champs);
-
-    const iEmplacement = blocs.findIndex((b) =>
-      b.rows.some((row) => row.some((f) => f.key === 'Emplacement'))
-    );
-    if (iEmplacement !== -1) {
-      blocs[iEmplacement].withLocator = true;
-    } else if (blocs.length && blocs[0].title === null) {
-      // Pas de champ « Emplacement » — les espaces extérieurs le nomment
-      // autrement. La localisation rejoint alors le bloc de tête plutôt que
-      // d'ouvrir un panneau vide à elle seule.
-      blocs[0].withLocator = true;
-    } else {
-      // Fiche entièrement sectionnée : la localisation ouvre la page, pour ne
-      // pas la reléguer en bas (retour KAPT, « Localiser : mettre tout en haut »).
-      blocs.unshift({ title: null, rows: [], withLocator: true });
-    }
-
-    return blocs
+    const blocs = buildSections(this.champs)
       .map((b) => ({
         ...b,
         rows: b.rows.map((row) => row.filter((f) => this.isVisible(f))).filter((row) => row.length > 0),
       }))
-      .filter((b) => b.rows.length > 0 || b.withLocator);
+      .filter((b) => b.rows.length > 0);
+
+    const emplacement = champEmplacement(this.champs);
+    const iBloc = emplacement ? blocs.findIndex((b) => b.rows.some((row) => row.includes(emplacement))) : -1;
+    if (iBloc !== -1) {
+      blocs[iBloc].withLocator = true;
+      blocs[iBloc].locatorApres = blocs[iBloc].rows.findIndex((row) => row.includes(emplacement!));
+    } else if (blocs.length && blocs[0].title === null) {
+      // Pas d'emplacement affiché : la localisation rejoint le bloc de tête
+      // plutôt que d'ouvrir un panneau vide à elle seule.
+      blocs[0].withLocator = true;
+      blocs[0].locatorApres = -1;
+    } else {
+      // Fiche entièrement sectionnée : la localisation ouvre la page, pour ne
+      // pas la reléguer en bas (retour KAPT, « Localiser : mettre tout en haut »).
+      blocs.unshift({ title: null, rows: [], withLocator: true, locatorApres: -1 });
+    }
+    return blocs;
   }
 
   /**
-   * Un champ masqué par le niveau de remplissage en cours reste affiché s'il
-   * a été révélé depuis le volet dépliable, ou automatiquement parce
-   * qu'obligatoire et resté vide à la validation.
+   * Un champ s'affiche si sa rubrique concerne l'élément, et si le niveau de
+   * remplissage le montre — ou s'il a été révélé depuis le volet dépliable, ou
+   * automatiquement parce qu'obligatoire et resté vide à la validation.
    */
   isVisible(f: FieldDef): boolean {
+    if (!blocActif(this.def, f, this.item)) return false;
     return requirementVisible(f.requirement, this.niveau) || this.revealed.has(f.key);
   }
 
   /** Champs masqués par le niveau de remplissage en cours, pour le volet dépliable. */
   get hiddenFields(): FieldDef[] {
-    return champsMasques(this.def, this.niveau, this.revealed);
+    return champsMasques(this.def, this.niveau, this.revealed, this.item);
+  }
+
+  /** Précision de l'option « Autre », rangée sous une clé voisine. */
+  autreDe(f: FieldDef): string | null {
+    return (this.item[cleAutre(f)] as string | null) ?? null;
+  }
+
+  onAutreChange(f: FieldDef, texte: string | null): void {
+    this.item[cleAutre(f)] = texte;
   }
 
   get hiddenFieldsFiltres(): FieldDef[] {

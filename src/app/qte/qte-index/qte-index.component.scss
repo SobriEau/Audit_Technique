@@ -36,3 +36,11 @@
   font-size: var(--fs-sm);
   text-align: center;
 }
+
+/* Glossaire, puis documents collectés en dessous (Victor Ledoux, 2026-09). */
+footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}

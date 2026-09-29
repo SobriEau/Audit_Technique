@@ -58,12 +58,10 @@ façon :
   de ses dix-sept champs survivent, et il cesse d'être répétable. Sa fiche à
   part est retirée du schéma — décision Sacha, 2026-09.
 - **Surpresseur** n'a aucun équivalent : il n'en reste qu'une question oui/non
-  sur la fiche Incendie (`F19`). Il est **conservé**, champs figés depuis la V2,
-  masqué par défaut sur l'accueil du projet et réactivable d'une case.
+  sur la fiche Incendie (`F19`). Conservé un temps (champs figés de la V2), il
+  a été **retiré** à la demande de Victor Ledoux (retour de test, 2026-09).
 
-La migration locale du 2026-08-24 supprimait aussi le surpresseur ; celle
-d'origin/main du 2026-09-14 le conservait. La fusion a retenu la seconde — voir
-`fusion-origin-main.md` à la racine.
+Historique des arbitrages : `MAJ/done/fusion-origin-main.md`.
 
 ### Ce qui s'ajoute aux fiches du classeur
 

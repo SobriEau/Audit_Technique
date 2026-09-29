@@ -1,5 +1,4 @@
-<!-- Entité unique (compteur général, collecte d'eau de pluie) : pas de liste,
-     on affiche directement sa fiche. -->
+<!-- Entité unique : pas de liste, on affiche directement sa fiche. -->
 @if (def && def.single) {
   <app-entity-form />
 }
@@ -12,7 +11,7 @@
   />
 
   <!-- Champs communs à tous les éléments de la page (la zone piscine : pédiluve,
-       nettoyage des plages), en tête, comme arbitré (arbitrages-v3.md, Q10).
+       nettoyage des plages), en tête, comme arbitré (MAJ/done/arbitrages-v3.md, Q10).
        Enregistrés à la volée : la page n'a pas de « Valider ». -->
   @if (preambule) {
     @for (bloc of preambuleSections; track $index) {
@@ -28,6 +27,8 @@
                 [ngModel]="valeurPreambule(f)"
                 (ngModelChange)="changerPreambule(f, $event)"
                 [ngModelOptions]="{ standalone: true }"
+                [autre]="autrePreambule(f)"
+                (autreChange)="changerAutrePreambule(f, $event)"
               />
             }
           </div>
@@ -35,6 +36,20 @@
       </div>
     }
     <h2>{{ def.plural }}</h2>
+  }
+
+  @if (totaux.length) {
+    <div class="totaux">
+      @for (t of totaux; track t.libelle) {
+        <div class="total">
+          <span class="total-valeur">{{ t.valeur }}{{ t.unite ? ' ' + t.unite : '' }}</span>
+          <span class="total-libelle">{{ t.libelle }}</span>
+          @if (t.detail) {
+            <span class="muted total-detail">{{ t.detail }}</span>
+          }
+        </div>
+      }
+    </div>
   }
 
   <p class="muted">
@@ -52,7 +67,7 @@
           <th>Numéro</th>
           @for (c of columns; track c.key) {
             @if (c.key !== 'Numero') {
-              <th>{{ c.label }}</th>
+              <th>{{ columnLabel(c) }}</th>
             }
           }
           <th class="col-actions">Actions</th>
@@ -78,7 +93,7 @@
         }
         @empty {
           <tr>
-            <td [attr.colspan]="columns.length + 1" class="empty-row">
+            <td [attr.colspan]="columns.length + 2" class="empty-row">
               Aucun élément. Cliquez sur « Ajouter — {{ def.singular }} ».
             </td>
           </tr>

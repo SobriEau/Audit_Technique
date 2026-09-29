@@ -59,7 +59,8 @@ const ok = (cond, message) => {
 function valeur(f) {
   if (f.kind === 'boolean') return false;
   if (f.kind === 'number') return 1;
-  if (f.kind === 'select' && f.options && f.options.length) return f.options[0];
+  if (f.kind === 'mesures-debit') return [{ temps: 10, volume: 2 }];
+  if (f.kind === 'select' && f.options && f.options.length) return f.multiple ? [f.options[0]] : f.options[0];
   return 'x';
 }
 
@@ -79,8 +80,16 @@ for (const def of AUDIT_SCHEMA) {
   const blocs = def.blocsConditionnels || [];
   const scenarios = [{ nom: 'aucun bloc conditionnel activé', commandes: {} }];
   for (const b of blocs) {
-    for (const v of b.valeurs) scenarios.push({ nom: `${b.champ} = ${JSON.stringify(v)}`, commandes: { [b.champ]: v }, bloc: b.bloc });
+    // Une commande à choix multiple se saisit en tableau.
+    const multiple = (def.fields.find((f) => f.key === b.champ) || {}).multiple;
+    for (const v of b.valeurs) {
+      scenarios.push({ nom: `${b.champ} = ${JSON.stringify(v)}`, commandes: { [b.champ]: multiple ? [v] : v }, bloc: b.bloc });
+    }
   }
+  const actifPour = (b, commandes) => {
+    const v = commandes[b.champ];
+    return Array.isArray(v) ? v.some((x) => b.valeurs.includes(x)) : b.valeurs.includes(v);
+  };
 
   let exiges = 0;
   for (const s of scenarios) {
@@ -88,14 +97,16 @@ for (const def of AUDIT_SCHEMA) {
     ok(champsManquants(def, item).length === 0, `${def.key} [${s.nom}] : la fiche reste invalidable`);
     // La valeur de commande ne doit pas avoir été écrasée par le remplissage.
     for (const [k, v] of Object.entries(s.commandes)) {
-      ok(item[k] === v, `${def.key} [${s.nom}] : le champ de commande ${k} a été modifié`);
+      ok(JSON.stringify(item[k]) === JSON.stringify(v), `${def.key} [${s.nom}] : le champ de commande ${k} a été modifié`);
     }
 
     // Un bloc inactif n'exige rien.
     if (s.bloc) {
-      const autres = blocs.filter((b) => b.bloc !== s.bloc && !b.valeurs.includes(s.commandes[b.champ]));
+      const autres = blocs.filter((b) => b.bloc !== s.bloc && !actifPour(b, s.commandes));
       for (const autre of autres) {
-        const exigeAilleurs = champsManquants(def, { ...s.commandes }).filter((f) => f.bloc === autre.bloc);
+        const exigeAilleurs = champsManquants(def, { ...s.commandes }).filter(
+          (f) => f.key !== autre.champ && (f.bloc === autre.bloc || f.section === autre.bloc)
+        );
         ok(exigeAilleurs.length === 0, `${def.key} [${s.nom}] : exige ${exigeAilleurs.length} champ(s) du bloc inactif « ${autre.bloc} »`);
       }
     }
@@ -113,7 +124,7 @@ for (const def of AUDIT_SCHEMA) {
   const visiblesMinimal = def.fields.filter((f) => f.kind !== 'photos' && requirementVisible(f.requirement, 'minimal'));
   ok(visiblesMinimal.every((f) => f.requirement === 'obligatoire'), `${def.key} : niveau minimal affiche un champ non obligatoire`);
   ok(
-    champsMasques(def, 'complet', new Set()).length === 0,
+    champsMasques(def, 'complet', new Set(), {}).length === 0,
     `${def.key} : niveau complet masque des champs`
   );
 

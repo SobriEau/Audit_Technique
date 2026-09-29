@@ -2,7 +2,7 @@
 
 Entité `douches_baignoires` — route `#/qte/douches-baignoires`.
 
-54 champ(s), 13 section(s). Colonnes du tableau : `TypeDEquipement`, `Emplacement`.
+54 champ(s), 13 section(s). Colonnes du tableau : `TypeDEquipement`, `Emplacement`, `NombreDEquipementsIdentiques`.
 
 
 ## En tête de fiche (aucune section)
@@ -33,7 +33,7 @@ Entité `douches_baignoires` — route `#/qte/douches-baignoires`.
 |---|---|---|---|
 | `E25` | Type de sol | Facultatif | liste déroulante receveur à l'italienne carrellée à l'italienne pierre naturelle chape béton étanche |
 | `I25` | Adaptée PMR ? | Recommandé | liste déroulante Oui / Non |
-| `E28` | Type d'emetteur | Obligatoire | case à cocher tête de douche ciel de pluie pommeau colonne hydromassante cascade Autre |
+| `E28` | Type d'émetteur | Obligatoire | case à cocher tête de douche ciel de pluie pommeau colonne hydromassante cascade Autre |
 | `I28` | Jets de l'émetteur | Facultatif | liste déroulante aucune pluie laminaire, aéré, brumisé, pulsé/massage, concentré/puissant, multi-jets |
 | `E41` | Présence d'un limiteur de débit | Obligatoire | Liste déroulante O/N |
 | `H41` | Particularités de la douche (encastrée, rideau, parois, siège rabattable, etc.) | Facultatif | Champ libre |

@@ -21,8 +21,27 @@ export interface FormSection {
   /** Intitulé du classeur, ou `null` pour le bloc de tête qui n'en a pas. */
   title: string | null;
   rows: FieldDef[][];
-  /** Le plan de localisation s'insère à la fin de ce bloc. */
+  /** Ce bloc porte la localisation sur plan. */
   withLocator: boolean;
+  /**
+   * Index de la ligne après laquelle la localisation s'insère — celle de
+   * l'emplacement, pour que « Localiser sur le plan » soit à côté du champ
+   * qu'il complète. `-1` : en tête du bloc ; absent : en fin de bloc.
+   */
+  locatorApres?: number;
+}
+
+/** Clé de ce champ si c'est l'emplacement de l'élément, que le classeur nomme parfois autrement. */
+export function champEmplacement(fields: FieldDef[]): FieldDef | undefined {
+  return fields.find((f) => f.key === 'Emplacement') ?? fields.find((f) => f.key.startsWith('Emplacement'));
+}
+
+/**
+ * Clé de stockage de la précision d'une option « Autre » : voisine de celle
+ * du champ, pour que la valeur du champ reste une option de sa liste.
+ */
+export function cleAutre(f: FieldDef): string {
+  return f.key + 'Autre';
 }
 
 /**

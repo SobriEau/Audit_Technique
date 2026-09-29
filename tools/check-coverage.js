@@ -35,6 +35,8 @@ const {
   ENTITIES,
   lireFiche,
   strip,
+  MESURES_DEBIT,
+  ILLUSTRATIONS,
 } = require('./lib/classeur');
 
 const SCHEMA = path.join(__dirname, '..', 'src', 'app', 'models', 'audit-schema.ts');
@@ -123,9 +125,28 @@ for (const ent of ENTITIES) {
     continue;
   }
 
-  const { champs, sections, candidats, priorites } = lireFiche(wb, sheet);
+  const { champs, sections, candidats, priorites, legendes: tablesLegende } = lireFiche(wb, sheet);
   const retenus = new Set((schema[ent.key] || []).map(norm));
   const refsRetenues = new Set(champs.map((c) => c.ref));
+
+  // Cellules exploitées autrement qu'en champ : légendes (« * » puis « Bon
+  // état | définition »), légendes d'illustrations, en-têtes des tableaux de
+  // mesure de débit, lignes d'exemple posées sous un libellé.
+  const lignesConsommees = new Set();
+  for (const lg of tablesLegende) {
+    lignesConsommees.add(lg.r);
+    for (let i = 1; i <= lg.entrees.length; i++) lignesConsommees.add(lg.r + i);
+  }
+  for (const [src, r] of Object.entries(MESURES_DEBIT)) {
+    if (src.startsWith(ent.sheet + '!')) lignesConsommees.add(r);
+  }
+  for (const ill of ILLUSTRATIONS) {
+    if (!ill.champ.startsWith(ent.sheet + '!')) continue;
+    for (const im of ill.images) refsRetenues.add(im.legende);
+  }
+  for (const c of champs) {
+    if (/^exemples?\s*:/i.test(c.below || '')) refsRetenues.add(c.ref.replace(/\d+$/, String(c.r + 1)));
+  }
 
   // ── Étiquettes vues par le lecteur mais absentes du schéma ──────────────
   //
@@ -151,7 +172,9 @@ for (const ent of ENTITIES) {
   // signe une légende ou un commentaire d'auteur.
   const lignesAvecPrio = new Set(priorites.map((p) => p.r));
 
-  const orphelins = candidats.filter((c) => !refsRetenues.has(c.ref) && !retenus.has(norm(c.label)));
+  const orphelins = candidats.filter(
+    (c) => !refsRetenues.has(c.ref) && !retenus.has(norm(c.label)) && !lignesConsommees.has(c.r)
+  );
   const estLegende = (c) =>
     !lignesAvecPrio.has(c.r) && (c.label.length > LONG || lignesLongues.has(c.r));
 

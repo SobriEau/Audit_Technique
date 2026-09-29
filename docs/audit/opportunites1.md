@@ -2,7 +2,7 @@
 
 Entité `opportunites` — route `#/qte/opportunites`.
 
-28 champ(s), 3 section(s). Colonnes du tableau : `Emplacement`.
+28 champ(s), 3 section(s). Colonnes du tableau : `Emplacement`, `OpportunitesADocumenter`.
 
 
 ## En tête de fiche (aucune section)

@@ -41,9 +41,10 @@ export class DataService {
    *
    * Indispensable à la reprise des audits créés avant l'introduction de `Id` :
    * sans cela, un robinet existant n'aurait pas d'identité et deviendrait
-   * inaccessible par son URL de fiche.
+   * inaccessible par son URL de fiche. Convertit au passage en liste une
+   * entité devenue répétable (le compteur général).
    *
-   * @returns vrai si au moins un identifiant a été attribué.
+   * @returns vrai si au moins un identifiant a été attribué ou une entité convertie.
    */
   private ensureEntityIds(): boolean {
     let changed = false;
@@ -52,7 +53,21 @@ export class DataService {
 
     for (const def of AUDIT_SCHEMA) {
       if (def.single) continue;
-      const list = qte[def.key];
+      let list = qte[def.key];
+
+      // Entité devenue répétable : le compteur général était une fiche unique,
+      // rangée en objet, jusqu'en 2026-09. Sa saisie devient le premier
+      // élément de la liste plutôt que de disparaître de l'écran.
+      if (list && typeof list === 'object' && !Array.isArray(list)) {
+        const ancien = list as Record<string, unknown>;
+        const saisi = Object.entries(ancien).some(
+          ([k, v]) => k !== 'Photos' && v !== null && v !== undefined && v !== ''
+        ) || (Array.isArray(ancien['Photos']) && ancien['Photos'].length > 0);
+        list = saisi ? [{ ...ancien, Numero: ancien['Numero'] ?? '1' }] : [];
+        qte[def.key] = list;
+        changed = true;
+      }
+
       if (!Array.isArray(list)) continue;
       for (const item of list as AuditEntity[]) {
         if (item && typeof item === 'object' && !item.Id) {

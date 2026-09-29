@@ -22,7 +22,7 @@
  * `priority` affichée en pastille, un `requirement` affiché en badge neutre et
  * pilotant la validation — portant exactement les mêmes valeurs, tirées des
  * mêmes cellules. Un champ en montrait alors deux à la suite. Voir
- * `fusion-origin-main.md`.
+ * `MAJ/done/fusion-origin-main.md`.
  *
  * Un champ sans `requirement` (le classeur ne dit rien, ou l'onglet a disparu)
  * n'affiche aucune pastille, est traité comme `facultatif` pour le filtrage, et
@@ -41,7 +41,40 @@ export type FieldKind =
   | 'boolean' // Oui / Non
   | 'entity-ref' // référence vers un autre élément de l'audit
   | 'photos' // galerie (app-photo-editor)
-  | 'plan'; // localisation sur plan (app-plan-locator)
+  | 'plan' // localisation sur plan (app-plan-locator)
+  | 'mesures-debit'; // trois essais temps / volume, débit calculé, mesure au bol
+
+/**
+ * Définition d'un terme de légende — « Bon état : lisible, pas de corrosion… ».
+ * Le classeur les pose sous les champs « Etat général », « Potentiel
+ * technique »… ; elles sont affichées sous le champ.
+ */
+export interface LegendEntry {
+  terme: string;
+  definition: string;
+}
+
+/** Un essai du tableau de mesure de débit. */
+export interface MesureDebit {
+  /** Durée de l'essai, en secondes. */
+  temps?: number | null;
+  /** Volume recueilli, en litres. */
+  volume?: number | null;
+  /** Débit lu directement au bol, en L/min. */
+  direct?: number | null;
+}
+
+/**
+ * Débit calculé d'un essai, en L/min : volume (L) ÷ temps (s) × 60.
+ *
+ * La note du classeur écrit « volume/temps/60 », ce qui donnerait des litres
+ * par seconde divisés encore par soixante : c'est bien × 60 qu'il faut.
+ */
+export function debitCalcule(m: MesureDebit | null | undefined): number | null {
+  if (!m || !m.temps || m.volume === null || m.volume === undefined) return null;
+  if (m.temps <= 0) return null;
+  return Math.round((m.volume / m.temps) * 60 * 100) / 100;
+}
 
 export interface FieldDef {
   /** Clé de stockage dans le JSON de l'audit. Ne jamais la renommer à la légère. */
@@ -51,6 +84,16 @@ export interface FieldDef {
 
   /** Valeurs autorisées, pour `select`. Issues de `value-lists.ts`. */
   options?: readonly string[];
+
+  /**
+   * Plusieurs réponses possibles (« à cocher » dans le classeur). La valeur
+   * stockée est alors un tableau de chaînes ; une chaîne seule, saisie avant
+   * le passage au choix multiple, est relue comme un tableau d'un élément.
+   */
+  multiple?: boolean;
+
+  /** Légende des termes proposés, reprise du classeur. */
+  legend?: readonly LegendEntry[];
 
   /** Unité affichée à côté d'un `number` (L/min, mm, m3…). */
   unit?: string;
@@ -94,7 +137,10 @@ export interface FieldDef {
   /** Niveau d'exigence du classeur. Voir `FieldRequirement`. */
   requirement?: FieldRequirement;
 
-  /** Aide affichée sous le champ, reprise de la note du classeur. */
+  /**
+   * Aide affichée sous le champ : les indications que le classeur écrit entre
+   * parenthèses à la fin du libellé (« tourne sans débit, bloqué, bruit… »).
+   */
   help?: string;
 
   /** Cellule d'origine dans `audit_technique.xlsx`, pour retrouver la source. */
@@ -112,13 +158,10 @@ export interface FieldDef {
  * du compteur général. Chaque bloc a ses champs obligatoires — et un lave-linge
  * ne peut pas remplir ceux de l'autolaveuse.
  *
- * Aujourd'hui, seule la **validation** en tient compte : un champ obligatoire
- * n'est exigé que si son bloc est actif. Masquer les blocs inactifs est
- * l'affichage conditionnel, reporté à une passe ultérieure (`arbitrages-v3.md`,
- * Q17) ; cette table en est le point de départ.
+ * Un bloc inactif est **masqué** à l'écran et **dispensé de validation**.
  */
 export interface BlocConditionnel {
-  /** Intitulé du bloc, tel que `FieldDef.bloc` le porte. */
+  /** Intitulé du bloc : `FieldDef.bloc`, ou à défaut `FieldDef.section`. */
   bloc: string;
   /** Clé du champ qui commande le bloc. */
   champ: string;
@@ -137,8 +180,8 @@ export interface EntityDef {
   plural: string;
 
   /**
-   * Entité unique (une seule fiche, pas de liste) : compteur général,
-   * collecte d'eau de pluie.
+   * Entité unique (une seule fiche, pas de liste). Un seul cas depuis que le
+   * compteur général est répétable : la zone piscine.
    */
   single?: boolean;
 
@@ -157,8 +200,8 @@ export interface EntityDef {
 
   /**
    * L'onglet de cette entité a disparu du classeur ; ses champs sont figés
-   * depuis la dernière version qui la décrivait. Un seul cas : le surpresseur,
-   * conservé depuis la V2 et masqué par défaut sur l'accueil du projet.
+   * depuis la dernière version qui la décrivait (`CHAMPS_FIGES`). Aucun cas
+   * depuis le retrait du surpresseur (2026-09).
    */
   horsClasseur?: boolean;
 
@@ -167,6 +210,9 @@ export interface EntityDef {
 
   /** Clés de champs affichées en colonnes de la page liste. */
   listColumns: string[];
+
+  /** Intitulé de colonne remplaçant le libellé du champ, trop long pour un en-tête. */
+  listColumnLabels?: Record<string, string>;
 
   fields: FieldDef[];
 }

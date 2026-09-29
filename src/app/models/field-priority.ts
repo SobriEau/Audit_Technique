@@ -8,7 +8,7 @@ import { FieldRequirement } from './field.models';
  * (`FIELD_PRIORITY`, une seule entrée : `Emplacement: 'haute'`) en attendant que
  * le classeur fournisse l'information — ce qu'il fait depuis la V3, pour chaque
  * question. Garder les deux affichait un même champ avec « Priorité : haute »
- * **et** « Obligatoire » ; voir `fusion-origin-main.md`.
+ * **et** « Obligatoire » ; voir `MAJ/done/fusion-origin-main.md`.
  *
  * Palette volontairement en dégradé d'orange, du plus léger au plus appuyé —
  * facultatif, recommandé, obligatoire — jamais rouge ni vert : une exigence ne

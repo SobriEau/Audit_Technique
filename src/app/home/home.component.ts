@@ -63,7 +63,7 @@ export class HomeComponent implements OnInit {
    * Entités hors classeur (le surpresseur) : aucun usage de l'eau ne les
    * commande, elles s'affichent d'une case à part. Leur onglet a disparu en V3
    * mais origin/main les a conservées, masquées par défaut — décision reprise
-   * à la fusion (voir `fusion-origin-main.md`).
+   * à la fusion (voir `MAJ/done/fusion-origin-main.md`).
    */
   readonly horsClasseur: EntityDef[] = AUDIT_SCHEMA.filter((e) => e.horsClasseur);
 

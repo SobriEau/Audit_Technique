@@ -142,6 +142,11 @@ const SECTION_FILLS_N1 = new Set([9, 13]);
  */
 const SECTION_FIXES = {
   'Etat lors de lavisite': 'Etat lors de la visite',
+  // Les deux blocs de l'onglet Autre portent leurs exemples dans le titre.
+  // Le titre sert aussi de nom de bloc conditionnel, commandé par « Choix » :
+  // les exemples passent en aide des champs ajoutés (`CHAMPS_AJOUTES`).
+  "Autre information (traitement de l'eau, adoucisseurs, fuites, CTA adiabatique, …)": 'Autre information',
+  "Autre utilisation de l'eau (procédés particuliers,…)": "Autre utilisation de l'eau",
   // Le même bloc s'appelle « Utilisation » sur le lave-linge et le bassin,
   // « Utilisations » sur cinq autres fiches. Ce sont des titres affichés :
   // deux graphies donnent deux blocs différents pour la même chose.
@@ -163,6 +168,34 @@ const SECTION_FIXES = {
  */
 const LABEL_FIXES = {
   'Dispoisitif relié au GTB/GTC ?': 'Dispositif relié au GTB/GTC ?',
+  // Signalé par Victor Ledoux (2026-09). La clé d'origine est figée dans
+  // `KEY_OVERRIDES` (gen-schema.js) : des audits d'essai circulent.
+  "Présence d'une réservie incendie ?": "Présence d'une réserve incendie ?",
+  // Sans effet sur la clé, qui ignore les accents (`TypeDEmetteur`).
+  "Type d'emetteur": "Type d'émetteur",
+};
+
+/**
+ * Intertitres que le classeur ne pose pas, ajoutés à la main.
+ *
+ * Sur la fiche Sous-compteur, le titre vertical « Localisation » couvre aussi
+ * le type, l'année de pose, la classe métrologique et le propriétaire : il
+ * manque la rubrique « Caractéristiques » que la fiche Compteur général porte
+ * (G13). Demandé par Victor Ledoux (2026-09).
+ */
+const SECTIONS_AJOUTEES = {
+  'Sous-compteur1': [{ r: 18, ref: 'E18', titre: 'Caractéristiques', niveau: 2 }],
+};
+
+/**
+ * Légendes sans astérisque de tête.
+ *
+ * Une légende se reconnaît d'ordinaire à sa cellule « * » ou « * Etat … »,
+ * suivie de lignes « terme | définition ». Celle de l'exigence de propreté
+ * (Appareils de lavage) n'a qu'un titre.
+ */
+const LEGENDES_AJOUTEES = {
+  'Appareils de lavage': ['E166'],
 };
 
 /**
@@ -170,7 +203,7 @@ const LABEL_FIXES = {
  *
  * Un champ n'est retenu que s'il porte une note ou un niveau de priorité. Deux
  * cellules du classeur n'ont ni l'un ni l'autre et sont pourtant de vraies
- * questions — arbitré avec l'auteur du projet, voir `arbitrages-v3.md`.
+ * questions — arbitré avec l'auteur du projet, voir `MAJ/done/arbitrages-v3.md`.
  *
  * Chaque entrée porte sa cellule d'origine : elle reste vérifiable dans le
  * classeur, et disparaîtra d'elle-même si une version future la décrit
@@ -197,42 +230,92 @@ const CHAMPS_AJOUTES = {
       requirement: null,
     },
   ],
+  // Oublié du classeur, demandé par Victor Ledoux (2026-09) : le traçage est
+  // un type de maintien en température du réseau ECS, à côté du bouclage.
+  // Aucune exigence n'a été donnée : le champ n'affiche donc pas de pastille.
+  'Réseaux ECS': [
+    {
+      ref: 'F30',
+      r: 30,
+      c: 6,
+      label: "Présence d'un traçage",
+      note: 'Liste déroulante : oui / non / ne sait pas',
+      requirement: null,
+    },
+  ],
+  // Le bloc « Autre information » n'avait aucun champ : le classeur n'y pose
+  // qu'une zone de saisie fusionnée, sans libellé (note M29). Le bloc « Autre
+  // utilisation » était dans le même cas (M46). Signalé par Victor Ledoux.
+  Autre1: [
+    {
+      ref: 'F23',
+      r: 23,
+      c: 6,
+      label: "Autre information (traitement de l'eau, adoucisseurs, fuites, CTA adiabatique, …)",
+      kind: 'textarea',
+      requirement: null,
+    },
+    {
+      ref: 'F40',
+      r: 40,
+      c: 6,
+      label: "Autre utilisation de l'eau (procédés particuliers,…)",
+      kind: 'textarea',
+      requirement: null,
+    },
+  ],
 };
 
 // ── Entités, dans l'ordre du classeur ──────────────────────────────────────
 //
-// Deux entités de la V2 n'ont plus d'onglet en V3, et ne sont pas traitées de
-// la même façon :
+// Deux entités de la V2 n'ont plus d'onglet en V3 :
 //
 //  - **Réducteur de pression** est replié dans la fiche « Compteur général »,
 //    en bloc conditionnel (`H43` « Présence d'un réducteur de pression à
 //    proximité ? », note `H44` : « Si oui, afficher les champs du dessous »).
-//    Six de ses dix-sept champs survivent ; il cesse d'être répétable. La fiche
-//    à part est retirée du schéma plutôt que dupliquée — décision Sacha,
-//    2026-09.
+//    Six de ses dix-sept champs survivent. La fiche à part est retirée du
+//    schéma plutôt que dupliquée — décision Sacha, 2026-09.
 //  - **Surpresseur** n'a aucun équivalent : il n'en reste qu'une question
-//    oui/non sur la fiche Incendie (`F19`). Il est **conservé** avec ses champs
-//    figés depuis la V2 (`CHAMPS_FIGES`), masqué par défaut sur l'accueil du
-//    projet et réactivable d'une case.
+//    oui/non sur la fiche Incendie (`F19`). La fusion du 2026-09-16 l'avait
+//    conservé, masqué par défaut ; il est **retiré** à la demande de Victor
+//    Ledoux (retour de test, 2026-09) : « on l'a finalement supprimé ». Les
+//    données éventuellement saisies restent dans `Qte.surpresseurs`, que plus
+//    rien n'affiche.
 //
-// La migration locale du 2026-08-24 retirait aussi le surpresseur ; celle
-// d'origin/main (2026-09-14) le conservait. La fusion retient la seconde, plus
-// récente et réversible : conserver ne perd rien. Voir `fusion-origin-main.md`.
+// Le **compteur général** n'est plus une fiche unique : un établissement peut
+// en avoir plusieurs (Victor Ledoux, 2026-09). Il passe en liste, comme les
+// sous-compteurs ; `DataService` convertit l'objet des audits antérieurs en
+// liste d'un élément.
+//
+// `blocs` déclare les rubriques qui ne concernent l'élément que sous condition
+// — masquées à l'écran et dispensées de validation tant que la condition n'est
+// pas remplie. `bloc` désigne un intitulé de premier niveau (`FieldDef.bloc`)
+// ou une section (`FieldDef.section`) ; le champ qui commande n'y est jamais
+// soumis lui-même.
 //
 // `cols` ne contient pas `Numero` : `entity-list` affiche déjà cette colonne
 // en dur, et la déclarer ici la faisait chercher parmi les champs, en vain.
+// `colLabels` remplace l'intitulé d'une colonne quand celui du champ est trop
+// long pour un en-tête de tableau.
 const ENTITIES = [
   {
-    sheet: 'Compteur général', key: 'releve_compteur_general', route: 'compteur-general', singular: 'Compteur général', plural: 'Compteur général', single: true, cols: [],
+    sheet: 'Compteur général', key: 'releve_compteur_general', route: 'compteur-general', singular: 'Compteur général', plural: 'Compteurs généraux', cols: ['Emplacement', 'Type', 'Teletransmission'],
     blocs: [{ bloc: 'Réducteur de pression', champSource: 'H43', valeurs: [true, 'Oui'], source: 'Compteur général!H44' }],
   },
-  { sheet: 'Surpresseur1', key: 'surpresseurs', route: 'surpresseurs', singular: 'Surpresseur', plural: 'Surpresseurs', horsClasseur: true, cols: ['Emplacement', 'AnneeDePose'] },
   { sheet: 'Sous-compteur1', key: 'sous_compteurs', route: 'sous-compteurs', singular: 'Sous-compteur', plural: 'Sous-compteurs', cols: ['Emplacement', 'AnneeDePose', 'Teletransmission'] },
-  { sheet: 'Réseaux ECS', key: 'reseaux_eau_chaude_sanitaire', route: 'reseaux-ecs', singular: 'Réseau ECS', plural: 'Réseaux ECS', cols: ['Emplacement', 'MateriauPrincipalDesCanalisations', 'Bouclage'] },
+  { sheet: 'Réseaux ECS', key: 'reseaux_eau_chaude_sanitaire', route: 'reseaux-ecs', singular: 'Réseau ECS', plural: 'Réseaux ECS', cols: ['Emplacement', 'MateriauPrincipalDesCanalisations', 'Bouclage'],
+    // « La sous-partie bouclage ne doit apparaître que si la case oui a été
+    // cochée dans la partie bouclage. Idem pour tous les champs de la partie
+    // bouclage » (Victor Ledoux, 2026-09). Aucune note du classeur ne l'écrit.
+    blocs: [
+      { bloc: 'Bouclage du réseau ECS', champSource: 'F51', valeurs: ['Oui'], source: 'retour de test V. Ledoux, 2026-09' },
+      { bloc: 'Sous-partie bouclage : circulateurs', champSource: 'F51', valeurs: ['Oui'], source: 'retour de test V. Ledoux, 2026-09' },
+    ],
+  },
   { sheet: 'Production Stockage ECS', key: 'production_stockage_ecs', route: 'production-stockage-ecs', singular: 'Production / Stockage ECS', plural: 'Production / Stockage ECS', cols: ['Emplacement', 'TypeDeSystemeDeProduction'] },
   { sheet: 'Robinets', key: 'robinets', route: 'robinets', singular: 'Robinet', plural: 'Robinets', cols: ['Emplacement', 'Utilisation1', 'NombreDEquipementsIdentiques'] },
   {
-    sheet: 'Douche-baignoire1', key: 'douches_baignoires', route: 'douches-baignoires', singular: 'Douche / Baignoire', plural: 'Douches et baignoires', cols: ['TypeDEquipement', 'Emplacement'],
+    sheet: 'Douche-baignoire1', key: 'douches_baignoires', route: 'douches-baignoires', singular: 'Douche / Baignoire', plural: 'Douches et baignoires', cols: ['TypeDEquipement', 'Emplacement', 'NombreDEquipementsIdentiques'],
     // Le bloc « Robinet » n'y figure pas : « Partie affichée systématiquement,
     // indépendamment du choix de l'équipement » (note D104).
     blocs: [
@@ -254,7 +337,13 @@ const ENTITIES = [
     ],
   },
   { sheet: 'Incendie', key: 'incendie', route: 'incendie', singular: 'Incendie', plural: 'Incendie', cols: ['Emplacement'] },
-  { sheet: 'Extérieur1', key: 'espace_vert_exterieur', route: 'espaces-exterieurs', singular: 'Espace extérieur', plural: 'Espaces extérieurs', cols: ['EmplacementDeLEspaceExterieur', 'TypeDeGestionDesEaux', 'SurfaceArrosee'] },
+  { sheet: 'Extérieur1', key: 'espace_vert_exterieur', route: 'espaces-exterieurs', singular: 'Espace extérieur', plural: 'Espaces extérieurs', cols: ['EmplacementDeLEspaceExterieur', 'TypeDeGestionDesEaux', 'SurfaceArrosee', 'Utilisation'],
+    colLabels: { EmplacementDeLEspaceExterieur: 'Emplacement', Utilisation: 'Surfaces nettoyées' },
+    blocs: [
+      { bloc: 'Arrosage', champSource: 'I28', valeurs: ['arrosage'], source: 'Extérieur1!I29' },
+      { bloc: 'Nettoyage', champSource: 'I28', valeurs: ['nettoyage'], source: 'Extérieur1!I29' },
+    ],
+  },
   { sheet: 'Bassin1', key: 'piscines', route: 'piscines', singular: 'Bassin', plural: 'Piscines', cols: ['Emplacement', 'VolumeDuBassin'], preambule: 'zone_piscine' },
   /**
    * Exception : l'onglet « Liste Piscines » n'est pas qu'une page de liste.
@@ -270,44 +359,104 @@ const ENTITIES = [
    */
   { sheet: 'Liste Piscines', key: 'zone_piscine', route: 'piscines-zone', singular: 'Zone piscine', plural: 'Zone piscine', single: true, embedded: 'piscines', cols: [] },
   { sheet: 'Toiture1', key: 'toitures', route: 'toitures', singular: 'Toiture', plural: 'Toitures', cols: ['Emplacement', 'SurfaceDeToiture', 'ToitureAccessible'] },
-  { sheet: 'Structure1', key: 'structure', route: 'structure', singular: 'Structure', plural: 'Structures', cols: ['Emplacement'] },
+  {
+    sheet: 'Structure1', key: 'structure', route: 'structure', singular: 'Structure', plural: 'Structures', cols: ['Type', 'Emplacement'],
+    blocs: [
+      { bloc: 'Structure du bâtiment et réseaux', champSource: 'I8', valeurs: ['Structure et réseaux'], source: 'Structure1!I9' },
+      { bloc: 'Espace technique aménageable', champSource: 'I8', valeurs: ['Espace technique aménageable'], source: 'Structure1!I9' },
+    ],
+  },
   { sheet: 'Ventilation1', key: 'ventilation_batiment', route: 'ventilation', singular: 'Ventilation', plural: 'Ventilation', cols: ['SystemeDeVentilation', 'EmplacementDuSysteme'] },
-  { sheet: 'Opportunités1', key: 'opportunites', route: 'opportunites', singular: 'Opportunité', plural: 'Opportunités', cols: ['Emplacement'] },
-  { sheet: 'Autre1', key: 'autre', route: 'autre', singular: 'Autre', plural: 'Autres', cols: ['Choix', 'Nom', 'Emplacement'] },
+  {
+    sheet: 'Opportunités1', key: 'opportunites', route: 'opportunites', singular: 'Opportunité', plural: 'Opportunités', cols: ['Emplacement', 'OpportunitesADocumenter'],
+    blocs: [
+      { bloc: 'Utilisation des eaux de pluie', champSource: 'I11', valeurs: ['Eau de pluie'], source: 'Opportunités1!I12' },
+      { bloc: 'Recyclage des eaux ménagères et de lavage', champSource: 'I11', valeurs: ['Eaux ménagères et de lavage'], source: 'Opportunités1!I12' },
+      { bloc: 'Collecte des urines', champSource: 'I11', valeurs: ['Urines'], source: 'Opportunités1!I12' },
+    ],
+  },
+  {
+    sheet: 'Autre1', key: 'autre', route: 'autre', singular: 'Autre', plural: 'Autres', cols: ['Choix', 'Nom', 'Emplacement'],
+    blocs: [
+      { bloc: 'Autre information', champSource: 'F8', valeurs: ['Autre information'], source: 'Autre1!F9' },
+      { bloc: "Autre utilisation de l'eau", champSource: 'F8', valeurs: ["Autre utilisation de l'eau"], source: 'Autre1!F9' },
+    ],
+  },
 ];
 
 /**
  * Champs des entités dont l'onglet a disparu du classeur sans équivalent.
  *
- * Copie figée du dernier schéma généré depuis un onglet réel (V2, 2026-08),
- * reprise d'origin/main (`LEGACY_FIELD_LINES`). Aucun ne porte de
- * `requirement` : la notion n'existait pas dans ce classeur-là. Les clés sont
- * écrites en toutes lettres, et non dérivées des libellés — elles doivent
- * rester celles sous lesquelles d'éventuelles données ont été saisies.
- *
- * Si un onglet réapparaît un jour sous ce nom, il reprend la main
- * automatiquement et ce repli devient inutile.
+ * Une entité marquée `horsClasseur` dans `ENTITIES` n'est conservée que si ses
+ * champs sont figés ici, par clé de stockage écrite en toutes lettres. Le seul
+ * cas, le surpresseur (champs de la V2), a été retiré en 2026-09 à la demande
+ * de Victor Ledoux ; le mécanisme reste pour un prochain onglet disparu.
  */
-const CHAMPS_FIGES = {
-  surpresseurs: [
-    { key: 'Emplacement', label: 'Emplacement', kind: 'text', row: 8 },
-    { key: 'ConditionDAcces', label: "Condition d'accès", kind: 'text', row: 12 },
-    { key: 'Marque', label: 'Marque', kind: 'text', row: 15 },
-    { key: 'Modele', label: 'Modèle', kind: 'text', row: 15 },
-    { key: 'Type', label: 'Type', kind: 'text', row: 18 },
-    { key: 'DiametreNominal', label: 'Diamètre Nominal', kind: 'number', row: 18, unit: 'mm' },
-    { key: 'AnneeDePose', label: 'Année de pose', kind: 'number', row: 21 },
-    { key: 'PressionAfficheeSiManometre', label: 'Pression affichée si manomètre', kind: 'number', row: 21, unit: 'bar' },
-    { key: 'PressionDeConsigneActuelle', label: 'Pression de consigne actuelle', kind: 'number', row: 24, unit: 'bar' },
-    { key: 'PlageDeReglageDeLa', label: 'Plage de réglage de la pression', kind: 'number', row: 24, unit: 'bar' },
-    { key: 'EtatGeneral', label: 'Etat général', kind: 'select', row: 27, options: ['Bon', 'Moyen', 'Mauvais'] },
-    { key: 'DateDerniereMaintenance', label: 'Date dernière maintenance', kind: 'text', row: 27 },
-    { key: 'OrganesDeReseauAProximite', label: 'Organes de réseau à proximité', kind: 'text', row: 30 },
-    { key: 'DysfonctionnementsObserves', label: 'Dysfonctionnements observés', kind: 'textarea', row: 33 },
-    { key: 'DispositifRelieAuGtbGtc', label: 'Dispositif relié au GTB/GTC ?', kind: 'boolean', row: 36 },
-    { key: 'Remarques', label: 'Remarques', kind: 'textarea', row: 39 },
-  ],
+const CHAMPS_FIGES = {};
+
+/**
+ * Tableaux de mesure de débit : trois essais « temps / volume », dont le débit
+ * se calcule, et une mesure directe au bol. Le classeur les dessine sous un
+ * intitulé (la cellule indiquée), avec une ligne d'en-têtes puis trois lignes
+ * numérotées. Le générateur n'en voyait que la première ligne, en quatre champs
+ * isolés : une seule mesure possible (Victor Ledoux, 2026-09).
+ *
+ * L'intitulé devient un champ `mesures-debit` ; les champs lus sur la ligne
+ * d'en-têtes sont écartés.
+ */
+const MESURES_DEBIT = {
+  'Robinets!F39': 40,
+  'Douche-baignoire1!E44': 45,
+  'Douche-baignoire1!E83': 84,
 };
+
+/**
+ * Par champ (cellule de son libellé), les images qui l'illustrent : cellule
+ * d'ancrage du coin haut-gauche de l'image, et cellule de sa légende.
+ */
+const ILLUSTRATIONS = [
+  {
+    champ: 'Douche-baignoire1!E28', // Type d'émetteur — douche
+    images: [
+      { ancre: 'E30', legende: 'E34' },
+      { ancre: 'F30', legende: 'G34' },
+      { ancre: 'G35', legende: 'H39' },
+      { ancre: 'E36', legende: 'E40' },
+    ],
+  },
+  { champ: 'Douche-baignoire1!I28', images: [{ ancre: 'I31', legende: 'I30' }] }, // Jets — douche
+  { champ: 'Douche-baignoire1!I72', images: [{ ancre: 'H75', legende: 'I74' }] }, // Jets — baignoire
+  {
+    champ: 'WC1!F18', // Type de toilette ou urinoir
+    images: [
+      { ancre: 'F20', legende: 'F25' },
+      { ancre: 'G20', legende: 'H25' },
+      { ancre: 'I20', legende: 'J25' },
+      { ancre: 'K20', legende: 'L25' },
+      { ancre: 'F26', legende: 'F31' },
+      { ancre: 'G26', legende: 'H31' },
+      { ancre: 'I26', legende: 'J31' },
+    ],
+  },
+  {
+    champ: 'Toiture1!F35', // Type de gouttières
+    images: [
+      { ancre: 'F39', legende: 'F43' },
+      { ancre: 'G39', legende: 'H43' },
+      { ancre: 'I38', legende: 'I43' },
+      { ancre: 'J38', legende: 'K43' },
+    ],
+  },
+  {
+    champ: 'Toiture1!F45', // Type de chéneaux
+    images: [
+      { ancre: 'F49', legende: 'F54' },
+      { ancre: 'G50', legende: 'H54' },
+      { ancre: 'I48', legende: 'J54' },
+      { ancre: 'K50', legende: 'L54' },
+    ],
+  },
+];
 
 /**
  * Certaines notes ne portent pas de signature d'auteur et commencent
@@ -421,7 +570,39 @@ function lireFiche(wb, sheet) {
     candidats.push({ ref: x.ref, r: x.r, c: x.c, label: x.v });
   }
 
+  for (const s of SECTIONS_AJOUTEES[sheet.name] || []) {
+    if (!sections.some((x) => x.r === s.r)) sections.push({ ...s });
+  }
   sections.sort((a, b) => a.r - b.r);
+
+  // ── Légendes ────────────────────────────────────────────────────────────
+  //
+  // « Bon état / Etat moyen / Mauvais état », « fort / moyen / faible » : le
+  // classeur les définit dans un petit tableau placé sous les champs, annoncé
+  // par une cellule « * » (ou « * Etat compteur ») et renvoyé par l'astérisque
+  // du libellé. Chaque ligne porte un terme et, à sa droite, sa définition.
+  // Leur rattachement aux champs se fait dans `gen-schema.js`, qui connaît les
+  // options de chaque champ.
+  const cellule = new Map(cellules.map((x) => [x.r + ':' + x.c, x]));
+  const departsLegende = cellules.filter(
+    (x) =>
+      x.r > enTete &&
+      (/^\*/.test(x.v) || (LEGENDES_AJOUTEES[sheet.name] || []).includes(x.ref))
+  );
+  const legendes = [];
+  for (const d of departsLegende) {
+    const entrees = [];
+    for (let r = d.r + 1; ; r++) {
+      const terme = cellule.get(r + ':' + d.c);
+      const definition = cellules.find((x) => x.r === r && x.c > d.c);
+      if (!terme || !definition) break;
+      entrees.push({ terme: terme.v, definition: definition.v });
+    }
+    // « * Le cas échéant, précisez le débit… » (WC) : une consigne, pas une
+    // légende — aucune ligne « terme | définition » ne la suit.
+    if (entrees.length < 2) continue;
+    legendes.push({ r: d.r, c: d.c, ref: d.ref, titre: d.v.replace(/^\*\s*/, ''), entrees });
+  }
 
   // Fenêtre horizontale d'un candidat : de sa colonne à celle du candidat
   // suivant sur la même ligne. C'est dans cette fenêtre que se trouvent sa
@@ -552,6 +733,7 @@ function lireFiche(wb, sheet) {
       requirement: a.requirement || null,
       ...rubriqueDe(a.r),
       ajoute: true,
+      ...(a.kind ? { kind: a.kind } : {}),
     });
     if (a.requirement) {
       const m = priorites.find((p) => !p.pris && p.niveau === a.requirement && Math.abs(p.r - a.r) <= 1);
@@ -561,7 +743,7 @@ function lireFiche(wb, sheet) {
 
   champs.sort((a, b) => a.r - b.r || a.c - b.c);
 
-  return { enTete, sections, champs, priorites, candidats };
+  return { enTete, sections, champs, priorites, candidats, legendes };
 }
 
 module.exports = {
@@ -576,8 +758,12 @@ module.exports = {
   SECTION_FILLS,
   SECTION_FIXES,
   LABEL_FIXES,
+  SECTIONS_AJOUTEES,
+  LEGENDES_AJOUTEES,
   CHAMPS_AJOUTES,
   CHAMPS_FIGES,
+  MESURES_DEBIT,
+  ILLUSTRATIONS,
   IGNORE,
   MAX_LABEL_LEN,
   NOTE_MARKER_RE,

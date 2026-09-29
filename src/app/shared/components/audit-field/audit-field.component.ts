@@ -1,6 +1,7 @@
-import { Component, Input, forwardRef, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, forwardRef, OnInit } from '@angular/core';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { FieldDef } from '../../../models/field.models';
+import { FieldDef, MesureDebit, debitCalcule } from '../../../models/field.models';
+import { ILLUSTRATIONS, Illustration } from '../../../models/illustrations';
 import { DataService } from '../../../core/services/data.service';
 import { AuditEntity } from '../../../models/data.models';
 import { RichEditorComponent } from '../rich-editor/rich-editor.component';
@@ -32,6 +33,12 @@ export const RADIO_THRESHOLD = 4;
 
 /** Compteur pour donner un nom unique à chaque groupe de boutons radio. */
 let uniqueId = 0;
+
+/** Nombre d'essais du tableau de mesure de débit, comme dans le classeur. */
+const NB_MESURES = 3;
+
+/** Une option « Autre », « autre », « Autre (préciser dans remarques) »… */
+const AUTRE_RE = /^autres?\b/i;
 
 /** Comparaison insensible à la casse et aux accents : « melangeur » trouve « Mélangeur ». */
 function normalize(s: string): string {
@@ -72,6 +79,15 @@ function normalize(s: string): string {
 export class AuditFieldComponent implements ControlValueAccessor, OnInit {
   @Input({ required: true }) def!: FieldDef;
 
+  /**
+   * Précision saisie quand « Autre » est choisi. Stockée par le formulaire
+   * sous une clé voisine (`<clé>Autre`), et non dans la valeur du champ : la
+   * valeur reste une option de la liste, que la liste des éléments et les
+   * blocs conditionnels savent lire.
+   */
+  @Input() autre: string | null = null;
+  @Output() autreChange = new EventEmitter<string | null>();
+
   value: unknown = null;
 
   /** Choix normalisés du champ, tous types confondus. */
@@ -96,10 +112,15 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
    * curée à la main, un badge neutre tiré du classeur — pour la même donnée.
    * Le badge neutre visait à ne pas confondre exigence et validation ; le rouge
    * de l'encadré des champs manquants s'en charge, et l'orange ne se lit pas
-   * comme une erreur. Voir `fusion-origin-main.md`.
+   * comme une erreur. Voir `MAJ/done/fusion-origin-main.md`.
    */
   get requirementLabel(): string | null {
     return this.def.requirement ? REQUIREMENT_LABEL[this.def.requirement] : null;
+  }
+
+  /** Images du classeur qui expliquent les choix proposés (types de WC…). */
+  get illustrations(): Illustration[] {
+    return (this.def.source && ILLUSTRATIONS[this.def.source]) || [];
   }
 
   // ── État de la liste filtrable ───────────────────────────────────────────
@@ -128,7 +149,94 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
   // ── Choix : radio ou liste filtrable ─────────────────────────────────────
 
   get isChoice(): boolean {
-    return this.def.kind === 'boolean' || this.def.kind === 'select';
+    return this.def.kind === 'boolean' || (this.def.kind === 'select' && !this.def.multiple);
+  }
+
+  // ── Choix multiple : cases à cocher ──────────────────────────────────────
+
+  get isMulti(): boolean {
+    return this.def.kind === 'select' && !!this.def.multiple;
+  }
+
+  /**
+   * Valeurs cochées. Une chaîne seule — saisie quand le champ n'acceptait
+   * qu'une réponse — est relue comme une case cochée, pas perdue.
+   */
+  get coches(): string[] {
+    const v = this.value;
+    if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string');
+    return typeof v === 'string' && v ? [v] : [];
+  }
+
+  estCoche(c: Choice): boolean {
+    return this.coches.includes(c.value as string);
+  }
+
+  basculer(c: Choice): void {
+    const actuelles = this.coches;
+    const v = c.value as string;
+    const suivantes = actuelles.includes(v) ? actuelles.filter((x) => x !== v) : [...actuelles, v];
+    this.value = suivantes.length ? suivantes : null;
+    this.onChangeFn(this.value);
+    this.onTouchedFn();
+  }
+
+  /** Valeurs cochées absentes de la liste : conservées et signalées. */
+  get orphelinsMulti(): string[] {
+    if (!this.isMulti) return [];
+    return this.coches.filter((v) => !this.def.options?.includes(v));
+  }
+
+  // ── Option « Autre » ─────────────────────────────────────────────────────
+
+  /** Une option « Autre » est retenue : un champ libre permet de préciser. */
+  get autreChoisi(): boolean {
+    if (this.def.kind !== 'select') return false;
+    const retenues = this.isMulti ? this.coches : typeof this.value === 'string' ? [this.value] : [];
+    return retenues.some((v) => AUTRE_RE.test(v));
+  }
+
+  onAutre(texte: string): void {
+    this.autre = texte.trim() === '' ? null : texte;
+    this.autreChange.emit(this.autre);
+  }
+
+  // ── Tableau de mesure de débit ───────────────────────────────────────────
+
+  /**
+   * Les trois essais. Une valeur numérique — l'ancien champ « Débit en sortie »
+   * d'avant le tableau — est reprise comme mesure directe du premier essai.
+   */
+  get mesures(): MesureDebit[] {
+    const v = this.value;
+    const lignes: MesureDebit[] = Array.isArray(v)
+      ? (v as MesureDebit[]).map((m) => ({ ...m }))
+      : typeof v === 'number'
+        ? [{ direct: v }]
+        : [];
+    while (lignes.length < NB_MESURES) lignes.push({});
+    return lignes.slice(0, NB_MESURES);
+  }
+
+  debit(m: MesureDebit): number | null {
+    return debitCalcule(m);
+  }
+
+  /** Moyenne des débits calculés, puis des mesures directes, sur les essais renseignés. */
+  get moyenneCalculee(): number | null {
+    return moyenne(this.mesures.map((m) => debitCalcule(m)));
+  }
+
+  get moyenneDirecte(): number | null {
+    return moyenne(this.mesures.map((m) => m.direct ?? null));
+  }
+
+  onMesure(i: number, champ: keyof MesureDebit, raw: string): void {
+    const n = raw === '' ? null : Number(raw);
+    const lignes = this.mesures;
+    lignes[i] = { ...lignes[i], [champ]: n !== null && Number.isNaN(n) ? null : n };
+    this.value = lignes;
+    this.onChangeFn(this.value);
   }
 
   /** Peu d'options : on les montre toutes plutôt que de les cacher. */
@@ -285,4 +393,10 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
   registerOnTouched(fn: () => void): void {
     this.onTouchedFn = fn;
   }
+}
+
+function moyenne(valeurs: (number | null)[]): number | null {
+  const n = valeurs.filter((x): x is number => typeof x === 'number');
+  if (!n.length) return null;
+  return Math.round((n.reduce((a, b) => a + b, 0) / n.length) * 100) / 100;
 }

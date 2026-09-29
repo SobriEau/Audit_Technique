@@ -2,7 +2,7 @@
 
 Entité `structure` — route `#/qte/structure`.
 
-32 champ(s), 4 section(s). Colonnes du tableau : `Emplacement`.
+32 champ(s), 4 section(s). Colonnes du tableau : `Type`, `Emplacement`.
 
 
 ## En tête de fiche (aucune section)

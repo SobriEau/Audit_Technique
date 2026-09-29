@@ -55,3 +55,36 @@ tbody tr:last-child td {
   color: var(--c-text-faint);
   padding: var(--sp-5);
 }
+
+/* ── Totaux en tête de tableau ──────────────────────────────────────── */
+
+.totaux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: var(--sp-3) 0;
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+}
+
+.total-valeur {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: var(--c-primary);
+}
+
+.total-libelle {
+  font-weight: 600;
+}
+
+.total-detail {
+  font-size: var(--fs-sm);
+}

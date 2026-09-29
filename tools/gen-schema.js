@@ -25,6 +25,7 @@ const {
   strip,
   ENTITIES,
   CHAMPS_FIGES,
+  MESURES_DEBIT,
   lireFiche,
 } = require('./lib/classeur');
 
@@ -41,6 +42,8 @@ const normLabel = (s) => normCell(s);
  */
 const VALUE_FIXES = {
   'à aproffondir': 'à approfondir',
+  'à approffondir': 'à approfondir',
+  'Entérée': 'Enterrée',
   "Extérieure avec possibilté d'être couverte": "Extérieure avec possibilité d'être couverte",
 };
 
@@ -81,7 +84,7 @@ const L = {
  * Le classeur laisse cohabiter plusieurs versions d'une même liste, et l'écart
  * est un défaut, non une intention. Corriger le classeur serait plus juste ;
  * en attendant, la correction vit ici — sourcée, et limitée aux cas arbitrés
- * (voir `arbitrages-v3.md`).
+ * (voir `MAJ/done/arbitrages-v3.md`).
  *
  * **Ne rien ajouter ici sans arbitrage** : deux listes différentes décrivent le
  * plus souvent deux notions différentes, et les fusionner effacerait une
@@ -98,7 +101,112 @@ const OPTION_OVERRIDES = {
   // Lave-linge au féminin, lave-vaisselle au masculin, pour la même question.
   'Appareils de lavage!E19': 'USAGE_APPAREIL_LAVAGE',
   'Appareils de lavage!E50': 'USAGE_APPAREIL_LAVAGE',
+  // La note énumère sans marqueur, et une ligne dépasse la longueur qu'une
+  // énumération implicite tolère : le champ retombait en texte libre (« pas de
+  // liste déroulante », Victor Ledoux, 2026-09). Deux matériaux partagent une
+  // ligne, séparés par une virgule.
+  'Bassin1!K14': [
+    'maçonné en béton armé',
+    'maçonné en béton projeté',
+    'blocs à bancher ou parpaings',
+    'coque polyester',
+    'panneaux modulaires (acier, polymère, aluminium)',
+    'bois',
+    'inox',
+    'composite',
+    'PVC',
+  ],
+  // « Nuit » et « Variable » ajoutés à la demande de Victor Ledoux (2026-09).
+  'Extérieur1!L41': ['Matin', 'Soir', 'En pleine journée', 'Nuit', 'Variable'],
+  // « oui à côté, derrière un des murs » est une seule réponse : la virgule
+  // la coupait en deux options sans objet.
+  'WC1!J48': ['non', 'oui à côté, derrière un des murs', "oui à l'aplomb aux étages inférieurs"],
 };
+
+/**
+ * Champs à choix multiple que le classeur ne marque pas « à cocher ».
+ *
+ * Demandés par Victor Ledoux (retour de test, 2026-09) ; les autres choix
+ * multiples se déduisent de la note (`MULTI_RE`).
+ */
+const MULTIPLES_IMPOSES = new Set([
+  'Appareils de lavage!K94', // Type de zone lavée — autolaveuse
+  'Appareils de lavage!E138', // Type de zone lavée — lavage manuel du sol
+  'Appareils de lavage!H138', // Type de surface
+  'Extérieur1!N38', // Type de paillage
+  'Extérieur1!F41', // Mode d'arrosage
+  'Extérieur1!F44', // Origine eau pour l'arrosage
+  'Bassin1!F17', // Type de couverture
+  'Opportunités1!F15', // Utilisations extérieures potentielles — eau de pluie
+  'Opportunités1!I15', // Utilisations intérieures potentielles — eau de pluie
+  'Opportunités1!F48', // Utilisations extérieures potentielles — eaux ménagères
+  'Opportunités1!I48', // Utilisations intérieures potentielles — eaux ménagères
+]);
+
+/**
+ * Exigences corrigées par l'auteur du classeur après coup.
+ *
+ * Toutes viennent du retour de test de Victor Ledoux (2026-09), qui les
+ * reconnaît comme des erreurs du classeur : un renvoi vers un réseau ECS rendu
+ * obligatoire bloquerait l'enregistrement dans les bâtiments où l'on ne saisit
+ * pas les réseaux, et l'on ne démontera pas chaque douche pour y chercher un
+ * limiteur de débit. À reporter dans le classeur.
+ */
+const REQUIREMENT_OVERRIDES = {
+  'Production Stockage ECS!F16': 'recommande', // Numéro de réseau ECS associé
+  'Production Stockage ECS!F33': 'facultatif', // Combustible
+  'Robinets!K21': 'recommande', // Numéro réseau ECS d'appartenance
+  'Douche-baignoire1!I11': 'recommande', // Numéro réseau ECS d'appartenance
+  'Douche-baignoire1!E41': 'facultatif', // Présence d'un limiteur de débit — douche
+  // Même question, même raison, sur la baignoire : étendu par cohérence.
+  'Douche-baignoire1!E80': 'facultatif',
+  'Douche-baignoire1!E114': 'facultatif', // Diamètre nominal de l'alimentation
+};
+
+/** Unités absentes ou ambiguës dans le libellé (Victor Ledoux, 2026-09). */
+const UNIT_OVERRIDES = {
+  'Toiture1!I19': '%', // « (% ou °) » : le pourcentage est retenu
+  'Extérieur1!I47': 'min', // Durée d'un arrosage
+  'Extérieur1!F63': 'min', // Durée d'un nettoyage
+  'Liste Piscines!E47': 'min', // Durée d'un nettoyage des plages
+};
+
+/**
+ * Aides imposées, par cellule d'origine — `null` n'en affiche aucune.
+ *
+ * L'aide vient d'ordinaire de la parenthèse finale du libellé.
+ */
+const HELP_OVERRIDES = {
+  // Le classeur la pose sous le tableau, renvoyée par l'astérisque d'une
+  // option (« Toilette avec rince main intégré* ») ; Victor Ledoux la veut sur
+  // les remarques, reformulée.
+  'WC1!F57': "Le cas échéant, précisez le débit du lave-main présent au-dessus de la chasse d'eau.",
+  // La parenthèse « (% ou °) » est devenue l'unité.
+  'Toiture1!I19': null,
+};
+
+/**
+ * Champs retirés. « Emplacement » de l'espace technique aménageable doublait
+ * celui de la fiche, rempli juste au-dessus (Victor Ledoux, 2026-09).
+ */
+const CHAMPS_RETIRES = new Set(['Structure1!F45']);
+
+/**
+ * Remarques générales rangées par le classeur sous la dernière rubrique de la
+ * fiche. Tant que les rubriques n'étaient pas masquées, c'était sans
+ * conséquence ; désormais, elles disparaîtraient avec la rubrique qu'elles
+ * suivent (les urines, le nettoyage…). Elles forment leur propre bloc.
+ */
+const CHAMPS_DETACHES = new Set([
+  'Compteur général!H63',
+  'Extérieur1!F69',
+  'Structure1!F65',
+  'Opportunités1!F77',
+  'Autre1!F56',
+]);
+const SECTION_DETACHEE = 'Remarques';
+
+
 const norm = (a) => a.map((s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim()).sort().join('|');
 const LOOKUP = new Map(Object.entries(L).map(([k, v]) => [norm(v), k]));
 
@@ -113,7 +221,11 @@ const LOOKUP = new Map(Object.entries(L).map(([k, v]) => [norm(v), k]));
  * dès que de vrais audits circuleront, toute régénération future devra y
  * figer les clés des entités concernées **avant** de faire tourner ce script.
  */
-const KEY_OVERRIDES = {};
+const KEY_OVERRIDES = {
+  // La coquille « réservie » est corrigée à l'affichage (`LABEL_FIXES`), pas
+  // dans la clé : des audits d'essai ont été saisis sous celle-ci.
+  Incendie: { "Présence d'une réserve incendie ?": 'PresenceDUneReservieIncendie' },
+};
 
 /** Clé de stockage dérivée du libellé, stable et lisible. */
 function keyFor(sheet, label) {
@@ -138,7 +250,53 @@ function keyFor(sheet, label) {
  * l'unité : « (chocs, gel) » n'en est pas une, alors qu'un simple `h` accepté
  * n'importe où dans la parenthèse le faisait passer pour tel.
  */
-const UNIT_RE = /\(\s*(l\/min|L\/min|l\/s|m3\/h|m3|m³|m²|m2|mm|cm|m|°C|bar|kWh|%|kg|s|L|h)\s*\)/;
+const UNITES = 'l\\/min|L\\/min|l\\/s|m3\\/h|m3|m³|m²|m2|mm|cm|m|°C|bar|kWh|%|kg|s|L|h';
+const UNIT_RE = new RegExp('\\(\\s*(?:en\\s+)?(' + UNITES + ')\\s*\\)');
+/** Une parenthèse qui ne contient qu'une unité — « (mm) », « (en m) ». */
+const UNIT_SEULE_RE = new RegExp('^\\s*(?:en\\s+)?(?:' + UNITES + ')\\s*$');
+
+/** Première lettre en capitale, pour une aide tirée d'une parenthèse. */
+const capitale = (t) => (t ? t[0].toUpperCase() + t.slice(1) : t);
+
+/**
+ * Sépare le libellé affiché de ses indications entre parenthèses.
+ *
+ * « Dysfonctionnements observés (tourne sans débit, bloqué, bruit,…) » : la
+ * parenthèse finale est une aide à la saisie. Le générateur la retirait du
+ * libellé et la perdait — tous les exemples du classeur avaient disparu de
+ * l'écran (Victor Ledoux, 2026-09). Elle devient `help`, affichée en petit sous
+ * le champ. Une parenthèse qui ne porte qu'une unité est retirée : l'unité est
+ * affichée à part.
+ *
+ * Seules les parenthèses **finales**, précédées d'une espace, sont prises :
+ * « vanne(s) thermostatique(s) » garde les siennes. Les parenthèses sont
+ * appariées, « lourdes (huile, boue)) » compris.
+ */
+function decouperLibelle(brut) {
+  const sansEtoile = (t) => t.replace(/\s*\*+\s*$/, '').trim();
+  let label = sansEtoile(brut);
+  const aides = [];
+  for (;;) {
+    if (!label.endsWith(')')) break;
+    let prof = 0;
+    let debut = -1;
+    for (let i = label.length - 1; i >= 0; i--) {
+      if (label[i] === ')') prof++;
+      else if (label[i] === '(' && --prof === 0) {
+        debut = i;
+        break;
+      }
+    }
+    if (debut <= 0 || !/\s/.test(label[debut - 1])) break;
+    const dedans = label.slice(debut + 1, -1).trim();
+    label = sansEtoile(label.slice(0, debut));
+    if (!UNIT_SEULE_RE.test(dedans)) aides.unshift(capitale(dedans));
+  }
+  return { label: label || brut, help: aides.join(' — ') || null };
+}
+
+/** Une ligne d'exemple posée sous le libellé : « exemple : Trace de fuite… ». */
+const EXEMPLE_RE = /^exemples?\s*:/i;
 
 /**
  * Marqueur d'énumération dans une note. Le classeur emploie plusieurs
@@ -147,6 +305,13 @@ const UNIT_RE = /\(\s*(l\/min|L\/min|l\/s|m3\/h|m3|m³|m²|m2|mm|cm|m|°C|bar|kW
  * 13 champs sur le seul onglet WC1.
  */
 const ENUM_MARKER_RE = /liste\s*d[ée]roulante|menu\s*d[ée]roulant|(?:cases?\s*)?[aà]\s*cocher/i;
+
+/**
+ * Plusieurs réponses possibles. « À cocher » est la forme du classeur pour une
+ * liste à choix multiple ; « plusieurs réponses possibles » la précise parfois.
+ * Tous ces champs n'acceptaient qu'une réponse (Victor Ledoux, 2026-09).
+ */
+const MULTI_RE = /cocher|plusieurs\s+(?:r[ée]ponses\s+|choix\s+)?possibles/i;
 
 /**
  * Découpe une liste d'options en respectant les parenthèses : une virgule à
@@ -250,8 +415,17 @@ function cleanOptions(list) {
     .map((o) => VALUE_FIXES[o] || o)
     // « (plusieurs réponses possibles) » n'est pas une valeur mais une
     // consigne, que le classeur écrit sur la ligne du marqueur.
-    .filter((o) => o && o.length < 80 && !/^\(.*\)$/.test(o) && !INTERFACE_NOTE_RE.test(o));
+    .filter((o) => o && o.length < 80 && !/^\(.*\)$/.test(o) && !CONSIGNE_OPTION_RE.test(o));
 }
+
+/**
+ * Consigne glissée parmi les options : « ouvrant les champs à la suite en
+ * question : », « plusieurs possibles », « Ouvrir la suite en fonction du
+ * choix ». Plus étroite qu'`INTERFACE_NOTE_RE` : « bouton » ou « page »
+ * peuvent être de vraies valeurs (« Bouton chasse cassé ou bloqué », perdu
+ * jusqu'ici de la liste des dysfonctionnements des WC).
+ */
+const CONSIGNE_OPTION_RE = /affich|si\s+oui|si\s+non|\bouvr|incr[ée]menter|calcul|^plusieurs\b|:$/i;
 
 /**
  * Note qui énumère sans le dire.
@@ -262,7 +436,7 @@ function cleanOptions(list) {
  * lignes courtes, sans ponctuation de phrase ni consigne d'interface, est une
  * énumération : c'est la même forme que les notes marquées.
  */
-const INTERFACE_NOTE_RE = /affich|si\s+oui|si\s+non|bouton|page|onglet|incr[ée]menter|calcul/i;
+const INTERFACE_NOTE_RE = /affich|si\s+oui|si\s+non|\bouvr|bouton|page|onglet|incr[ée]menter|calcul/i;
 function looksEnumerated(note) {
   const lignes = note.split('\n').map((l) => l.trim()).filter(Boolean);
   if (lignes.length < 3) return null;
@@ -303,7 +477,13 @@ function classify(note, cellBelow, label) {
     if (target) return { kind: 'entity-ref', refTo: target };
   }
 
-  if (/\bo\s*\/\s*n\b/i.test(n) || /^\s*oui\s*\/\s*non\s*$/i.test(cellBelow || '')) {
+  // « oui/non » seul dans la note, sans marqueur de liste : « Possibilité
+  // d'installer un réseau supplémentaire… » restait en texte libre.
+  if (
+    /\bo\s*\/\s*n\b/i.test(n) ||
+    /^\s*oui\s*\/\s*non\s*$/i.test(n) ||
+    /^\s*oui\s*\/\s*non\s*$/i.test(cellBelow || '')
+  ) {
     return { kind: 'boolean' };
   }
 
@@ -347,7 +527,7 @@ function classify(note, cellBelow, label) {
       return { kind: 'boolean' };
     }
 
-    return { kind: 'select', options: opts };
+    return { kind: 'select', options: opts, multiple: MULTI_RE.test(n) };
   }
 
   const unit = label.match(UNIT_RE);
@@ -408,42 +588,124 @@ for (const ent of ENTITIES) {
     }
   }
 
-  const { champs } = sheet ? lireFiche(wb, sheet) : { champs: [] };
+  const { champs, legendes } = sheet ? lireFiche(wb, sheet) : { champs: [], legendes: [] };
+
+  // Ligne d'en-têtes des tableaux de mesure de débit de cette feuille : ce
+  // qu'on y lit est une colonne du tableau, pas un champ.
+  const lignesMesures = new Set(
+    Object.entries(MESURES_DEBIT)
+      .filter(([src]) => src.startsWith(ent.sheet + '!'))
+      .map(([, r]) => r)
+  );
 
   for (const c of champs) {
-    const { kind, options, unit, refTo, warn } = classify(c.note, c.below, c.label);
+    const source = `${ent.sheet}!${colName(c.c)}${c.r}`;
+    if (CHAMPS_RETIRES.has(source) || lignesMesures.has(c.r)) continue;
 
+    const { kind, options, unit, refTo, warn, multiple } = classify(c.note, c.below, c.label);
+
+    // La clé dérive du libellé **complet** : en retirer les parenthèses ici
+    // ferait dériver des clés déjà en circulation.
     let key = keyFor(ent.sheet, c.label);
     while (seen.has(key)) key += 'Bis';
     seen.add(key);
 
+    const { label, help } = decouperLibelle(c.label);
     const f = {
       key,
-      // L'astérisque renvoie à une légende du classeur, absente de l'écran :
-      // affiché tel quel, il ressemble à une marque de champ obligatoire.
-      label: c.label.replace(/\s*\([^)]*\)\s*$/, '').replace(/\s*\*+\s*$/, '').trim() || c.label,
-      kind,
+      label,
+      kind: c.kind || kind,
       row: c.r,
-      source: `${ent.sheet}!${colName(c.c)}${c.r}`,
+      source,
+      rawLabel: c.label,
     };
-    if (unit) f.unit = unit;
+    if (MESURES_DEBIT[source]) f.kind = 'mesures-debit';
+
+    const aide = source in HELP_OVERRIDES ? HELP_OVERRIDES[source] : help || (EXEMPLE_RE.test(c.below) ? capitale(c.below.replace(/\s+/g, ' ').replace(/\s+:/, ' :')) : null);
+    if (aide) f.help = aide;
+    const unite = UNIT_OVERRIDES[source] || (f.kind === 'number' ? unit : null);
+    if (unite) {
+      f.unit = unite;
+      if (f.kind !== 'number') f.kind = 'number';
+    }
     if (refTo) f.refTo = refTo;
     if (warn) f.warn = warn;
-    const impose = OPTION_OVERRIDES[f.source];
+    const impose = OPTION_OVERRIDES[source];
     if (impose) {
-      f.options = `L.${impose}`;
+      f.optionsArr = Array.isArray(impose) ? impose : L[impose];
+      f.options = Array.isArray(impose) ? JSON.stringify(impose) : `L.${impose}`;
       // Le champ devient un choix même si la note ne le disait pas clairement.
       if (f.kind !== 'select') f.kind = 'select';
-    } else if (options && options.length) {
+    } else if (options && options.length && f.kind === 'select') {
       const constant = LOOKUP.get(norm(options));
+      // Les valeurs stockées sont celles de la constante, pas celles de la note.
+      f.optionsArr = constant ? L[constant] : options;
       f.options = constant ? `L.${constant}` : JSON.stringify(options);
     }
-    if (kind === 'textarea') f.wide = true;
-    if (c.section) f.section = c.section;
-    if (c.bloc) f.bloc = c.bloc;
-    if (c.requirement) f.requirement = c.requirement;
+    if (f.kind === 'select' && (multiple || MULTIPLES_IMPOSES.has(source))) f.multiple = true;
+    if (f.kind === 'textarea' || f.kind === 'mesures-debit') f.wide = true;
+    if (CHAMPS_DETACHES.has(source)) {
+      f.section = SECTION_DETACHEE;
+    } else {
+      if (c.section) f.section = c.section;
+      if (c.bloc) f.bloc = c.bloc;
+    }
+    const exigence = REQUIREMENT_OVERRIDES[source] || c.requirement;
+    if (exigence) f.requirement = exigence;
 
     fields.push(f);
+  }
+
+  // Une table de correction qui ne trouve plus sa cellule est une correction
+  // perdue en silence : le classeur a bougé, la table doit suivre.
+  for (const table of [OPTION_OVERRIDES, REQUIREMENT_OVERRIDES, UNIT_OVERRIDES, HELP_OVERRIDES, MESURES_DEBIT]) {
+    for (const src of Object.keys(table)) {
+      if (src.startsWith(ent.sheet + '!') && !fields.some((f) => f.source === src)) {
+        throw new Error(`${src} : correction déclarée pour un champ introuvable`);
+      }
+    }
+  }
+  for (const table of [MULTIPLES_IMPOSES, CHAMPS_DETACHES]) {
+    for (const src of table) {
+      if (src.startsWith(ent.sheet + '!') && !fields.some((f) => f.source === src)) {
+        throw new Error(`${src} : correction déclarée pour un champ introuvable`);
+      }
+    }
+  }
+
+  // ── Légendes ─────────────────────────────────────────────────────────────
+  //
+  // Chaque légende va aux champs qu'elle définit. D'abord ceux dont le libellé
+  // porte l'astérisque de renvoi, entre la légende précédente et celle-ci ;
+  // sinon, dans la même fenêtre, ceux dont les options sont les termes de la
+  // légende (« Etat général » des WC n'a pas d'astérisque) ; sinon, n'importe
+  // où plus haut (l'exigence de propreté, définie une fois en bas de fiche
+  // pour deux champs). Il faut trois termes communs : « faible / moyen /
+  // élevé » ne doit pas hériter de la légende « fort / moyen / faible ».
+  const motsDe = (t) => normLabel(VALUE_FIXES[t] || t).replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+  const couvre = (f, lg) => {
+    const opts = f.optionsArr || [];
+    const communs = opts.filter((o) => {
+      const mo = motsDe(o).join(' ');
+      return lg.entrees.some((e) => {
+        const me = motsDe(e.terme);
+        return me.join(' ') === mo || me.includes(mo) || me.join(' ').startsWith(mo) || mo.startsWith(me.join(' '));
+      });
+    });
+    return communs.length >= Math.min(3, lg.entrees.length);
+  };
+  let rPrec = 0;
+  for (const lg of [...legendes].sort((x, y) => x.r - y.r)) {
+    const libres = fields.filter((f) => !f.legend && f.row < lg.r);
+    const fenetre = libres.filter((f) => f.row > rPrec);
+    let cibles = fenetre.filter((f) => /\*\s*$/.test(f.rawLabel));
+    if (!cibles.length) cibles = fenetre.filter((f) => couvre(f, lg));
+    if (!cibles.length) cibles = libres.filter((f) => couvre(f, lg));
+    if (!cibles.length) report.push(`  ⚠ ${ent.sheet}!${lg.ref} : légende sans champ`);
+    for (const f of cibles) {
+      f.legend = lg.entrees.map((e) => ({ terme: VALUE_FIXES[e.terme] || e.terme, definition: e.definition }));
+    }
+    rPrec = lg.r;
   }
 
   // ── Blocs conditionnels ────────────────────────────────────────────────
@@ -453,20 +715,19 @@ for (const ent of ENTITIES) {
   // mal résolu désactiverait en silence l'exigence de ses champs obligatoires,
   // ou au contraire bloquerait la validation d'une fiche pour un bloc qui ne
   // la concerne pas — le défaut que cette table corrige.
+  //
+  // Un bloc désigne un intitulé de premier niveau (`bloc`) ou une section.
   const blocs = [];
   for (const b of ent.blocs || []) {
     const commande = fields.find((f) => f.source === `${ent.sheet}!${b.champSource}`);
     if (!commande) throw new Error(`${ent.sheet} : bloc « ${b.bloc} », champ ${b.champSource} introuvable`);
-    if (!fields.some((f) => f.bloc === b.bloc)) {
+    if (!fields.some((f) => f.key !== commande.key && (f.bloc === b.bloc || f.section === b.bloc))) {
       throw new Error(`${ent.sheet} : bloc « ${b.bloc} » introuvable parmi les sections`);
     }
     const valeurs = b.valeurs.filter((v) => {
       if (commande.kind === 'boolean') return typeof v === 'boolean';
       if (typeof v !== 'string') return false;
-      const opts = commande.options && commande.options.startsWith('[')
-        ? JSON.parse(commande.options)
-        : L[String(commande.options).replace(/^L\./, '')] || [];
-      return opts.includes(v);
+      return (commande.optionsArr || []).includes(v);
     });
     if (!valeurs.length) {
       throw new Error(
@@ -505,6 +766,7 @@ for (const ent of ENTITIES) {
     out.push(`    ],`);
   }
   out.push(`    listColumns: ${JSON.stringify(ent.cols)},`);
+  if (ent.colLabels) out.push(`    listColumnLabels: ${JSON.stringify(ent.colLabels)},`);
   out.push(`    fields: [`);
   for (const f of fields) {
     const parts = [
@@ -516,9 +778,12 @@ for (const ent of ENTITIES) {
     if (f.unit) parts.push(`unit: ${JSON.stringify(f.unit)}`);
     if (f.refTo) parts.push(`refTo: ${JSON.stringify(f.refTo)}`);
     if (f.options) parts.push(`options: ${f.options}`);
+    if (f.multiple) parts.push(`multiple: true`);
     if (f.section) parts.push(`section: ${JSON.stringify(f.section)}`);
     if (f.bloc) parts.push(`bloc: ${JSON.stringify(f.bloc)}`);
     if (f.requirement) parts.push(`requirement: ${JSON.stringify(f.requirement)}`);
+    if (f.help) parts.push(`help: ${JSON.stringify(f.help)}`);
+    if (f.legend) parts.push(`legend: ${JSON.stringify(f.legend)}`);
     if (f.source) parts.push(`source: ${JSON.stringify(f.source)}`);
     if (f.warn) parts.push(`warn: ${JSON.stringify(f.warn)}`);
     if (f.wide) parts.push(`wide: true`);

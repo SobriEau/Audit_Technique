@@ -25,7 +25,7 @@ Entité `incendie` — route `#/qte/incendie`.
 
 | Cellule | Libellé | Priorité | Note du classeur |
 |---|---|---|---|
-| `F22` | Présence d'une réservie incendie ? | Obligatoire | Liste déroulante Oui/Non |
+| `F22` | Présence d'une réserve incendie ? | Obligatoire | Liste déroulante Oui/Non |
 | `K22` | Type d'eau de la réserve incendie | Recommandé | liste déroulante eau potable eau de pluie eau pluviale mare |
 | `F25` | Volume réserve incendie (m3) | Recommandé | champ libre |
 

@@ -74,7 +74,7 @@ function charger(route) {
  */
 const ECRANS = [
   { route: '#/accueil', attendu: ['Nouvel audit', 'France 2030', 'Ponts et Chaussées'], titre: 'Accueil général' },
-  { route: '#/home', attendu: ['Nom du site audité', 'Effectif', "Nom et fonction de l'accompagnant", "Utilisations de l'eau", 'Voir la liste des documents collectés', 'Niveau de remplissage des fiches', 'Surpresseurs'], titre: 'Accueil du projet' },
+  { route: '#/home', attendu: ['Nom du site audité', 'Effectif', "Nom et fonction de l'accompagnant", "Utilisations de l'eau", 'Voir la liste des documents collectés', 'Niveau de remplissage des fiches'], absent: ['Surpresseurs'], titre: 'Accueil du projet' },
   { route: '#/documents', attendu: ['Documents collectés', 'Dossier Technique Amiante', 'priority--obligatoire'], titre: 'Documents à collecter' },
   { route: '#/glossaire', attendu: ['Glossaire', 'Eau Chaude Sanitaire', 'Plénum'], titre: 'Glossaire' },
   // Audit neuf, rien de coché : seules les sept sections permanentes
@@ -83,13 +83,14 @@ const ECRANS = [
   // était visible (défaut corrigé à la fusion avec origin/main).
   {
     route: '#/qte',
-    attendu: ['Arrivée d’eau', 'Date de construction du bâtiment', 'Structure et opportunités', 'Toitures'],
+    attendu: ['Arrivée d’eau', 'Date de construction du bâtiment', 'Structure et opportunités', 'Toitures', 'Liste des documents collectés'],
     absent: ['Points d’eau intérieurs', 'Surpresseurs', 'Zone piscine'],
     titre: 'Tableau de bord',
   },
-  { route: '#/qte/robinets', attendu: ['Robinets'], titre: 'Liste des robinets' },
+  { route: '#/qte/robinets', attendu: ['Robinets', 'Nombre total de robinets'], titre: 'Liste des robinets' },
   { route: '#/qte/piscines', attendu: ['Pédiluve', 'Nettoyage des plages', 'Piscines'], titre: 'Piscines et zone commune' },
-  { route: '#/qte/compteur-general', attendu: ['Compteur général', 'Localisation', 'Etat lors de la visite', 'priority--obligatoire'], titre: 'Fiche compteur général' },
+  // Le compteur général est répétable depuis 2026-09 : sa route mène à une liste.
+  { route: '#/qte/compteur-general', attendu: ['Compteurs généraux', 'Ajouter — Compteur général'], titre: 'Liste compteurs généraux' },
 ];
 
 const REPLI = 'Le navigateur a refusé';

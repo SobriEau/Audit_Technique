@@ -26,11 +26,18 @@ function describeError(code: string): string {
       return "Micro refusé. Autorisez l'accès au microphone dans le navigateur.";
     case 'service-not-allowed':
       return (
-        'Service de dictée bloqué par le navigateur. ' +
-        "Ouvrez l'application via une adresse http:// plutôt qu'en fichier local."
+        'Service de dictée bloqué par le navigateur, ou absent du téléphone. ' +
+        "Ouvrez l'application via une adresse http:// plutôt qu'en fichier local ; " +
+        'sur un Android sans services Google (/e/OS…), utilisez le micro du clavier.'
       );
     case 'network':
-      return 'Pas de connexion réseau : la dictée en ligne est indisponible.';
+      return (
+        'Dictée indisponible : pas de connexion réseau, ou pas de service de ' +
+        'reconnaissance sur cet appareil (Android sans services Google, /e/OS…). ' +
+        'Le micro du clavier du téléphone reste utilisable.'
+      );
+    case 'language-not-supported':
+      return 'La reconnaissance vocale de cet appareil ne prend pas en charge le français.';
     case 'audio-capture':
       return 'Aucun microphone détecté sur cet appareil.';
     case 'aborted':

@@ -141,7 +141,9 @@ AppData
     │   ├── Photos[]             AssetRef
     │   └── … champs du schéma
     ├── wc[], piscines[], …      idem, une clé par entité listée
-    ├── releve_compteur_general{} entité unique : un objet, pas un tableau
+    ├── releve_compteur_general[] liste depuis 2026-09 (objet unique avant,
+    │                            converti au chargement par ensureEntityIds)
+    ├── zone_piscine{}           seule entité unique : un objet, pas un tableau
     └── Localisations{}          vestige des sections en JSON brut (voir §8)
 ```
 
@@ -368,7 +370,7 @@ active et évite que le texte parte dans le mauvais champ.
 
 Les entités de la partie technique (V3 du classeur, 2026-08) **ne sont pas
 autant de composants** : seize fiches du classeur, plus la zone piscine rendue
-en tête de la page Piscines, plus le surpresseur conservé hors classeur. Le
+en tête de la page Piscines. Le
 classeur décrit partout le même motif « liste puis fiche » : chaque entité est
 donc décrite en données et rendue par deux composants génériques.
 
@@ -385,19 +387,47 @@ donc décrite en données et rendue par deux composants génériques.
 | `audit-field` | **Composant de saisie unique** — texte, nombre, liste, oui/non, référence, photos |
 | `entity-list` / `entity-form` | Rendu générique de la liste et de la fiche |
 
-**Deux entités de la V2 n'ont plus d'onglet en V3**, et elles ne sont pas
-traitées pareil. Le *réducteur de pression* est replié en bloc conditionnel
-dans la fiche Compteur général (six champs sur dix-sept survivent) : sa fiche à
-part est retirée du schéma, et `Qte.reducteurs_de_pression` n'est plus lu. Le
-*surpresseur* n'a aucun équivalent : il est **conservé** avec ses champs figés
-depuis la V2 (`CHAMPS_FIGES`, entité `horsClasseur`), masqué par défaut et
-réactivable d'une case sur l'accueil du projet.
+**Deux entités de la V2 n'ont plus d'onglet en V3.** Le *réducteur de
+pression* est replié en bloc conditionnel dans la fiche Compteur général (six
+champs sur dix-sept survivent) : `Qte.reducteurs_de_pression` n'est plus lu.
+Le *surpresseur*, conservé un temps avec ses champs figés de la V2, a été
+**retiré** à la demande de Victor Ledoux (2026-09) ; `Qte.surpresseurs` n'est
+plus lu. Le mécanisme `CHAMPS_FIGES` / `horsClasseur` reste, vide.
+
+### Retour de test de Victor Ledoux (2026-09)
+
+Le support est dans `MAJ/to_do/retours_test_html_victor.txt`. Chaque
+correction est sourcée dans le code, et **le générateur s'arrête si l'une ne
+retrouve plus sa cellule** :
+
+| Demande | Où |
+|---|---|
+| Indications entre parenthèses perdues | `decouperLibelle()` (gen-schema) → `FieldDef.help` |
+| Légendes « Bon / Moyen / Mauvais état », « fort / moyen / faible » | `lireFiche().legendes`, rattachées dans gen-schema → `FieldDef.legend` |
+| Choix multiples (« à cocher ») | `MULTI_RE`, `MULTIPLES_IMPOSES` → `FieldDef.multiple`, valeur `string[]` |
+| Exigences corrigées (réseau ECS, limiteur, combustible, DN) | `REQUIREMENT_OVERRIDES` |
+| Unités (%, minutes), listes (matériaux du bassin, période d'arrosage) | `UNIT_OVERRIDES`, `OPTION_OVERRIDES` |
+| Trois mesures de débit calculées | `MESURES_DEBIT` → `kind: 'mesures-debit'`, `debitCalcule()` |
+| Photos des types (jets, émetteurs, WC, gouttières, chéneaux) | `ILLUSTRATIONS` (lib/classeur) → `gen-illustrations.js` → `illustrations.ts` |
+| Champ libre sur « Autre » | `audit-field`, stocké sous `<clé>Autre` (`cleAutre()`) |
+| Rubriques masquées selon le type, le bouclage, les usages | blocs de `ENTITIES`, `blocActif()` |
+| Totaux en tête des listes | `src/app/qte/totaux.ts` |
+| Compteur général répétable | `ENTITIES` sans `single`, conversion dans `DataService` |
+| Traçage (réseau ECS), blocs « Autre » | `CHAMPS_AJOUTES` |
+| « Emplacement » en double (structure) | `CHAMPS_RETIRES` |
+| Localiser sur plan à côté de l'emplacement | `entity-form` (`locatorApres`) |
+| Arriver en haut de page | `withInMemoryScrolling` dans `main.ts` |
+| Bouton de téléchargement absent sur Chrome de bureau | `self-extract.ts` ignore les ressources d'extensions |
+
+Les totaux « fiches + équipements identiques » suivent la règle telle que
+Victor l'a formulée ; le détail du calcul est affiché, pour qu'on voie tout
+de suite si « équipements identiques » compte déjà l'élément lui-même.
 
 ### Deux migrations V3 ont été menées en parallèle
 
 Le 2026-08-24 sur un poste, le 2026-09-14 sur un autre, sans que l'une sache
 rien de l'autre. Elles ont été fusionnées le 2026-09-16 ; chaque arbitrage est
-consigné dans [fusion-origin-main.md](fusion-origin-main.md). À lire avant de
+consigné dans [MAJ/done/fusion-origin-main.md](MAJ/done/fusion-origin-main.md). À lire avant de
 toucher à l'exigence des champs, au surpresseur ou à la validation : plusieurs
 choix y défont explicitement ce qu'une des deux versions avait écrit.
 
@@ -450,8 +480,11 @@ lave-linge ne pouvait pas être enregistré sans remplir les champs obligatoires
 de l'autolaveuse — c'était le cas sur origin/main avant la fusion. Les blocs
 conditionnels se déclarent dans `ENTITIES` (`lib/classeur.js`) ; le générateur
 refuse une déclaration qui ne se résout pas, et `check-exigences.js` vérifie
-que chaque fiche reste validable. Masquer les blocs inactifs à l'écran
-(l'affichage conditionnel) reste à faire.
+que chaque fiche reste validable. Un bloc inactif est **masqué à l'écran**
+et dispensé de validation. Un bloc désigne un intitulé de premier niveau ou
+une section ; le champ qui le commande n'y est jamais soumis. Les remarques
+générales que le classeur range sous la dernière rubrique en sont détachées
+(`CHAMPS_DETACHES`), sinon elles disparaîtraient avec elle.
 
 ⚠️ **Ces cellules occupent la place d'un libellé.** Non filtrées, elles
 produisaient 406 faux champs — plus que de vrais — et, en s'intercalant entre
@@ -463,6 +496,14 @@ devant rester vide.
 
 Routes : `#/qte/<route>` pour la liste — ou directement la fiche si l'entité est
 déclarée `single` — et `#/qte/<route>/<Id>` pour un élément.
+
+### Choix multiples et option « Autre »
+
+Un champ `multiple` stocke un tableau et s'affiche en cases à cocher, quel que
+soit le nombre d'options. Une chaîne seule, saisie quand le champ n'acceptait
+qu'une réponse, est relue comme une case cochée. Une option « Autre » retenue
+ouvre un champ libre, stocké sous `<clé>Autre` pour que la valeur du champ
+reste une option de la liste.
 
 ### Les quatre écrans du classeur, et où ils vivent
 
@@ -493,7 +534,7 @@ d'une mise à jour à l'autre, des sections que l'auditeur voyait la veille.
 
 ### Deux formes pour un champ à choix
 
-`audit-field` choisit seul, selon le nombre d'options : **moins de quatre**
+Pour un choix simple, `audit-field` choisit seul, selon le nombre d'options : **moins de quatre**
 donne des boutons radio, **quatre ou plus** un champ de recherche filtrant la
 liste. Le seuil est `RADIO_THRESHOLD`. Le Oui/Non suit la même règle — c'est un
 choix à deux options comme un autre.
@@ -606,7 +647,7 @@ interactif et dépend du stockage.
 
 ```bash
 npm start                     # développement
-npm run gen                   # régénère schéma, pages, docs depuis le classeur
+npm run gen                   # régénère schéma, pages, illustrations, docs depuis le classeur
 npm run check:coverage        # que contient le classeur que le schéma ignore ?
 npm run build                 # fichier autonome, puis ouvrir index.html
 npm run check:extract         # le fichier sait-il encore se reproduire ?

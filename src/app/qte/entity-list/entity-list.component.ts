@@ -8,7 +8,8 @@ import { AuditFieldComponent } from '../../shared/components/audit-field/audit-f
 import { entityByKey, entityByRoute } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
 import { AuditEntity } from '../../models/data.models';
-import { FormSection, buildSections, formFields } from '../form-layout';
+import { FormSection, buildSections, cleAutre, formFields } from '../form-layout';
+import { Total, totaux } from '../totaux';
 
 /**
  * Page index générique : liste les éléments d'une entité et mène à leur fiche.
@@ -87,8 +88,27 @@ export class EntityListComponent implements OnInit {
     this.data.setSingle(this.preambule.key, this.preambuleValeurs);
   }
 
+  autrePreambule(f: FieldDef): string | null {
+    return (this.preambuleValeurs[cleAutre(f)] as string | null) ?? null;
+  }
+
+  changerAutrePreambule(f: FieldDef, texte: string | null): void {
+    if (!this.preambule) return;
+    this.preambuleValeurs[cleAutre(f)] = texte;
+    this.data.setSingle(this.preambule.key, this.preambuleValeurs);
+  }
+
+  /** Totaux en tête de tableau (nombre de robinets, surfaces…). */
+  totaux: Total[] = [];
+
   private reload(): void {
     this.items = [...this.data.getEntities(this.def.key)];
+    this.totaux = totaux(this.def.key, this.items);
+  }
+
+  /** Intitulé de colonne : celui du champ, sauf s'il est trop long pour un en-tête. */
+  columnLabel(field: FieldDef): string {
+    return this.def.listColumnLabels?.[field.key] ?? field.label;
   }
 
   /** Rend une valeur lisible dans le tableau, selon le type du champ. */
@@ -96,6 +116,7 @@ export class EntityListComponent implements OnInit {
     const v = (item as Record<string, unknown>)[field.key];
     if (v === null || v === undefined || v === '') return '';
 
+    if (Array.isArray(v)) return v.filter((x) => typeof x === 'string').join(', ');
     if (field.kind === 'boolean') return v ? 'Oui' : 'Non';
 
     if (field.kind === 'entity-ref' && field.refTo) {
