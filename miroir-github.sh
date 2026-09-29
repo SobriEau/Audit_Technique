@@ -2,7 +2,10 @@
 # Recopie le dépôt GitLab du Cerema (branches et étiquettes) vers le dépôt
 # GitHub du projet, avec un compte GitHub distinct de celui du poste.
 #
-#   ./miroir-github.sh [propriétaire/dépôt] [--force] [--dry-run]
+#   ./miroir-github.sh [--force] [--dry-run] [propriétaire/dépôt]
+#
+# Sans dépôt en argument, le script liste ceux où le compte connecté peut
+# écrire, et l'on choisit dans la liste.
 #
 # Le compte GitHub n'est utilisé que le temps du script :
 #   - la connexion se fait par `gh auth login` dans un GH_CONFIG_DIR jetable,
@@ -14,6 +17,7 @@
 #   - les variables par lesquelles VS Code ou un GH_TOKEN existant fourniraient
 #     leurs propres identifiants sont neutralisées ;
 #   - le dossier jetable est effacé en sortie, même sur erreur ou Ctrl-C.
+#     Pas de `gh auth logout` : il toucherait au trousseau du système.
 #
 # La source est GitLab, pas la copie de travail : ce qui n'est pas poussé sur
 # GitLab n'est pas recopié. Le script le signale.
@@ -22,24 +26,20 @@ set -euo pipefail
 
 # --- Réglages ---------------------------------------------------------------
 
-# Dépôt GitHub cible, sous la forme propriétaire/dépôt. Peut être donné en
-# argument ou par la variable d'environnement GITHUB_REPO.
-GITHUB_REPO_DEFAUT=""
-
 GITLAB_URL="git@gitlab.cerema.fr:groupe_batiment_idf/sobrieau.git"
 
 # --- Arguments --------------------------------------------------------------
 
 FORCE=0
 DRY_RUN=0
-CIBLE="${GITHUB_REPO:-$GITHUB_REPO_DEFAUT}"
+CIBLE=""
 
 for arg in "$@"; do
   case "$arg" in
     --force)   FORCE=1 ;;
     --dry-run) DRY_RUN=1 ;;
     -h|--help)
-      sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
       echo
       echo "  --force    écrase les branches divergentes côté GitHub"
       echo "  --dry-run  montre ce qui serait poussé, sans rien pousser"
@@ -49,16 +49,12 @@ for arg in "$@"; do
   esac
 done
 
-if [[ -z "$CIBLE" ]]; then
-  read -r -p "Dépôt GitHub cible (propriétaire/dépôt) : " CIBLE
-fi
 CIBLE="${CIBLE#https://github.com/}"
 CIBLE="${CIBLE%.git}"
-if [[ ! "$CIBLE" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+if [[ -n "$CIBLE" && ! "$CIBLE" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
   echo "Dépôt cible invalide : « $CIBLE » (attendu : propriétaire/dépôt)" >&2
   exit 2
 fi
-GITHUB_URL="https://github.com/$CIBLE.git"
 
 command -v git >/dev/null || { echo "git est introuvable." >&2; exit 1; }
 command -v gh  >/dev/null || {
@@ -74,10 +70,12 @@ TMP_BASE="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}"
 TRAVAIL="$(mktemp -d "$TMP_BASE/miroir-github.XXXXXX")"
 chmod 700 "$TRAVAIL"
 
+PID_LOGIN=""
 nettoyer() {
-  if [[ -f "$TRAVAIL/gh/hosts.yml" ]]; then
-    GH_CONFIG_DIR="$TRAVAIL/gh" gh auth logout --hostname github.com >/dev/null 2>&1 || true
-  fi
+  [[ -n "$PID_LOGIN" ]] && kill "$PID_LOGIN" 2>/dev/null
+  # Surtout pas de `gh auth logout` : il efface aussi l'entrée du trousseau
+  # système qui porte le nom du compte, donc la connexion habituelle du poste
+  # si c'est le même compte. Le jeton n'est écrit que dans $TRAVAIL.
   rm -rf "$TRAVAIL"
 }
 trap nettoyer EXIT
@@ -89,9 +87,36 @@ unset GH_TOKEN GITHUB_TOKEN GH_ENTERPRISE_TOKEN GITHUB_ENTERPRISE_TOKEN
 unset GIT_ASKPASS SSH_ASKPASS VSCODE_GIT_ASKPASS_NODE VSCODE_GIT_ASKPASS_MAIN \
       VSCODE_GIT_ASKPASS_EXTRA_ARGS VSCODE_GIT_IPC_HANDLE
 export GIT_TERMINAL_PROMPT=0
-# gh ouvrirait le navigateur par défaut, où le compte personnel est connecté :
-# on se contente d'afficher l'adresse.
-export GH_BROWSER="echo"
+# Le trousseau du système (Secret Service, joint par D-Bus) est partagé avec le
+# gh habituel, qui y range ses jetons sous le nom du compte : avec le même
+# compte, le gh du script écraserait ou effacerait celui du poste. On le lui
+# rend inaccessible — seul gh est concerné, pas le navigateur ouvert plus bas.
+SANS_TROUSSEAU="unix:path=/nonexistent"
+gh() { DBUS_SESSION_BUS_ADDRESS="$SANS_TROUSSEAU" command gh "$@"; }
+
+# Une fenêtre ordinaire du navigateur partagerait la session du compte
+# personnel, déjà connecté à GitHub : c'est lui qui serait autorisé. La page
+# s'ouvre donc en fenêtre privée.
+ouvrir_prive() {
+  local url="$1" nav
+  for nav in firefox chromium chromium-browser google-chrome brave-browser microsoft-edge; do
+    command -v "$nav" >/dev/null 2>&1 || continue
+    case "$nav" in
+      firefox)        nohup "$nav" --private-window "$url" >/dev/null 2>&1 & ;;
+      microsoft-edge) nohup "$nav" --inprivate "$url" >/dev/null 2>&1 & ;;
+      *)              nohup "$nav" --incognito "$url" >/dev/null 2>&1 & ;;
+    esac
+    echo "   Fenêtre privée ouverte ($nav) sur $url"
+    return
+  done
+  if command -v xdg-open >/dev/null 2>&1; then
+    nohup xdg-open "$url" >/dev/null 2>&1 &
+    echo "   Navigateur ouvert sur $url — ce n'est PAS une fenêtre privée :"
+    echo "   déconnectez-y votre compte GitHub personnel avant d'autoriser."
+  else
+    echo "   Ouvrez cette adresse dans une fenêtre privée : $url"
+  fi
+}
 
 # --- Récupération depuis GitLab --------------------------------------------
 
@@ -123,30 +148,88 @@ echo "   Étiquettes : $(git -C "$TRAVAIL/depot.git" tag | wc -l)"
 
 echo
 echo "==> Connexion au compte GitHub du projet"
-echo "   Ouvrez l'adresse ci-dessous dans une FENÊTRE PRIVÉE (ou un autre"
-echo "   navigateur), connectez-vous avec le compte du projet, puis saisissez"
-echo "   le code affiché. Dans votre navigateur habituel, c'est votre compte"
-echo "   personnel qui serait autorisé."
-echo
-# En HTTPS, gh propose d'inscrire son assistant d'identifiants dans la
-# configuration git globale : on lui en donne une jetable, qui disparaît avec
-# le reste.
+# gh est lancé sans terminal : il ne pose alors aucune question (Entrée pour
+# ouvrir le navigateur, inscription dans la configuration git…), se contente
+# d'afficher le code et attend l'autorisation. Le script lit le code, l'affiche
+# et ouvre lui-même la page. GIT_CONFIG_GLOBAL jetable par précaution : gh ne
+# doit rien écrire dans la configuration git du poste.
 GIT_CONFIG_GLOBAL="$TRAVAIL/gitconfig" \
   gh auth login --hostname github.com --git-protocol https --web \
-  --insecure-storage --scopes repo
+  --insecure-storage --scopes repo </dev/null >"$TRAVAIL/login.log" 2>&1 &
+PID_LOGIN=$!
+
+CODE=""
+for _ in $(seq 1 30); do
+  CODE="$(grep -oE '\b[A-Z0-9]{4}-[A-Z0-9]{4}\b' "$TRAVAIL/login.log" | head -1 || true)"
+  [[ -n "$CODE" ]] && break
+  kill -0 "$PID_LOGIN" 2>/dev/null || break
+  sleep 1
+done
+if [[ -z "$CODE" ]]; then
+  echo "Impossible d'obtenir un code de connexion de GitHub :" >&2
+  cat "$TRAVAIL/login.log" >&2
+  exit 1
+fi
+
+echo
+echo "   ┌───────────────────────────────────────────┐"
+echo "   │   Code à saisir sur GitHub :  $CODE   │"
+echo "   └───────────────────────────────────────────┘"
+echo
+ouvrir_prive "https://github.com/login/device"
+echo "   Connectez-vous avec le compte DU PROJET, saisissez le code, autorisez."
+echo "   En attente de l'autorisation…"
+
+if ! wait "$PID_LOGIN"; then
+  PID_LOGIN=""
+  echo "La connexion a échoué ou expiré :" >&2
+  grep -v -i clipboard "$TRAVAIL/login.log" >&2
+  exit 1
+fi
+PID_LOGIN=""
 
 COMPTE="$(gh api user --jq .login)"
 echo
 echo "   Connecté en tant que : $COMPTE"
 
-if ! droits="$(gh api "repos/$CIBLE" --jq '.permissions.push' 2>/dev/null)"; then
-  echo "Le dépôt $CIBLE est introuvable pour le compte $COMPTE." >&2
-  exit 1
+if [[ -z "$CIBLE" ]]; then
+  # Dépôts personnels, d'organisation et ceux où le compte est invité ; seuls
+  # ceux où il peut pousser sont proposés.
+  mapfile -t DEPOTS < <(
+    gh api --paginate \
+      "user/repos?affiliation=owner,collaborator,organization_member&sort=full_name&per_page=100" \
+      --jq '.[] | select(.permissions.push) | .full_name'
+  )
+  if [[ ${#DEPOTS[@]} -eq 0 ]]; then
+    echo "Le compte $COMPTE n'a accès en écriture à aucun dépôt." >&2
+    echo "Créez d'abord le dépôt sur GitHub, ou faites-vous inviter." >&2
+    exit 1
+  fi
+  echo
+  echo "Dépôts accessibles en écriture :"
+  for i in "${!DEPOTS[@]}"; do
+    printf '  %2d) %s\n' $((i + 1)) "${DEPOTS[$i]}"
+  done
+  while :; do
+    read -r -p "Numéro du dépôt cible (q pour abandonner) : " choix
+    [[ "$choix" == q ]] && { echo "Abandon."; exit 1; }
+    if [[ "$choix" =~ ^[0-9]+$ ]] && (( choix >= 1 && choix <= ${#DEPOTS[@]} )); then
+      CIBLE="${DEPOTS[$((choix - 1))]}"
+      break
+    fi
+    echo "   Choix invalide."
+  done
+else
+  if ! droits="$(gh api "repos/$CIBLE" --jq '.permissions.push' 2>/dev/null)"; then
+    echo "Le dépôt $CIBLE est introuvable pour le compte $COMPTE." >&2
+    exit 1
+  fi
+  if [[ "$droits" != "true" ]]; then
+    echo "Le compte $COMPTE n'a pas le droit d'écrire dans $CIBLE." >&2
+    exit 1
+  fi
 fi
-if [[ "$droits" != "true" ]]; then
-  echo "Le compte $COMPTE n'a pas le droit d'écrire dans $CIBLE." >&2
-  exit 1
-fi
+GITHUB_URL="https://github.com/$CIBLE.git"
 
 read -r -p "Pousser vers $GITHUB_URL avec le compte $COMPTE ? [o/N] " rep
 [[ "$rep" =~ ^[oOyY]$ ]] || { echo "Abandon."; exit 1; }
@@ -164,7 +247,8 @@ echo "==> Envoi vers $GITHUB_URL"
 set +e
 git -C "$TRAVAIL/depot.git" \
   -c credential.helper= \
-  -c "credential.https://github.com.helper=!gh auth git-credential" \
+  -c credential.https://github.com.helper= \
+  -c "credential.https://github.com.helper=!DBUS_SESSION_BUS_ADDRESS=$SANS_TROUSSEAU gh auth git-credential" \
   -c credential.useHttpPath=false \
   push "${options[@]}" "$GITHUB_URL" \
   'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
@@ -187,4 +271,4 @@ if [[ $DRY_RUN -eq 1 ]]; then
 else
   echo "Copie terminée : https://github.com/$CIBLE"
 fi
-echo "La session GitHub est fermée et ses fichiers effacés."
+echo "Les identifiants GitHub utilisés par le script sont effacés du poste."
