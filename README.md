@@ -1,6 +1,6 @@
 # SobriEau
 
-Application d'audit de consommation d'eau dans les bâtiments publics (Cerema).
+Application d'audit de consommation d'eau dans les bâtiments publics.
 L'auditeur remplit l'audit sur le terrain, souvent hors connexion, dans un
 **fichier `index.html` unique** ouvert par double-clic, puis exporte un JSON.
 
