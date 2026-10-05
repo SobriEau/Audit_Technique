@@ -315,6 +315,56 @@ porte le dialogue. Trois choses à ne pas défaire :
 Toute évolution du modèle doit rester lisible par un import d'ancien fichier :
 des audits circulent déjà.
 
+### Export CSV — pour compiler et analyser
+
+Bouton « Exporter en CSV » de l'accueil du projet, et `npm run csv -- audit.json`
+pour un JSON déjà reçu : c'est le même code
+([csv-export.ts](src/app/core/utils/csv-export.ts)), et les deux donnent le même
+fichier à l'octet près. Séparateur « ; », encodage **cp-1252**, virgule
+décimale : ce qu'Excel attend en France.
+
+**Format long, une ligne par réponse**, onze colonnes fixes. Un format large
+aurait changé de colonnes à chaque évolution du formulaire.
+
+| Colonne | Contenu |
+|---|---|
+| `AuditId`, `Audit` | identité et nom du bâtiment, répétés sur chaque ligne pour rassembler les fichiers |
+| `Section` | « Généralités », « Robinets », « Documents collectés »… |
+| `Element`, `ElementId` | numéro affiché et `Id` de la fiche ; un renvoi entre fiches vaut un `ElementId` |
+| `Rubrique`, `Question` | intitulés affichés — ils peuvent changer d'une version à l'autre |
+| `Cle` | chemin dans le JSON, sans le rang de l'élément : `Qte.wc[].Utilisateurs`. **C'est la colonne stable**, celle sur laquelle filtrer |
+| `Valeur`, `Unite` | un choix multiple tient sur une ligne, réponses séparées par « \| » |
+| `Origine` | `saisie` — une valeur du JSON — ou `calcul` (débit, numéro d'un renvoi, nom du plan) |
+
+Trois choses à ne pas défaire :
+
+- **Le parcours suit les données, jamais le schéma.** Le schéma n'habille
+  qu'une valeur (libellé, rubrique, unité) ; il ne décide pas de ce qui sort.
+  Un champ retiré du classeur sort encore, sous sa clé, pour les audits qui
+  l'avaient rempli ; une structure inconnue est dépliée telle quelle. Filtrer
+  l'export par le schéma ferait disparaître des saisies à chaque évolution.
+- **Les images ne sont pas reprises** — ni `__assets`, ni une image restée en
+  ligne dans un audit ancien : le CSV porte leurs références. C'est la seule
+  partie du JSON qui n'y figure pas.
+- **L'apostrophe en tête d'une valeur est voulue.** Mesuré sur Excel 16 en
+  français, à l'ouverture directe : « 2/4 » — une option du volume de chasse
+  des WC — devient le 2 avril, « 0123 » perd son zéro, un numéro de seize
+  chiffres ses derniers chiffres, « 5E3 » vaut 5000, « - fuite » s'affiche
+  « #NOM? », sans que rien le signale. `reinterpreteParExcel()` protège ces
+  textes et eux seuls : un nombre simple et une date complète sont relus à
+  l'identique. Restent converties, sans perte, les dates écrites en lettres
+  (« mars 2024 »).
+
+Un caractère absent de cp-1252 (un émoji) devient « ? » et l'écran le dit ; les
+espaces et tirets typographiques ont un équivalent
+([cp1252.ts](src/app/core/utils/cp1252.ts)).
+
+`npm run check:csv` porte la garantie : il remplit chaque champ de chaque fiche
+du schéma réel, y ajoute ce que le schéma ignore, énumère les feuilles du JSON
+par son propre parcours et exige une ligne pour chacune — puis recommence avec
+un schéma amputé, puis vide. *Vérifié en le cassant : sans le dépliage des clés
+inconnues, il signale 104 valeurs manquantes.*
+
 ---
 
 ## 6. Plans et localisation
@@ -423,6 +473,24 @@ Les totaux « fiches + équipements identiques » suivent la règle telle que
 Victor l'a formulée ; le détail du calcul est affiché, pour qu'on voie tout
 de suite si « équipements identiques » compte déjà l'élément lui-même.
 
+### Second retour de test (2026-10)
+
+Mêmes tables, même garde-fou — `CHAMPS_RETIRES` compris, qui n'en avait pas.
+
+| Demande | Où |
+|---|---|
+| « Continuité de l'isolation » retirée (réseau ECS) | `CHAMPS_RETIRES` |
+| « Autre » dans les utilisateurs des WC, les matériaux du bassin | `OPTION_OVERRIDES` |
+| Fréquence d'utilisation par utilisateur coché (WC) | `CHAMPS_PAR_OPTION` → `FieldDef.parOption` |
+| Colonne « Type de gestion des eaux pluviales » retirée de la liste | `cols` de `ENTITIES` |
+| « Autre information » et « Autre utilisation » cochables ensemble | `MULTIPLES_IMPOSES` |
+| Coquilles des indications (descentes, ventilation) | `LABEL_FIXES` |
+
+Deux demandes n'appelaient aucune modification, vérifié dans Chrome :
+arrosage et nettoyage se cochaient déjà ensemble, et la seule parenthèse des
+« Remarques » du réseau ECS que porte le classeur — « (circulateur double, …) »
+— s'affiche, mais dans la sous-partie bouclage, donc seulement à « Oui ».
+
 ### Deux migrations V3 ont été menées en parallèle
 
 Le 2026-08-24 sur un poste, le 2026-09-14 sur un autre, sans que l'une sache
@@ -504,6 +572,17 @@ soit le nombre d'options. Une chaîne seule, saisie quand le champ n'acceptait
 qu'une réponse, est relue comme une case cochée. Une option « Autre » retenue
 ouvre un champ libre, stocké sous `<clé>Autre` pour que la valeur du champ
 reste une option de la liste.
+
+« Autre » s'entend seul ou suivi de sa consigne (« Autre (préciser dans
+remarques) »). **« Autres adultes » et « Autre information » sont des réponses
+à part entière** : le motif d'origine, `^autres?\b`, leur ouvrait à tort le
+champ de précision.
+
+Un champ `parOption` ouvre en plus **un champ libre par option cochée** —
+« Fréquence d'utilisation — Public extérieur » sur les utilisateurs des WC. Les
+saisies sont stockées à part, sous la clé que le schéma déclare
+(`FrequenceDUtilisation`), en `{ option: texte }`. Décocher une option retire
+sa saisie : une fréquence sans son utilisateur n'a plus de sens à l'export.
 
 ### Les quatre écrans du classeur, et où ils vivent
 
@@ -653,6 +732,7 @@ npm run build                 # fichier autonome, puis ouvrir index.html
 npm run check:extract         # le fichier sait-il encore se reproduire ?
 npm run check:smoke           # chaque écran se rend-il en file:// ?
 npm run check:exigences       # chaque fiche est-elle validable ?
+npm run check:csv             # tout le JSON se retrouve-t-il dans l'export CSV ?
 ```
 
 Points de contrôle qui ont déjà révélé des régressions :
@@ -675,6 +755,9 @@ Points de contrôle qui ont déjà révélé des régressions :
 9. `npm run check:exigences` après toute modification des blocs conditionnels,
    des exigences ou de la validation : une fiche invalidable ne produit aucune
    erreur, elle empêche seulement l'auditeur d'avancer.
+10. `npm run check:csv` après toute évolution du modèle de données ou de
+    l'export : une réponse absente du CSV manque à l'analyse sans que rien ne
+    le signale.
 
 ---
 

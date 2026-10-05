@@ -54,6 +54,14 @@ export interface LegendEntry {
   definition: string;
 }
 
+/** Champ libre ouvert pour chaque option cochée. Voir `FieldDef.parOption`. */
+export interface ChampParOption {
+  /** Clé de stockage des saisies, dans le JSON de l'élément. */
+  cle: string;
+  /** Intitulé affiché devant le nom de l'option. */
+  libelle: string;
+}
+
 /** Un essai du tableau de mesure de débit. */
 export interface MesureDebit {
   /** Durée de l'essai, en secondes. */
@@ -91,6 +99,14 @@ export interface FieldDef {
    * le passage au choix multiple, est relue comme un tableau d'un élément.
    */
   multiple?: boolean;
+
+  /**
+   * Champ libre ouvert **pour chaque option cochée** d'un choix multiple —
+   * « Fréquence d'utilisation — Public extérieur » sur les utilisateurs des WC.
+   * Les saisies sont stockées à part, sous `cle`, en `{ option: texte }` : la
+   * valeur du champ reste la liste des options cochées.
+   */
+  parOption?: ChampParOption;
 
   /** Légende des termes proposés, reprise du classeur. */
   legend?: readonly LegendEntry[];

@@ -49,7 +49,7 @@ Entité `toitures` — route `#/qte/toitures`.
 | `F60` | Type de descentes | Obligatoire | liste déroulante apparente (façade), encastrée (mur ou gaine technique) |
 | `I60` | Nombre de descentes | Obligatoire | champ libre |
 | `L60` | Matériau | Facultatif | liste déroulante PVC, Zinc, aluminium, acier galvanisé, fonte, cuivre |
-| `F63` | Etat des descentes (déformation, affaissement, mauvaise pente, fixations dégradésn joints dégradés, corrosion, encrassement, etc.) | Recommandé | Champ libre |
+| `F63` | Etat des descentes (déformation, affaissement, mauvaise pente, fixations dégradés, joints dégradés, corrosion, encrassement, etc.) | Recommandé | Champ libre |
 | `F66` | Hauteur des descentes (m) | Facultatif | Champ libre |
 | `J66` | Diamètre des descentes (m) | Recommandé | champ libre |
 

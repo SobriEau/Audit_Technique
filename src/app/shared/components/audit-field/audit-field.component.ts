@@ -37,8 +37,14 @@ let uniqueId = 0;
 /** Nombre d'essais du tableau de mesure de débit, comme dans le classeur. */
 const NB_MESURES = 3;
 
-/** Une option « Autre », « autre », « Autre (préciser dans remarques) »… */
-const AUTRE_RE = /^autres?\b/i;
+/**
+ * Une option « Autre », « autre », « Autre (préciser dans remarques) »,
+ * « autre précisé dans remarques ». Le mot doit être seul ou suivi de sa
+ * consigne : « Autres adultes » (utilisateurs des WC) et « Autre information »
+ * (onglet Autre) sont des réponses à part entière, qui ouvraient à tort le
+ * champ de précision.
+ */
+const AUTRE_RE = /^autres?(?:$|\s*\(|\s+pr[ée]cis)/i;
 
 /** Comparaison insensible à la casse et aux accents : « melangeur » trouve « Mélangeur ». */
 function normalize(s: string): string {
@@ -87,6 +93,13 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
    */
   @Input() autre: string | null = null;
   @Output() autreChange = new EventEmitter<string | null>();
+
+  /**
+   * Saisies du champ libre ouvert pour chaque option cochée (`def.parOption`),
+   * par option. Stockées par le formulaire sous la clé que le schéma déclare.
+   */
+  @Input() parOption: Record<string, string> | null = null;
+  @Output() parOptionChange = new EventEmitter<Record<string, string> | null>();
 
   value: unknown = null;
 
@@ -179,6 +192,9 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
     this.value = suivantes.length ? suivantes : null;
     this.onChangeFn(this.value);
     this.onTouchedFn();
+    // La saisie d'une option décochée part avec elle : une fréquence
+    // d'utilisation sans son utilisateur n'aurait plus de sens à l'export.
+    if (actuelles.includes(v) && this.parOption?.[v] !== undefined) this.onParOption(v, '');
   }
 
   /** Valeurs cochées absentes de la liste : conservées et signalées. */
@@ -199,6 +215,27 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
   onAutre(texte: string): void {
     this.autre = texte.trim() === '' ? null : texte;
     this.autreChange.emit(this.autre);
+  }
+
+  // ── Champ libre par option cochée ────────────────────────────────────────
+
+  /** Options cochées qui ouvrent chacune leur champ libre, dans l'ordre de la liste. */
+  get optionsDetaillees(): string[] {
+    if (!this.isMulti || !this.def.parOption) return [];
+    const coches = this.coches;
+    return (this.def.options ?? []).filter((o) => coches.includes(o));
+  }
+
+  parOptionDe(option: string): string {
+    return this.parOption?.[option] ?? '';
+  }
+
+  onParOption(option: string, texte: string): void {
+    const suivant = { ...(this.parOption ?? {}) };
+    if (texte.trim() === '') delete suivant[option];
+    else suivant[option] = texte;
+    this.parOption = Object.keys(suivant).length ? suivant : null;
+    this.parOptionChange.emit(this.parOption);
   }
 
   // ── Tableau de mesure de débit ───────────────────────────────────────────

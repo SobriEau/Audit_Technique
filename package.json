@@ -11,6 +11,8 @@
     "check:coverage": "node tools/check-coverage.js",
     "check:smoke": "node tools/smoke-test.js",
     "check:exigences": "node tools/check-exigences.js",
+    "check:csv": "node tools/check-csv.js",
+    "csv": "node tools/json-to-csv.js",
     "gen": "node tools/xlsx-extract.js && node tools/gen-schema.js && node tools/gen-pages.js && node tools/gen-illustrations.js && node tools/gen-docs.js && node tools/gen-referentiel.js"
   },
   "dependencies": {

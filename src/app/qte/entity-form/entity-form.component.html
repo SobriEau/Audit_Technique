@@ -23,6 +23,8 @@
               [ngModelOptions]="{ standalone: true }"
               [autre]="autreDe(f)"
               (autreChange)="onAutreChange(f, $event)"
+              [parOption]="parOptionDe(f)"
+              (parOptionChange)="onParOptionChange(f, $event)"
             />
           }
         </div>

@@ -171,9 +171,10 @@
   font-size: var(--fs-sm);
 }
 
-/* ── Précision d'une option « Autre » ───────────────────────────────── */
+/* ── Précision d'une option « Autre », champ libre par option cochée ── */
 
-.autre {
+.autre,
+.par-option {
   display: block;
   margin: var(--sp-2) 0 var(--sp-1);
   font-weight: normal;

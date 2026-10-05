@@ -223,6 +223,12 @@
   <app-dictation-field [id]="uid + '-autre'" [ngModel]="autre ?? ''" (ngModelChange)="onAutre($event)" />
 }
 
+<!-- Un champ libre par option cochée : « Fréquence d'utilisation — Personnel ». -->
+@for (o of optionsDetaillees; track o; let i = $index) {
+  <label class="par-option" [attr.for]="uid + '-option-' + i">{{ def.parOption?.libelle }} — {{ o }}</label>
+  <app-dictation-field [id]="uid + '-option-' + i" [ngModel]="parOptionDe(o)" (ngModelChange)="onParOption(o, $event)" />
+}
+
 @if (effectiveHelp) {
   <p class="muted field-help">{{ effectiveHelp }}</p>
 }

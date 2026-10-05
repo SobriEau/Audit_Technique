@@ -226,6 +226,23 @@ export class HomeComponent implements OnInit {
     setPhotoMode(this.mode);
   }
 
+  /** Compte rendu du dernier export CSV, affiché sous le bouton. */
+  exportCsv: string | null = null;
+
+  /**
+   * Export CSV de l'audit ouvert. La saisie en cours est d'abord enregistrée :
+   * l'export lit les données du service, pas les champs de cette page.
+   */
+  exporterCsv(): void {
+    this.autoSave();
+    const { fichier, lignes, remplaces } = this.dataService.exportCsv();
+    this.exportCsv =
+      `${fichier} — ${lignes} ligne${lignes > 1 ? 's' : ''}.` +
+      (remplaces.length
+        ? ` Caractères absents de l'encodage Windows-1252, remplacés par « ? » : ${remplaces.join(' ')}`
+        : '');
+  }
+
   /** La galerie générale est enregistrée dès qu'une photo est ajoutée ou retirée. */
   onPhotosChange(): void {
     this.dataService.setPhotos(this.photos);

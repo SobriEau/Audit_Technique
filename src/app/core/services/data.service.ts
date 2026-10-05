@@ -12,6 +12,8 @@ import { AUDIT_SCHEMA } from '../../models/audit-schema';
 import { AssetStoreService } from './asset-store.service';
 import { AuditRegistryService } from './audit-registry.service';
 import { addressKey, htmlToText } from '../utils/address-key';
+import { encoderCp1252 } from '../utils/cp1252';
+import { csvAudit, nomAudit } from '../utils/csv-export';
 import { uid } from '../utils/uid';
 
 /**
@@ -431,11 +433,39 @@ export class DataService {
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json',
     });
+    this.telecharger(blob, `${name}.json`);
+  }
 
+  /**
+   * Exporte l'audit ouvert en CSV, une ligne par réponse, pour compiler et
+   * analyser plusieurs bâtiments — voir `csv-export.ts`.
+   *
+   * Séparateur « ; » et encodage cp-1252 : ce qu'Excel attend en France. Les
+   * images n'y figurent que par leurs références ; le fichier se prépare donc
+   * sans relire IndexedDB, et ne remplace pas l'export JSON pour transmettre
+   * un audit.
+   *
+   * @returns le nombre de lignes écrites, et les caractères que cp-1252 ne
+   * connaît pas, remplacés par « ? » — à signaler à l'auditeur.
+   */
+  exportCsv(): { fichier: string; lignes: number; remplaces: string[] } {
+    const { texte, lignes } = csvAudit(this._data);
+    const { octets, remplaces } = encoderCp1252(texte);
+
+    // Le nom du site dans le nom du fichier : ces exports sont faits pour être
+    // rassemblés, et trente « sobrieau-2026-10-05.csv » ne se distinguent pas.
+    const site = addressKey(nomAudit(this._data)).replace(/[^a-z0-9]+/g, '-').slice(0, 40).replace(/^-|-$/g, '');
+    const fichier = ['sobrieau', site, new Date().toISOString().slice(0, 10)].filter(Boolean).join('-') + '.csv';
+
+    this.telecharger(new Blob([octets], { type: 'text/csv;charset=windows-1252' }), fichier);
+    return { fichier, lignes: lignes.length, remplaces };
+  }
+
+  private telecharger(blob: Blob, fichier: string): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${name}.json`;
+    a.download = fichier;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

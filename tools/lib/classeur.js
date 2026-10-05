@@ -173,6 +173,11 @@ const LABEL_FIXES = {
   "Présence d'une réservie incendie ?": "Présence d'une réserve incendie ?",
   // Sans effet sur la clé, qui ignore les accents (`TypeDEmetteur`).
   "Type d'emetteur": "Type d'émetteur",
+  // Coquilles dans les indications entre parenthèses, signalées au second
+  // retour de test (2026-10). Sans effet sur la clé, qui ignore la parenthèse.
+  'Etat des descentes (déformation, affaissement, mauvaise pente, fixations dégradésn joints dégradés, corrosion, encrassement, etc.)':
+    'Etat des descentes (déformation, affaissement, mauvaise pente, fixations dégradés, joints dégradés, corrosion, encrassement, etc.)',
+  "Remarques (concommation d'eau de la CTA,…)": "Remarques (consommation d'eau de la CTA,…)",
 };
 
 /**
@@ -337,7 +342,9 @@ const ENTITIES = [
     ],
   },
   { sheet: 'Incendie', key: 'incendie', route: 'incendie', singular: 'Incendie', plural: 'Incendie', cols: ['Emplacement'] },
-  { sheet: 'Extérieur1', key: 'espace_vert_exterieur', route: 'espaces-exterieurs', singular: 'Espace extérieur', plural: 'Espaces extérieurs', cols: ['EmplacementDeLEspaceExterieur', 'TypeDeGestionDesEaux', 'SurfaceArrosee', 'Utilisation'],
+  // La colonne « Type de gestion des eaux pluviales » a été retirée de la
+  // liste au second retour de test (2026-10).
+  { sheet: 'Extérieur1', key: 'espace_vert_exterieur', route: 'espaces-exterieurs', singular: 'Espace extérieur', plural: 'Espaces extérieurs', cols: ['EmplacementDeLEspaceExterieur', 'SurfaceArrosee', 'Utilisation'],
     colLabels: { EmplacementDeLEspaceExterieur: 'Emplacement', Utilisation: 'Surfaces nettoyées' },
     blocs: [
       { bloc: 'Arrosage', champSource: 'I28', valeurs: ['arrosage'], source: 'Extérieur1!I29' },

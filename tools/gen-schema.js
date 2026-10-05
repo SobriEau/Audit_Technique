@@ -104,7 +104,8 @@ const OPTION_OVERRIDES = {
   // La note énumère sans marqueur, et une ligne dépasse la longueur qu'une
   // énumération implicite tolère : le champ retombait en texte libre (« pas de
   // liste déroulante », Victor Ledoux, 2026-09). Deux matériaux partagent une
-  // ligne, séparés par une virgule.
+  // ligne, séparés par une virgule. « autre » ajouté au second retour de test
+  // (2026-10), comme sur les matériaux de revêtement voisins.
   'Bassin1!K14': [
     'maçonné en béton armé',
     'maçonné en béton projeté',
@@ -115,7 +116,11 @@ const OPTION_OVERRIDES = {
     'inox',
     'composite',
     'PVC',
+    'autre',
   ],
+  // « Autre » ajouté au second retour de test (2026-10) ; les sept premiers
+  // sont ceux de la note du classeur.
+  'WC1!F15': ['Public extérieur', 'Personnel', 'Autres adultes', 'Enfants', 'Adolescents', 'Personnes âgées', 'PMR', 'Autre'],
   // « Nuit » et « Variable » ajoutés à la demande de Victor Ledoux (2026-09).
   'Extérieur1!L41': ['Matin', 'Soir', 'En pleine journée', 'Nuit', 'Variable'],
   // « oui à côté, derrière un des murs » est une seule réponse : la virgule
@@ -141,7 +146,22 @@ const MULTIPLES_IMPOSES = new Set([
   'Opportunités1!I15', // Utilisations intérieures potentielles — eau de pluie
   'Opportunités1!F48', // Utilisations extérieures potentielles — eaux ménagères
   'Opportunités1!I48', // Utilisations intérieures potentielles — eaux ménagères
+  // Second retour de test (2026-10) : une même fiche peut porter à la fois une
+  // « autre information » et une « autre utilisation de l'eau ».
+  'Autre1!F8', // Choix
 ]);
+
+/**
+ * Champ libre ouvert **pour chaque option cochée** d'un choix multiple.
+ *
+ * Demandé au second retour de test (2026-10) pour la fréquentation des WC :
+ * cocher « Public extérieur » ouvre « Fréquence d'utilisation — Public
+ * extérieur ». Les saisies sont stockées à part, sous `cle`, en
+ * `{ option: texte }` : la valeur du champ reste la liste des options cochées.
+ */
+const CHAMPS_PAR_OPTION = {
+  'WC1!F15': { cle: 'FrequenceDUtilisation', libelle: "Fréquence d'utilisation" },
+};
 
 /**
  * Exigences corrigées par l'auteur du classeur après coup.
@@ -188,8 +208,11 @@ const HELP_OVERRIDES = {
 /**
  * Champs retirés. « Emplacement » de l'espace technique aménageable doublait
  * celui de la fiche, rempli juste au-dessus (Victor Ledoux, 2026-09).
+ * « Continuité de l'isolation » du calorifugeage est comprise dans l'état
+ * bon / moyen / mauvais de l'isolant, demandé juste après (second retour de
+ * test, 2026-10).
  */
-const CHAMPS_RETIRES = new Set(['Structure1!F45']);
+const CHAMPS_RETIRES = new Set(['Structure1!F45', 'Réseaux ECS!F38']);
 
 /**
  * Remarques générales rangées par le classeur sous la dernière rubrique de la
@@ -643,6 +666,15 @@ for (const ent of ENTITIES) {
       f.options = constant ? `L.${constant}` : JSON.stringify(options);
     }
     if (f.kind === 'select' && (multiple || MULTIPLES_IMPOSES.has(source))) f.multiple = true;
+    const parOption = CHAMPS_PAR_OPTION[source];
+    if (parOption) {
+      // Un champ par option cochée n'a de sens que sur un choix multiple, et
+      // sa clé de stockage ne doit pas recouvrir celle d'un champ de la fiche.
+      if (!f.multiple) throw new Error(`${source} : champ par option déclaré sur un champ qui n'est pas à choix multiple`);
+      if (seen.has(parOption.cle)) throw new Error(`${source} : la clé ${parOption.cle} est déjà celle d'un champ`);
+      seen.add(parOption.cle);
+      f.parOption = parOption;
+    }
     if (f.kind === 'textarea' || f.kind === 'mesures-debit') f.wide = true;
     if (CHAMPS_DETACHES.has(source)) {
       f.section = SECTION_DETACHEE;
@@ -658,11 +690,18 @@ for (const ent of ENTITIES) {
 
   // Une table de correction qui ne trouve plus sa cellule est une correction
   // perdue en silence : le classeur a bougé, la table doit suivre.
-  for (const table of [OPTION_OVERRIDES, REQUIREMENT_OVERRIDES, UNIT_OVERRIDES, HELP_OVERRIDES, MESURES_DEBIT]) {
+  for (const table of [OPTION_OVERRIDES, REQUIREMENT_OVERRIDES, UNIT_OVERRIDES, HELP_OVERRIDES, MESURES_DEBIT, CHAMPS_PAR_OPTION]) {
     for (const src of Object.keys(table)) {
       if (src.startsWith(ent.sheet + '!') && !fields.some((f) => f.source === src)) {
         throw new Error(`${src} : correction déclarée pour un champ introuvable`);
       }
+    }
+  }
+  // Un retrait qui ne retire plus rien : la cellule a bougé, et le champ
+  // écarté est revenu à l'écran sous une autre référence.
+  for (const src of CHAMPS_RETIRES) {
+    if (src.startsWith(ent.sheet + '!') && !champs.some((c) => `${ent.sheet}!${colName(c.c)}${c.r}` === src)) {
+      throw new Error(`${src} : retrait déclaré pour un champ introuvable`);
     }
   }
   for (const table of [MULTIPLES_IMPOSES, CHAMPS_DETACHES]) {
@@ -779,6 +818,9 @@ for (const ent of ENTITIES) {
     if (f.refTo) parts.push(`refTo: ${JSON.stringify(f.refTo)}`);
     if (f.options) parts.push(`options: ${f.options}`);
     if (f.multiple) parts.push(`multiple: true`);
+    if (f.parOption) {
+      parts.push(`parOption: { cle: ${JSON.stringify(f.parOption.cle)}, libelle: ${JSON.stringify(f.parOption.libelle)} }`);
+    }
     if (f.section) parts.push(`section: ${JSON.stringify(f.section)}`);
     if (f.bloc) parts.push(`bloc: ${JSON.stringify(f.bloc)}`);
     if (f.requirement) parts.push(`requirement: ${JSON.stringify(f.requirement)}`);

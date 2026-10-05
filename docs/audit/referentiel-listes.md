@@ -3,7 +3,7 @@
 ⚠️ **Fichier généré** par `node tools/gen-referentiel.js`, à partir de
 `src/app/models/audit-schema.ts`. Ne pas l’éditer à la main.
 
-123 champ(s) à choix, dont 63 adossés à une constante partagée de `value-lists.ts` et 60 avec une liste propre.
+122 champ(s) à choix, dont 62 adossés à une constante partagée de `value-lists.ts` et 60 avec une liste propre.
 
 ## Constantes partagées
 
@@ -29,7 +29,7 @@
 | `CHEMINEMENT_RESEAU` | 7 | `Structure1!F28`, `Structure1!F37` |
 | `POTENTIEL_TECHNIQUE` | 4 | `Opportunités1!F27`, `Opportunités1!F54`, `Opportunités1!F69` |
 | `ETAT_GENERAL` | 3 | `Compteur général!L29`, `Compteur général!H53`, `Sous-compteur1!J30`, `Réseaux ECS!F41`, `Production Stockage ECS!F42`, `Production Stockage ECS!F65`, `Production Stockage ECS!F82`, `Robinets!F51`, `Douche-baignoire1!E53`, `Douche-baignoire1!E92`, `Douche-baignoire1!E117`, `WC1!F51`, `Appareils de lavage!E37`, `Appareils de lavage!E68`, `Appareils de lavage!E115`, `Appareils de lavage!E153`, `Bassin1!L32` |
-| `OUI_NON_NSP` | 3 | `Réseaux ECS!F29`, `Réseaux ECS!F30`, `Réseaux ECS!F38`, `Réseaux ECS!F51`, `Réseaux ECS!F87`, `Réseaux ECS!F90`, `Réseaux ECS!F101`, `Réseaux ECS!F108`, `Réseaux ECS!F111`, `Production Stockage ECS!F79`, `Production Stockage ECS!F98`, `Production Stockage ECS!F101` |
+| `OUI_NON_NSP` | 3 | `Réseaux ECS!F29`, `Réseaux ECS!F30`, `Réseaux ECS!F51`, `Réseaux ECS!F87`, `Réseaux ECS!F90`, `Réseaux ECS!F101`, `Réseaux ECS!F108`, `Réseaux ECS!F111`, `Production Stockage ECS!F79`, `Production Stockage ECS!F98`, `Production Stockage ECS!F101` |
 
 ## Divergences internes au classeur
 
@@ -113,7 +113,7 @@
 | `Extérieur1!L41` | Période d'arrosage dans la journée | Matin · Soir · En pleine journée · Nuit · Variable |
 | `Extérieur1!F60` | Origine de l'eau | eau potable · eau de pluie · eau pluviale · eau grise · eau souterraine |
 | `Bassin1!F14` | Type | Enterré · Semi-enterrée · Hors sol avec structure · Hors sol tubulaire · Hors sol autoportée |
-| `Bassin1!K14` | Matériaux de construction | maçonné en béton armé · maçonné en béton projeté · blocs à bancher ou parpaings · coque polyester · panneaux modulaires (acier, polymère, aluminium) · bois · inox · composite · PVC |
+| `Bassin1!K14` | Matériaux de construction | maçonné en béton armé · maçonné en béton projeté · blocs à bancher ou parpaings · coque polyester · panneaux modulaires (acier, polymère, aluminium) · bois · inox · composite · PVC · autre |
 | `Bassin1!M14` | Matériaux de revêtement | Carrelage · Résine · Liner · Coque · Plaques aluminium · autre |
 | `Bassin1!K17` | Origine eau du bassin | eau potable · eau de mer · eau souterraine · eau de pluie · eau pluviale · eau de surface |
 | `Bassin1!M17` | Mode de remplissage du bassin | manuel · automatique avec flotteur |

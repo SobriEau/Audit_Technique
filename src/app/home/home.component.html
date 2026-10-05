@@ -291,6 +291,27 @@
   </div>
 </div>
 
+<div class="panel">
+  <h2>Exporter pour l'analyse</h2>
+  <p class="muted">
+    Toutes les réponses de l'audit dans un tableau, une ligne par réponse, à
+    rassembler avec celles d'autres bâtiments. Fichier CSV, séparateur « ; »,
+    encodage Windows-1252. Les photos et les plans n'y figurent que par leur
+    nom : pour transmettre l'audit lui-même, utilisez « Sauvegarder l'audit ».
+  </p>
+  <p class="muted">
+    Une apostrophe en tête d'une valeur (« '2/4 », « '- fuite ») la protège
+    d'Excel, qui en ferait une date ou une formule : elle ne fait pas partie de
+    la réponse.
+  </p>
+  <div class="actions">
+    <button type="button" class="secondary" (click)="exporterCsv()">Exporter en CSV</button>
+  </div>
+  @if (exportCsv) {
+    <p class="muted export-etat" role="status">{{ exportCsv }}</p>
+  }
+</div>
+
 <footer class="muted">
   <button type="button" class="lien" (click)="nav('telecharger')">
     Télécharger l'application

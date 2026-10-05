@@ -207,6 +207,15 @@ export class EntityFormComponent implements OnInit {
     this.item[cleAutre(f)] = texte;
   }
 
+  /** Saisies du champ libre ouvert par option cochée, rangées sous la clé du schéma. */
+  parOptionDe(f: FieldDef): Record<string, string> | null {
+    return f.parOption ? ((this.item[f.parOption.cle] as Record<string, string> | null) ?? null) : null;
+  }
+
+  onParOptionChange(f: FieldDef, saisies: Record<string, string> | null): void {
+    if (f.parOption) this.item[f.parOption.cle] = saisies;
+  }
+
   get hiddenFieldsFiltres(): FieldDef[] {
     const q = normalizeSearch(this.filtreMasques);
     if (!q) return this.hiddenFields;

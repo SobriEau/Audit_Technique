@@ -15,6 +15,7 @@ npm run build            # fichier autonome
 npm run check:extract    # le fichier sait-il encore se reproduire ?
 npm run check:smoke      # chaque écran se rend-il en file:// ?
 npm run check:exigences  # chaque fiche est-elle validable ?
+npm run check:csv        # tout le JSON se retrouve-t-il dans l'export CSV ?
 ```
 
 Décompression du classeur (un .xlsx est une archive ZIP) :
@@ -57,6 +58,9 @@ node tools/xlsx-extract.js tools/.cache/xlsx-v2 tools/.cache/workbook-v2.json
 | `check-extract.js` | **Contrôle** : le fichier autonome sait-il encore se reproduire à l'identique ? À lancer après tout `npm run build`. Voir ci-dessous. |
 | `smoke-test.js` | **Contrôle** : chaque écran se rend-il dans Chrome, en `file://` ? Attrape la page blanche, qui ne remonte aucune erreur nulle part. |
 | `check-exigences.js` | **Contrôle** : chaque fiche est-elle validable, et seulement sur les champs qui la concernent ? Compile la logique d'exigence avec le schéma réel et rejoue une saisie par entité et par bloc conditionnel. |
+| `check-csv.js` | **Contrôle** : tout ce que contient le JSON d'un audit se retrouve-t-il dans l'export CSV ? Remplit chaque champ du schéma réel, y ajoute ce que le schéma ignore, puis confronte le fichier relu aux feuilles du JSON — y compris avec un schéma amputé ou vide. |
+| `json-to-csv.js` | Convertit en CSV un audit déjà exporté en JSON, avec le code même de l'application : `npm run csv -- audit.json`. Séparateur « ; », encodage cp-1252. |
+| `lib/compiler.js` | Compile des modules de l'application (fonctions pures) pour les exécuter hors navigateur. |
 
 ### Une seule lecture de la mise en page
 
@@ -154,9 +158,10 @@ cherché aux emplacements usuels, sinon renseigner `CHROME_PATH`.
   entité et chaque valeur, une saisie complète qui doit être validable. Un
   bloc désigne un intitulé de premier niveau **ou une section** (le bouclage
   d'un réseau ECS) ; un bloc inactif est masqué à l'écran.
-- **Les corrections du retour de test (2026-09) sont des tables sourcées**
-  dans `gen-schema.js` — `REQUIREMENT_OVERRIDES`, `UNIT_OVERRIDES`,
-  `HELP_OVERRIDES`, `MULTIPLES_IMPOSES`, `CHAMPS_RETIRES`, `CHAMPS_DETACHES` —
+- **Les corrections des retours de test (2026-09, 2026-10) sont des tables
+  sourcées** dans `gen-schema.js` — `REQUIREMENT_OVERRIDES`, `UNIT_OVERRIDES`,
+  `HELP_OVERRIDES`, `MULTIPLES_IMPOSES`, `CHAMPS_PAR_OPTION`, `CHAMPS_RETIRES`,
+  `CHAMPS_DETACHES` —
   et dans `lib/classeur.js` (`MESURES_DEBIT`, `SECTIONS_AJOUTEES`,
   `LEGENDES_AJOUTEES`). Une entrée qui ne retrouve plus sa cellule **arrête
   la génération** : le classeur a bougé, la table doit suivre. À reporter

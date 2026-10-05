@@ -15,4 +15,4 @@ Entité `ventilation_batiment` — route `#/qte/ventilation`.
 | `B23` | Année d'installation | Facultatif | Champ libre |
 | `B27` | Système en fonctionnement le jour de l'audit | Recommandé | Liste déroulante O/N |
 | `B31` | Dégradations / dysfontionnement observés | Recommandé | Champ libre |
-| `B35` | Remarques (concommation d'eau de la CTA,…) | — | Champ libre |
+| `B35` | Remarques (consommation d'eau de la CTA,…) | — | Champ libre |

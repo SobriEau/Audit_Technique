@@ -98,6 +98,16 @@ export class EntityListComponent implements OnInit {
     this.data.setSingle(this.preambule.key, this.preambuleValeurs);
   }
 
+  parOptionPreambule(f: FieldDef): Record<string, string> | null {
+    return f.parOption ? ((this.preambuleValeurs[f.parOption.cle] as Record<string, string> | null) ?? null) : null;
+  }
+
+  changerParOptionPreambule(f: FieldDef, saisies: Record<string, string> | null): void {
+    if (!this.preambule || !f.parOption) return;
+    this.preambuleValeurs[f.parOption.cle] = saisies;
+    this.data.setSingle(this.preambule.key, this.preambuleValeurs);
+  }
+
   /** Totaux en tête de tableau (nombre de robinets, surfaces…). */
   totaux: Total[] = [];
 

@@ -29,6 +29,8 @@
                 [ngModelOptions]="{ standalone: true }"
                 [autre]="autrePreambule(f)"
                 (autreChange)="changerAutrePreambule(f, $event)"
+                [parOption]="parOptionPreambule(f)"
+                (parOptionChange)="changerParOptionPreambule(f, $event)"
               />
             }
           </div>
