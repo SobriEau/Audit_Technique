@@ -67,6 +67,9 @@
       <thead>
         <tr>
           <th>Numéro</th>
+          @if (avecPieces) {
+            <th>Pièce</th>
+          }
           @for (c of columns; track c.key) {
             @if (c.key !== 'Numero') {
               <th>{{ columnLabel(c) }}</th>
@@ -79,6 +82,9 @@
         @for (item of items; track item.Id) {
           <tr class="clickable" (click)="open(item)">
             <td>{{ item.Numero ?? '' }}</td>
+            @if (avecPieces) {
+              <td>{{ pieceDe(item) || '—' }}</td>
+            }
             @for (c of columns; track c.key) {
               @if (c.key !== 'Numero') {
                 <td>{{ display(item, c) }}</td>
@@ -95,7 +101,7 @@
         }
         @empty {
           <tr>
-            <td [attr.colspan]="columns.length + 2" class="empty-row">
+            <td [attr.colspan]="columns.length + (avecPieces ? 3 : 2)" class="empty-row">
               Aucun élément. Cliquez sur « Ajouter — {{ def.singular }} ».
             </td>
           </tr>

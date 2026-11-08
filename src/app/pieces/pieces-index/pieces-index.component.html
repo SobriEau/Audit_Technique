@@ -1,0 +1,23 @@
+<app-page-header
+  pageTitle="Pièces"
+  [backTo]="['/qte']"
+  [crumbs]="[{ label: 'Audit technique', link: ['/qte'] }, { label: 'Pièces' }]"
+/>
+
+<div class="panel">
+  <h2>Avancer pièce par pièce</h2>
+  <p class="muted">
+    Ouvrez la pièce où vous vous trouvez : vous y verrez les points d'eau
+    attendus, et pourrez en ajouter. Les listes par type — robinets, WC,
+    réseaux… — restent accessibles depuis l'audit technique ; c'est le même
+    audit, vu autrement.
+  </p>
+
+  <app-piece-manager />
+</div>
+
+<footer class="muted">
+  <button type="button" class="lien" (click)="nav('/qte')">
+    Revenir aux sections de l'audit technique
+  </button>
+</footer>

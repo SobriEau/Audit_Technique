@@ -57,6 +57,12 @@
     @if (modeFichiers) {
       <span class="mode">fichiers voisins</span>
     }
+    @if (nbSansBinaire) {
+      <span class="alerte-sauvegarde" role="status">
+        {{ nbSansBinaire }} image(s) n'existent plus que sous forme de chemin :
+        l'export JSON ne les embarquera pas.
+      </span>
+    }
   </div>
 
   @if (photos.length === 0) {
@@ -88,6 +94,14 @@
               } @else {
                 <span class="badge badge--local" title="Présente uniquement sur ce poste">
                   ⌂ local
+                </span>
+              }
+              @if (sansBinaire(photo)) {
+                <span
+                  class="badge badge--alerte"
+                  title="L'image n'est plus dans ce navigateur : l'export JSON ne pourra pas l'embarquer. Seul son chemin subsiste."
+                >
+                  ⚠ hors sauvegarde
                 </span>
               }
             </span>

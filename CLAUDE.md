@@ -128,6 +128,7 @@ AppData
 ├── EquipementsPresents {} ancien régime d'affichage, et entités hors classeur
 ├── Documents {}         documents récupérés, par identifiant stable
 ├── Plans[]              AssetRef — plans du bâtiment, communs à l'audit
+├── Pieces[]             pièces du bâtiment, pointées sur un plan
 ├── Photos[]             AssetRef — galerie générale
 ├── Qge {}               JSON libre (éditeur brut)
 ├── Qus {}               JSON libre (éditeur brut)
@@ -137,6 +138,7 @@ AppData
     ├── robinets[]               une entrée par élément
     │   ├── Id                   identité stable
     │   ├── Numero               libellé affiché
+    │   ├── Piece                Id de la pièce, ou null (§3bis)
     │   ├── Localisation         PlanLocation | null
     │   ├── Photos[]             AssetRef
     │   └── … champs du schéma
@@ -198,6 +200,52 @@ photos sur son voisin.
 `Qte.Localisations` et `Qte.PhotosSections` sont un vestige de l'époque où les
 sections étaient éditées en JSON brut. Ils ne sont plus alimentés, et ne
 subsistent que pour relire les audits enregistrés à ce moment-là.
+
+### Les pièces — une seconde entrée, pas une seconde structure
+
+Le classeur range l'audit par **type d'équipement** : un onglet « Robinets »,
+un onglet « WC ». Sur le terrain, l'auditeur avance par **pièce** : il entre
+dans un local et relève tout ce qu'il y voit (première visite terrain,
+2026-10). Les deux lectures coexistent, et c'est ce qu'il ne faut pas défaire.
+
+- **La pièce ne contient pas les points d'eau.** `AppData.Pieces[]` d'un côté,
+  une clé `Piece` portant son `Id` sur chaque élément de l'autre (`CLE_PIECE`
+  dans [data.models.ts](src/app/models/data.models.ts)). Ranger les éléments
+  *dans* la pièce aurait changé la forme du JSON : or des audits circulent, et
+  une version qui ignore les pièces doit continuer de les relire — elle ignore
+  simplement une clé de plus.
+- **`Piece` n'est pas un champ du schéma, et ne peut pas l'être.**
+  `audit-schema.ts` est généré depuis le classeur, qui ne décrit pas les
+  pièces. La clé est donc traitée comme `Photos` et `Localisation` : déclarée
+  dans le modèle, rendue à part par `entity-form`, habillée à part par l'export
+  CSV.
+- **Les listes par type restent le chemin d'origine.** Sept entités ne sont
+  dans aucune pièce (réseaux ECS, toitures, structure, ventilation, espaces
+  extérieurs, opportunités, zone piscine), un audit commencé avant n'a pas de
+  pièces, et la colonne « Pièce » d'une liste est le seul endroit où l'on voit
+  qu'un point d'eau n'en a pas. Les retirer rendrait des saisies
+  inatteignables.
+- **Supprimer une pièce détache ses points d'eau, sans les supprimer**
+  (`purgePieceReferences`). On supprime une pièce pour réorganiser ; effacer au
+  passage une fiche remplie sur le terrain n'aurait aucun rapport avec ce que
+  l'auditeur a demandé. Le nombre d'éléments concernés est annoncé avant.
+- La règle d'affichage des sections est **partagée** entre le tableau de bord
+  et la page d'une pièce
+  ([sections-visibles.ts](src/app/qte/sections-visibles.ts)), et le rendu d'une
+  cellule entre les deux tableaux ([affichage.ts](src/app/qte/affichage.ts)) :
+  dupliquées, elles rendraient une section atteignable d'un côté et pas de
+  l'autre, sans rien signaler.
+
+Écrans : `#/pieces` (liste, et préparation) et `#/pieces/<Id>` (points d'eau de
+la pièce). Le composant `piece-manager` sert à la fois la préparation sur
+l'accueil du projet et la page `#/pieces`. Le **compteur général** n'y est pas
+rendu en tableau mais par un lien direct vers sa fiche : un bâtiment n'en a
+qu'un, et un tableau d'une ligne serait une étape de plus sans rien montrer.
+
+Une pièce porte une `PlanLocation`, comme un élément — donc la même punaise et
+le même dialogue, et `purgePlanReferences` les traite ensemble. Ce n'est pas un
+contour de pièce : voir l'arbitrage dans
+[MAJ/realisations/2026-11-08-pieces-archive-images.md](MAJ/realisations/2026-11-08-pieces-archive-images.md).
 
 ---
 
@@ -277,6 +325,82 @@ Mesuré depuis le fichier autonome ouvert en `file://` :
   opaque n'a pas de fiche de permissions. L'auditeur devra l'accorder à chaque
   ouverture du fichier. C'est écrit à l'écran, pas laissé deviner.
 
+### Où chercher une photo — quatre sources, et l'ordre est la règle
+
+`sourcePhoto` ([photo-mode.ts](src/app/core/utils/photo-mode.ts)) décide, et
+c'est une fonction pure parce que **cet ordre a déjà été faux deux fois** :
+
+| # | Source | Pourquoi là |
+|---|---|---|
+| 1 | `base` | Le binaire local. Écrit avant même que la vignette soit rendue, dans les deux modes de rangement : la seule source sûre et immédiate. |
+| 2 | `voisin` | Le fichier **à plat**, à côté de la page. C'est le cas **normal** : le navigateur télécharge dans un dossier unique et aplatit les séparateurs, la photo est donc là et nulle part ailleurs sur le poste de l'auditeur. |
+| 3 | `archive` | Le même fichier **dans le sous-dossier de l'audit** — le chemin enregistré tel quel. C'est le **repli**, et il ne sert qu'après : chacun exporte son archive, on les réunit, et les photos de plusieurs auditeurs se retrouvent chacune dans le dossier de son audit. |
+| 4 | `drive` | Le filet, qui suppose le réseau. |
+
+Les deux erreurs, pour qu'on ne les refasse pas :
+
+- **Le chemin relatif avant le binaire.** Le téléchargement n'est ni instantané
+  ni notifiable : la vignette tombait sur un fichier inexistant, le navigateur
+  retenait l'échec, et il fallait **recharger la page** pour voir les photos
+  (première visite terrain, 2026-10).
+- **Le sous-dossier avant le fichier à plat.** C'était échouer à chaque
+  affichage sur le poste de l'auditeur pour réussir sur un cas qui n'arrive
+  qu'après l'archivage.
+
+Une source mise en échec est **écartée**, pas réessayée : chaque échec retire
+exactement une piste, donc le parcours est fini. C'est la même fonction qui
+désigne la source et qui l'écarte — elles ne peuvent pas diverger.
+
+### Le chemin d'une photo : à plat sur le poste, en sous-dossier dans l'archive
+
+Le chemin enregistré est `./<dossier-de-l-audit>/<fichier>` (`cheminPhoto`,
+`dossierAudit`). Le dossier porte le nom de l'audit **et huit caractères de son
+identité**, et c'est là tout l'intérêt : deux audits peuvent s'appeler « École
+Jean Moulin », et une fois les archives de plusieurs auditeurs réunies leurs
+photos se mélangeraient dans un dossier commun.
+
+⚠️ **Un navigateur ne peut pas créer ce sous-dossier.** Mesuré sur Chromium 141
+en pilotant le protocole DevTools — seul moyen d'autoriser un téléchargement
+sans fenêtre : l'attribut `download` **aplatit** les séparateurs.
+`mon-audit/photo.jpg` est écrit `mon-audit_photo.jpg`, et
+`./mon-audit/photo.jpg` devient `_mon-audit_photo.jpg`. C'est une règle
+d'assainissement du navigateur, pas un réglage.
+
+D'où deux emplacements pour un même fichier, et il faut tenir les deux :
+
+- **sur le poste de l'auditeur**, à plat dans le dossier de téléchargement, à
+  côté de la page. C'est l'état courant, pendant tout l'audit ;
+- **dans l'archive**, au chemin enregistré. C'est l'état d'après — celui qui
+  permet de réunir le travail de plusieurs auditeurs sans collision.
+
+L'affichage essaie donc le fichier à plat **avant** le sous-dossier (§4,
+tableau des sources). L'API File System Access, qui saurait écrire dans un
+dossier choisi et rendrait les deux états identiques, est bien présente en
+`file://` (mesuré) mais **absente de Chrome sur Android**, c'est-à-dire de
+l'appareil de terrain : elle n'a pas été retenue.
+
+Un renommage de l'audit ne réécrit pas les chemins déjà enregistrés — ce serait
+toucher à des dizaines d'enregistrements pour un libellé. C'est **l'archive qui
+réécrit** chaque chemin sur le dossier qu'elle a réellement créé : elle est
+donc toujours cohérente avec elle-même.
+
+`npm run check:photos` porte ces règles — composition des noms, unicité du
+dossier, et l'ordre des sources. *Vérifié en le cassant : remettre le
+sous-dossier avant le fichier à plat remonte 4 échecs ; retirer l'identité du
+nom de dossier en remonte 2.*
+
+### Le binaire est la sauvegarde, le chemin n'en est pas une
+
+Une photo n'est enregistrée **que** si son binaire est en base : c'est de là que
+l'export JSON tire les images (`buildExportPayload`), une page `file://` ne
+pouvant pas lire ses fichiers voisins. Un chemin relatif ne vaut que sur le
+poste où le fichier se trouve.
+
+Deux garde-fous, pour que l'écart se voie au lieu de se découvrir à la
+réception : la vignette d'une photo sans binaire porte un bandeau rouge
+« hors sauvegarde », et l'export annonce le nombre d'images qu'il n'a pas pu
+embarquer.
+
 [camera-capture](src/app/shared/components/camera-capture/camera-capture.component.ts)
 porte le dialogue. Trois choses à ne pas défaire :
 
@@ -314,6 +438,103 @@ porte le dialogue. Trois choses à ne pas défaire :
 
 Toute évolution du modèle doit rester lisible par un import d'ancien fichier :
 des audits circulent déjà.
+
+### Réunir deux audits — deux auditeurs sur un même bâtiment
+
+Pour un grand bâtiment, l'un prépare l'audit (plans, pièces), l'envoie à
+l'autre, chacun relève sa part hors connexion, et l'un **intègre** le fichier
+de l'autre dans l'audit qu'il a ouvert. C'est une opération distincte de
+l'import, qui crée un audit à part : panneau « Travailler à deux sur le même
+bâtiment » de l'accueil du projet, et
+[fusion.ts](src/app/core/utils/fusion.ts).
+
+Trois règles portent tout, et ce sont elles le contrat :
+
+- **Rien n'est jamais écrasé.** Une fiche renseignée **différemment** des deux
+  côtés n'est pas arbitrée : elle est ajoutée **en double**, et le rapport
+  nomme les champs en cause. Un doublon se supprime en deux clics ; une saisie
+  de terrain écrasée ne se retrouve jamais. Une fiche que l'autre a seulement
+  **complétée** — champs vides ici, photos ajoutées — est complétée sur place,
+  parce que c'est le cas courant et que le dupliquer serait absurde.
+- **L'identité fait foi, le numéro est refait.** Le rapprochement se fait sur
+  `Id` (pièces, plans, fiches) : c'est ce qui permet de reconnaître la base
+  préparée en commun au lieu de la recopier. Les deux listes numérotant chacune
+  à partir de 1, les éléments repris sont renumérotés à la suite — sans risque,
+  les relations désignant l'`Id` (§3).
+- **`fusionner()` est pure.** Elle ne touche ni à l'un ni à l'autre de ses
+  arguments et rend un audit neuf plus un rapport. C'est ce qui permet de
+  **montrer le résultat avant de l'appliquer** — on n'intègre pas un relevé de
+  terrain à l'aveugle — et de l'éprouver hors navigateur.
+
+Deux conséquences à connaître : l'identifiant d'une image reprise est
+**conservé** sauf s'il désigne déjà une autre image du poste (sinon la reprise
+écraserait une image étrangère au fichier) ; et intégrer **deux fois** le même
+fichier n'ajoute rien, un doublon déjà posé étant reconnu à son contenu. Un
+fichier antérieur aux identifiants n'offre rien à reconnaître : l'intégrer deux
+fois double ses fiches.
+
+`npm run check:fusion` porte la garantie : il joue le scénario de terrain —
+base commune, deux apports, une fiche remplie des deux côtés — puis vérifie,
+par son propre parcours du JSON, que chaque réponse des deux fichiers se
+retrouve, que la base commune n'est pas recopiée, que les identités et les
+numéros restent uniques, et que la seconde intégration est blanche. *Vérifié en
+le cassant : remplacer la fiche d'accueil par celle reçue remonte 8 échecs.*
+
+### Archive complète — tout emporter d'un coup
+
+Bouton « Exporter tout en ZIP » de l'accueil général. L'archive porte
+l'application **et tous les audits du poste**, et elle est autosuffisante : on
+la déplie, on ouvre `index.html`, et les chemins relatifs des photos tombent
+juste, parce que l'arborescence est celle qu'ils décrivent (§4).
+
+```
+sobrieau-2026-11-08.zip
+├── index.html                     ← l'application, par `reconstituer()`
+├── LISEZ-MOI.txt
+└── ecole-jean-moulin-a1b2c3d4/    ← un dossier par audit
+    ├── audit.json
+    ├── 20261108T0930_robinet-3_1f2e3d4c.jpg
+    └── plans/rdc.png
+```
+
+Quatre points à ne pas défaire :
+
+- **C'est un ZIP, pas un RAR**, et ce n'est pas un choix de confort : le format
+  RAR est propriétaire, son algorithme de compression n'est pas publié, et
+  aucune bibliothèque JavaScript ne sait en *écrire* — celles qui existent ne
+  font que lire. Un ZIP s'ouvre d'un double-clic sous Windows comme sous macOS.
+- **L'écrivain ZIP est écrit à la main** ([zip.ts](src/app/core/utils/zip.ts)),
+  deux cents lignes, sans dépendance : le livrable est un fichier autonome, et
+  toute bibliothèque y serait inlinée. La compression vient du navigateur
+  (`CompressionStream('deflate-raw')`, présent en `file://` — mesuré) ; faute
+  d'elle, les fichiers sont stockés tels quels et l'archive s'ouvre pareil. Un
+  JPEG est stocké sans tentative de compression : elle ne gagne rien et coûte
+  le parcours de chaque octet.
+- **Les images viennent de la base, pas des fichiers voisins.** « Depuis les
+  liens relatifs » est impossible à la lettre : `fetch` d'un voisin est refusé
+  en `file://`. C'est la même image, et elle est en base dans les deux modes de
+  rangement.
+- **`audit.json` embarque les images par défaut**, sur une case à cocher : coché,
+  chaque dossier est réutilisable seul ; décoché, l'archive est deux fois plus
+  légère mais un JSON sorti de son dossier a perdu ses images.
+
+Pas de ZIP64 : au-delà de 65 535 fichiers ou de 4 Go, l'archive est **refusée**
+avec un message, plutôt que produite dans un état qu'aucun outil n'ouvrirait.
+
+Deux contrôles, parce qu'il y a deux choses distinctes à garantir :
+
+- `npm run check:zip` éprouve **l'écrivain** : une archive aux contenus pénibles
+  — accents, sous-dossiers, fichier vide, binaire incompressible, noms en
+  double — confiée à **`unzip`**, un lecteur indépendant, et chaque octet relu
+  comparé à l'octet écrit. *Vérifié en le cassant : une somme de contrôle
+  faussée, un décalage d'index faussé ou le bit UTF-8 retiré font refuser
+  l'archive.*
+- `npm run check:archive` éprouve **la chaîne**, dans un vrai navigateur piloté
+  par le protocole DevTools — seul moyen d'autoriser un téléchargement sans
+  fenêtre, `--dump-dom` n'en faisant aucun, silencieusement. Un audit et une
+  image sont posés dans le stockage de la page, le bouton est cliqué, l'archive
+  dépliée, et la photo doit s'y trouver au chemin que le JSON annonce. C'est le
+  seul à éprouver les trois bouts ensemble.
 
 ### Export CSV — pour compiler et analyser
 
@@ -375,6 +596,8 @@ inconnues, il signale 104 valeurs manquantes.*
   `<embed>` isole les clics — impossible d'y poser une punaise.
 - Les coordonnées de punaise sont des **fractions (0 à 1)**, jamais des pixels :
   la punaise doit rester juste en vignette, en plein écran et à l'impression.
+- **Les pièces y sont posées comme les éléments** (§3bis) : supprimer un plan
+  purge aussi leurs punaises, et un import réécrit aussi les leurs.
 
 ### PDF.js — montage à ne pas défaire
 
@@ -436,6 +659,7 @@ donc décrite en données et rendue par deux composants génériques.
 | `glossaire.ts`, `documents-collectes.ts` | **Générés** : contenus repris mot pour mot du classeur |
 | `audit-field` | **Composant de saisie unique** — texte, nombre, liste, oui/non, référence, photos |
 | `entity-list` / `entity-form` | Rendu générique de la liste et de la fiche |
+| [sections-visibles.ts](src/app/qte/sections-visibles.ts), [affichage.ts](src/app/qte/affichage.ts) | Règles partagées par le tableau de bord et la page d'une pièce (§3bis) |
 
 **Deux entités de la V2 n'ont plus d'onglet en V3.** Le *réducteur de
 pression* est replié en bloc conditionnel dans la fiche Compteur général (six
@@ -446,7 +670,7 @@ plus lu. Le mécanisme `CHAMPS_FIGES` / `horsClasseur` reste, vide.
 
 ### Retour de test de Victor Ledoux (2026-09)
 
-Le support est dans `MAJ/to_do/retours_test_html_victor.txt`. Chaque
+Le support est dans `MAJ/retours/2026-09-16-victor-ledoux-test-html.txt`. Chaque
 correction est sourcée dans le code, et **le générateur s'arrête si l'une ne
 retrouve plus sa cellule** :
 
@@ -491,11 +715,31 @@ arrosage et nettoyage se cochaient déjà ensemble, et la seule parenthèse des
 « Remarques » du réseau ECS que porte le classeur — « (circulateur double, …) »
 — s'affiche, mais dans la sous-partie bouclage, donc seulement à « Oui ».
 
+### Première visite terrain (2026-10)
+
+Le support est dans `MAJ/retours/2026-10-16-premiere-visite-terrain.md`, les arbitrages dans
+[MAJ/realisations/2026-11-08-pieces-archive-images.md](MAJ/realisations/2026-11-08-pieces-archive-images.md).
+
+| Demande | Où |
+|---|---|
+| Intégrer un JSON dans l'audit en cours (deux auditeurs, un bâtiment) | [fusion.ts](src/app/core/utils/fusion.ts), `DataService.prepareMerge` / `applyMerge`, `fusion-audit` (§5) |
+| Avancer par pièce plutôt que par type d'équipement | `AppData.Pieces`, clé `Piece`, `piece-manager`, `#/pieces` (§3bis) |
+| Photos mal affichées jusqu'au rechargement de la page | `PhotoEditorComponent.source` (§4) |
+
+### Demandes complémentaires (2026-11-08)
+
+| Demande | Où |
+|---|---|
+| Chemin d'une photo = dossier de la page + dossier de l'audit + fichier | `cheminPhoto()`, `dossierAudit()` (§4) |
+| Archive : l'application à la racine, un dossier par audit | `ArchiveService`, [zip.ts](src/app/core/utils/zip.ts) (§5) |
+| Garantir qu'une photo reste enregistrée autrement que par son chemin | binaire en base, bandeau « hors sauvegarde », compte à l'export (§4) |
+| Restructurer le suivi des mises à jour | `MAJ/` — voir [MAJ/AVANCEMENT.md](MAJ/AVANCEMENT.md) |
+
 ### Deux migrations V3 ont été menées en parallèle
 
 Le 2026-08-24 sur un poste, le 2026-09-14 sur un autre, sans que l'une sache
 rien de l'autre. Elles ont été fusionnées le 2026-09-16 ; chaque arbitrage est
-consigné dans [MAJ/done/fusion-origin-main.md](MAJ/done/fusion-origin-main.md). À lire avant de
+consigné dans [MAJ/realisations/2026-09-16-fusion-origin-main.md](MAJ/realisations/2026-09-16-fusion-origin-main.md). À lire avant de
 toucher à l'exigence des champs, au surpresseur ou à la validation : plusieurs
 choix y défont explicitement ce qu'une des deux versions avait écrit.
 
@@ -733,7 +977,34 @@ npm run check:extract         # le fichier sait-il encore se reproduire ?
 npm run check:smoke           # chaque écran se rend-il en file:// ?
 npm run check:exigences       # chaque fiche est-elle validable ?
 npm run check:csv             # tout le JSON se retrouve-t-il dans l'export CSV ?
+npm run check:fusion          # réunir deux audits perd-il, ou double-t-il, quelque chose ?
+npm run check:photos          # chemins des photos, et ordre des sources d'affichage
+npm run check:zip             # l'archive produite s'ouvre-t-elle vraiment ?
+npm run check:archive         # dépliée, la photo est-elle au chemin que le JSON annonce ?
 ```
+
+`check:smoke` et `check:extract` cherchent Chrome dans quelques chemins usuels,
+`/snap/bin/chromium` compris, et obéissent à `CHROME_PATH`.
+
+`check:smoke` sait en outre **amorcer le stockage** avant de charger un écran,
+et **relever l'état enregistré** après. C'est ce qui lui permet d'éprouver deux
+choses autrement invisibles :
+
+- les écrans qui n'existent que sur un audit rempli — la page d'une pièce
+  n'existe pas sur un audit neuf, et sa route redirige ;
+- **la lisibilité des audits anciens** : un audit rangé sous la clé mono-audit
+  `sobrieau`, sans `Id` sur ses éléments, compteur général en objet,
+  `EquipementsPresents` sans `UtilisationsEau`, ni pièces. Cinq écrans le
+  chargent, et un sixième relit le `localStorage` après coup.
+
+Ce dernier point mérite l'écran de relevé : une identité attribuée à un
+élément ancien **ne change rien au tableau** — Angular rend la liste sans elle
+— mais sans identité la fiche est inatteignable par son URL. *Vérifié en le
+cassant : retirer l'attribution des identités ne fait tomber aucun écran, et
+seul le relevé le signale.*
+
+La page d'amorçage est écrite **à côté de la cible** et non dans `/tmp`, qu'un
+navigateur en paquet confiné (snap, flatpak) ne voit pas.
 
 Points de contrôle qui ont déjà révélé des régressions :
 
@@ -758,10 +1029,68 @@ Points de contrôle qui ont déjà révélé des régressions :
 10. `npm run check:csv` après toute évolution du modèle de données ou de
     l'export : une réponse absente du CSV manque à l'analyse sans que rien ne
     le signale.
+11. `npm run check:fusion` après toute modification de la réunion de deux
+    audits, du modèle de données ou de la numérotation : une fusion fautive
+    écrase un relevé de terrain sans laisser de trace, et personne ne refera
+    la visite pour s'en apercevoir.
+12. Rattacher un point d'eau à une pièce, puis **supprimer la pièce** : la
+    fiche doit rester dans la liste de son type, et le nombre d'éléments
+    détachés doit avoir été annoncé.
+13. En mode « fichiers voisins », ajouter une photo **sur un téléphone** : la
+    vignette doit s'afficher immédiatement, sans recharger la page.
+14. Ouvrir un audit **antérieur** à la version en cours — `check:smoke` en
+    charge un, mais la variété des audits réellement en circulation dépasse ce
+    qu'une graine peut représenter. Les sections visibles la veille doivent
+    l'être encore (§8), et les fiches rester atteignables par leur URL.
+15. `npm run check:zip` après toute modification de l'écrivain ZIP ou de
+    l'archive : une archive mal formée ne se voit pas au moment de la produire,
+    seulement à la réception.
+15 bis. `npm run check:photos` après toute modification des chemins de photos
+    ou de l'ordre des sources : une vignette finit toujours par s'afficher, par
+    la source suivante — seuls le réseau et le cache gardent la trace de
+    l'essai perdu.
+16. `npm run check:archive` après toute modification de l'archive ou du chemin
+    des photos : il pose un audit et une image dans le stockage d'un vrai
+    navigateur, clique le bouton, déplie l'archive téléchargée, et exige que la
+    photo s'y trouve **au chemin que le JSON annonce** — l'audit porte exprès
+    un chemin périmé, pour vérifier que l'archive le réécrit. C'est le seul
+    contrôle qui éprouve les trois bouts **ensemble** : chemin enregistré,
+    arborescence produite, résolution du lien. Chacun peut être juste seul et
+    faux à trois.
 
 ---
 
-## 12. À savoir
+## 12. Suivi des mises à jour
+
+`MAJ/` porte l'historique des demandes, et sa convention tient en trois
+dossiers — décrite dans [MAJ/AVANCEMENT.md](MAJ/AVANCEMENT.md), qui est le
+point d'entrée :
+
+| Dossier | Contenu | Règle |
+|---|---|---|
+| `retours/` | Les éléments de retour **bruts**, tels que reçus | Jamais modifiés. C'est la seule pièce qu'on ne peut pas reconstituer. |
+| `to_do/` | Une fiche par retour : chaque demande, son état, et l'endroit du code où elle a abouti | Le document de travail — c'est là que vivent les réserves et les lectures tranchées. |
+| `realisations/` | Les notes d'arbitrage : ce qui a été fait, et pourquoi plutôt qu'autrement | À lire avant de défaire quelque chose. |
+| `classeurs/` | Les versions du classeur Excel dont le schéma est généré | `audit_technique.xlsx` est la version courante. |
+
+Les trois raisons de cette séparation ont chacune été payées une fois :
+
+- **Un retour reformulé perd sa demande.** « Pas pour le compteur général » ne
+  se laisse lire que dans la phrase entière ; résumé en « ne pas afficher »,
+  l'arbitrage aurait porté sur autre chose.
+- **Un retour sans fichier se perd.** Le second retour de test (2026-10) est
+  arrivé hors fichier : sa fiche ne contient que ce que le code atteste, et nul
+  ne sait ce qu'elle oublie.
+- **Une réalisation sans note se défait.** Plusieurs choix du projet annulent
+  explicitement un choix antérieur pris à dessein ; sans la note, le suivant les
+  rétablit de bonne foi.
+
+Nommage `AAAA-MM-JJ-sujet` : les dossiers se trient d'eux-mêmes, et la date d'un
+retour ne se confond pas avec celle de sa réalisation.
+
+---
+
+## 13. À savoir
 
 - **`.github/copilot-instructions.md` est obsolète et trompeur.** Il décrit
   l'architecture Python supprimée (`fusionner_v2.py`, dossier `site/`,

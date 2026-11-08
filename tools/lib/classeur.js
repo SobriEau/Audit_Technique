@@ -208,7 +208,7 @@ const LEGENDES_AJOUTEES = {
  *
  * Un champ n'est retenu que s'il porte une note ou un niveau de priorité. Deux
  * cellules du classeur n'ont ni l'un ni l'autre et sont pourtant de vraies
- * questions — arbitré avec l'auteur du projet, voir `MAJ/done/arbitrages-v3.md`.
+ * questions — arbitré avec l'auteur du projet, voir `MAJ/realisations/2026-08-21-arbitrages-v3.md`.
  *
  * Chaque entrée porte sa cellule d'origine : elle reste vérifiable dans le
  * classeur, et disparaîtra d'elle-même si une version future la décrit

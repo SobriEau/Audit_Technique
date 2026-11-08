@@ -1,0 +1,114 @@
+@if (piece) {
+  <app-page-header
+    [pageTitle]="titre"
+    [backTo]="['/pieces']"
+    [crumbs]="[
+      { label: 'Audit technique', link: ['/qte'] },
+      { label: 'Pièces', link: ['/pieces'] },
+      { label: titre }
+    ]"
+  />
+
+  <div class="panel">
+    <h2>Repérage</h2>
+    @if (piece.Remarques) {
+      <p class="remarques">{{ piece.Remarques }}</p>
+    }
+    <app-plan-locator [location]="location" (locationChange)="onLocationChange($event)" />
+  </div>
+
+  <div class="panel">
+    <h2>Points d'eau de cette pièce</h2>
+
+    @if (total === 0) {
+      <p class="muted empty">
+        Aucun point d'eau déclaré ici. Choisissez un type ci-dessous : la fiche
+        est créée rattachée à cette pièce, et s'ouvre pour être remplie.
+      </p>
+    }
+
+    <div class="ajout">
+      <label for="type-a-ajouter">Ajouter un point d'eau</label>
+      <div class="ajout-ligne">
+        <select id="type-a-ajouter" [(ngModel)]="aAjouter" name="aAjouter">
+          <option value="">Choisir un type…</option>
+          @for (d of ajoutables; track d.key) {
+            <option [value]="d.key">{{ d.singular }}</option>
+          }
+        </select>
+        <button type="button" class="primary" [disabled]="!aAjouter" (click)="ajouterEtOuvrir()">
+          + Ajouter et remplir
+        </button>
+      </div>
+      <p class="muted field-help">
+        Les types proposés sont ceux que les utilisations de l'eau déclarées sur
+        l'accueil du projet font apparaître.
+      </p>
+    </div>
+  </div>
+
+  @for (bloc of blocs; track bloc.def.key) {
+    <div class="panel">
+      <h2>{{ bloc.def.plural }} <span class="compte">{{ bloc.items.length }}</span></h2>
+
+      @if (bloc.tableau) {
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Numéro</th>
+                @for (c of bloc.colonnes; track c.key) {
+                  <th>{{ libelleColonne(bloc.def, c) }}</th>
+                }
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of bloc.items; track item.Id) {
+                <tr class="clickable" (click)="ouvrir(bloc.def, item)">
+                  <td>{{ item.Numero ?? '' }}</td>
+                  @for (c of bloc.colonnes; track c.key) {
+                    <td>{{ display(item, c) }}</td>
+                  }
+                  <td class="col-actions">
+                    <button class="ghost" (click)="ouvrir(bloc.def, item)">Modifier</button>
+                    <button class="ghost" (click)="detacher(bloc.def, item, $event)">
+                      Retirer d'ici
+                    </button>
+                    <button class="ghost btn-delete" (click)="supprimer(bloc.def, item, $event)">
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <!-- Pas de tableau pour le compteur général : sa fiche s'ouvre droit. -->
+        <ul class="fiches">
+          @for (item of bloc.items; track item.Id) {
+            <li>
+              <button type="button" class="secondary" (click)="ouvrir(bloc.def, item)">
+                Ouvrir — {{ bloc.def.singular }}{{ item.Numero ? ' n° ' + item.Numero : '' }}
+              </button>
+              <button class="ghost" (click)="detacher(bloc.def, item, $event)">Retirer d'ici</button>
+              <button class="ghost btn-delete" (click)="supprimer(bloc.def, item, $event)">
+                Supprimer
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="actions">
+        <button type="button" class="ghost" (click)="ajouterLigne(bloc.def)">
+          + Ajouter — {{ bloc.def.singular }}
+        </button>
+        <button type="button" class="ghost" (click)="nav('/qte/' + bloc.def.route)">
+          Voir tous les {{ bloc.def.plural }} du bâtiment
+        </button>
+      </div>
+    </div>
+  }
+}

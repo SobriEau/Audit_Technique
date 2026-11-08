@@ -43,6 +43,46 @@ export interface PlanLocation {
 }
 
 /**
+ * Pièce du bâtiment, définie à la préparation de l'audit.
+ *
+ * Le classeur raisonne par **type d'équipement** : un onglet « Robinets », un
+ * onglet « WC ». Sur le terrain, l'auditeur avance par **pièce** : il entre
+ * dans un local et y relève tout ce qu'il voit. Les deux lectures coexistent —
+ * la pièce ne remplace aucune liste, elle en offre une autre entrée (voir
+ * `#/pieces`), et c'est elle qui permet à deux auditeurs de se répartir un
+ * grand bâtiment (voir `fusion.ts`).
+ *
+ * La pièce n'est **jamais** l'identité d'un point d'eau : chaque élément garde
+ * son `Id`, et porte le `Id` de sa pièce sous la clé `Piece` (voir
+ * `CLE_PIECE`). Ranger les éléments *dans* la pièce aurait fait de la liste
+ * par type une vue reconstruite, et aurait changé le format du JSON — alors
+ * que les audits qui circulent doivent rester lisibles.
+ */
+export interface Piece {
+  /** Identité technique stable. Ne jamais la réattribuer. */
+  Id: string;
+  /** Nom tel qu'il figure sur le plan : « Sanitaires RDC », « Cuisine ». */
+  Nom: string;
+  /** Niveau ou bâtiment, quand les noms de pièces se répètent d'un étage à l'autre. */
+  Niveau?: string | null;
+  /**
+   * Emplacement de la pièce sur un plan de l'audit — même forme que celle d'un
+   * élément, pour que `purgePlanReferences` les traite ensemble.
+   */
+  Localisation?: PlanLocation | null;
+  Remarques?: string | null;
+}
+
+/**
+ * Clé portant, dans un élément d'audit, l'identité de sa pièce.
+ *
+ * Déclarée ici et non dans `audit-schema.ts` : ce dernier est **généré** depuis
+ * le classeur, qui ne décrit pas les pièces. Un champ ajouté à la main y serait
+ * perdu à la première régénération.
+ */
+export const CLE_PIECE = 'Piece';
+
+/**
  * Socle commun à tout élément d'audit listé puis détaillé sur sa propre fiche
  * (robinets aujourd'hui ; sous-compteurs, WC, douches… à venir).
  *
@@ -61,6 +101,12 @@ export interface AuditEntity {
   Id: string;
   /** Numéro affiché. Libellé uniquement — jamais une clé. */
   Numero?: string | null;
+  /**
+   * Identité de la pièce où se trouve l'élément (`Piece.Id`), ou absente s'il
+   * n'est rattaché à aucune. Simple renvoi : la pièce ne contient pas
+   * l'élément, c'est l'élément qui la désigne. Voir `CLE_PIECE`.
+   */
+  Piece?: string | null;
   /**
    * Les autres champs sont déclarés dans le schéma (`audit-schema.ts`) et non
    * dans le type : c'est ce qui permet à un même moteur de rendre les dix
@@ -191,6 +237,14 @@ export interface AppData {
   Effectif?: string | null;
   /** Plans du bâtiment chargés depuis l'accueil, communs à tout l'audit. */
   Plans?: AssetRef[];
+  /**
+   * Pièces du bâtiment, définies à la préparation de l'audit et repérées sur
+   * les plans. Un élément technique les désigne par son champ `Piece`.
+   *
+   * Absent sur les audits antérieurs : l'application fonctionne sans, et les
+   * listes par type restent le chemin d'origine.
+   */
+  Pieces?: Piece[];
   /** Galerie générale de l'audit, indépendante des éléments techniques. */
   Photos?: AssetRef[];
   Qge?: Record<string, unknown>;

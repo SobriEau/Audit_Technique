@@ -7,6 +7,8 @@ import { QteIndexComponent } from './qte/qte-index/qte-index.component';
 import { EntityListComponent } from './qte/entity-list/entity-list.component';
 import { EntityFormComponent } from './qte/entity-form/entity-form.component';
 import { DocumentsComponent } from './documents/documents.component';
+import { PiecesIndexComponent } from './pieces/pieces-index/pieces-index.component';
+import { PieceDetailComponent } from './pieces/piece-detail/piece-detail.component';
 import { GlossaireComponent } from './glossaire/glossaire.component';
 import { TelechargerComponent } from './telecharger/telecharger.component';
 
@@ -29,6 +31,11 @@ export const routes: Routes = [
   { path: 'qte/:entity', component: EntityListComponent },
   // Fiche d'un élément, adressée par identité stable et jamais par index.
   { path: 'qte/:entity/:id', component: EntityFormComponent },
+
+  // Entrée par pièce : l'auditeur avance de local en local, là où le classeur
+  // range par type d'équipement. Les deux chemins mènent aux mêmes fiches.
+  { path: 'pieces', component: PiecesIndexComponent },
+  { path: 'pieces/:id', component: PieceDetailComponent },
 
   // Glossaire des sigles, repris du classeur.
   { path: 'glossaire', component: GlossaireComponent },

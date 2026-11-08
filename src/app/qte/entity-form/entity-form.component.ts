@@ -8,7 +8,7 @@ import { PlanLocatorComponent } from '../../shared/components/plan-locator/plan-
 import { PhotoEditorComponent } from '../../shared/components/photo-editor/photo-editor.component';
 import { entityByRoute } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
-import { AssetRef, NiveauRemplissage, PlanLocation } from '../../models/data.models';
+import { AssetRef, CLE_PIECE, NiveauRemplissage, Piece, PlanLocation } from '../../models/data.models';
 import { FormSection, buildSections, champEmplacement, cleAutre, formFields } from '../form-layout';
 import { NIVEAU_LABELS, blocActif, champsManquants, champsMasques, requirementVisible } from '../exigences';
 
@@ -26,7 +26,7 @@ function normalizeSearch(s: string): string {
  * uniques (compteur général), signalées par `single` dans le schéma.
  *
  * Trois mécanismes se superposent, et viennent de deux migrations V3 menées en
- * parallèle puis fusionnées (voir `MAJ/done/fusion-origin-main.md`) :
+ * parallèle puis fusionnées (voir `MAJ/realisations/2026-09-16-fusion-origin-main.md`) :
  *  - le **découpage en sections** du classeur (migration locale) ;
  *  - le **niveau de remplissage**, qui masque les champs les moins exigés, et
  *    la **validation** des champs obligatoires (migration d'origin/main) ;
@@ -237,6 +237,37 @@ export class EntityFormComponent implements OnInit {
 
   get location(): PlanLocation | null {
     return (this.item['Localisation'] as PlanLocation | null) ?? null;
+  }
+
+  // ── Pièce de l'élément ───────────────────────────────────────────────────
+  //
+  // Le rattachement n'est pas un champ du schéma : `audit-schema.ts` est
+  // généré depuis le classeur, qui ne décrit pas les pièces (voir `CLE_PIECE`).
+  // Il est donc rendu ici, à côté de la localisation sur plan qu'il complète —
+  // l'une dit dans quel local on est, l'autre où ce local se trouve.
+
+  /** Pièces de l'audit, pour le sélecteur. Vide : le sélecteur n'est pas rendu. */
+  get pieces(): Piece[] {
+    return this.data.getPieces();
+  }
+
+  get pieceId(): string {
+    return (this.item[CLE_PIECE] as string | null) ?? '';
+  }
+
+  pieceLabel(id: string): string {
+    return this.data.pieceLabel(id);
+  }
+
+  /**
+   * Enregistré aussitôt, comme la localisation : la pièce commande l'écran
+   * d'où l'on vient. Quitter la fiche par « Annuler » sans que le
+   * rattachement ait pris ferait disparaître l'élément de la pièce où
+   * l'auditeur venait de le ranger.
+   */
+  onPieceChange(id: string): void {
+    this.item[CLE_PIECE] = id || null;
+    this.persist();
   }
 
   valueOf(field: FieldDef): unknown {

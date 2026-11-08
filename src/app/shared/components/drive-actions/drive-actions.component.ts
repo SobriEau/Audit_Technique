@@ -114,7 +114,13 @@ export class DriveActionsComponent implements OnInit, OnDestroy {
     this.fermerMenu();
     await this.executer('Préparation du fichier…', async () => {
       const stamp = new Date().toISOString().slice(0, 10);
-      await this.data.exportJson(`sobrieau-${stamp}`);
+      const { fichier, manquantes } = await this.data.exportJson(`sobrieau-${stamp}`);
+      // Un fichier dont des images manquent reste importable, mais incomplet :
+      // mieux vaut l'apprendre maintenant qu'à la réception.
+      this.message = manquantes
+        ? `${fichier} — attention : ${manquantes} image(s) introuvables dans ce ` +
+          "navigateur n'ont pas pu être embarquées."
+        : `${fichier} enregistré.`;
     });
   }
 

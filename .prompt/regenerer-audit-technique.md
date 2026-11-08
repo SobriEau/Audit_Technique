@@ -12,8 +12,8 @@
 **Ne présume pas du fichier.** Pose ces questions et attends les réponses :
 
 1. **Quel classeur** faut-il prendre pour base ? Donne-moi le chemin exact.
-   `MAJ/done/audit_technique.xlsx` est la copie canonique de la dernière
-   version retenue — mais plusieurs classeurs datés cohabitent dans `MAJ/done/`, et
+   `MAJ/classeurs/audit_technique.xlsx` est la copie canonique de la dernière
+   version retenue — mais plusieurs classeurs datés cohabitent dans `MAJ/classeurs/`, et
    le plus récent n'est pas forcément celui qu'on veut. Demande, ne devine pas.
    Pour comparer deux versions, `xlsx-extract.js` accepte un dossier source et
    un fichier de sortie en arguments.

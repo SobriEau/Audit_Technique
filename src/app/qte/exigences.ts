@@ -94,7 +94,7 @@ export function blocActif(def: EntityDef, f: FieldDef, item: Record<string, unkn
  * Sans cette restriction, la validation reprise d'origin/main exigeait les
  * champs de l'autolaveuse pour enregistrer un lave-linge, et ceux de la
  * baignoire pour une douche : la fiche ne pouvait tout simplement pas être
- * validée sans inventer des réponses. Voir `MAJ/done/fusion-origin-main.md`.
+ * validée sans inventer des réponses. Voir `MAJ/realisations/2026-09-16-fusion-origin-main.md`.
  */
 export function champsManquants(def: EntityDef, item: Record<string, unknown>): FieldDef[] {
   return saisissables(def).filter(

@@ -128,3 +128,19 @@
   background: var(--c-danger-bg);
   color: var(--c-danger);
 }
+
+/* Une photo réduite à son chemin : l'export JSON ne l'embarquera pas. */
+.badge--alerte {
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
+  border-color: var(--c-danger-border);
+}
+
+.alerte-sauvegarde {
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+  background: var(--c-danger-bg);
+  border: 1px solid var(--c-danger-border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-1) var(--sp-2);
+}

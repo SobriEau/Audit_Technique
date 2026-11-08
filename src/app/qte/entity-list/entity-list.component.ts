@@ -10,6 +10,7 @@ import { EntityDef, FieldDef } from '../../models/field.models';
 import { AuditEntity } from '../../models/data.models';
 import { FormSection, buildSections, cleAutre, formFields } from '../form-layout';
 import { Total, totaux } from '../totaux';
+import { valeurAffichee } from '../affichage';
 
 /**
  * Page index générique : liste les éléments d'une entité et mène à leur fiche.
@@ -121,20 +122,24 @@ export class EntityListComponent implements OnInit {
     return this.def.listColumnLabels?.[field.key] ?? field.label;
   }
 
-  /** Rend une valeur lisible dans le tableau, selon le type du champ. */
+  /** Rend une valeur lisible dans le tableau — voir `affichage.ts`. */
   display(item: AuditEntity, field: FieldDef): string {
-    const v = (item as Record<string, unknown>)[field.key];
-    if (v === null || v === undefined || v === '') return '';
+    return valeurAffichee(item, field, (entite, id) => this.data.getEntity(entite, id));
+  }
 
-    if (Array.isArray(v)) return v.filter((x) => typeof x === 'string').join(', ');
-    if (field.kind === 'boolean') return v ? 'Oui' : 'Non';
+  /**
+   * Pièce de l'élément, affichée en tête de ligne quand l'audit en définit.
+   *
+   * Une colonne de plus sur une liste déjà large, mais sans elle la liste par
+   * type et l'entrée par pièce ne se recoupent nulle part : impossible de voir
+   * qu'un robinet a été oublié dans une pièce, ni où il se trouve.
+   */
+  get avecPieces(): boolean {
+    return this.data.getPieces().length > 0;
+  }
 
-    if (field.kind === 'entity-ref' && field.refTo) {
-      const target = this.data.getEntity(field.refTo, String(v));
-      return target ? `n° ${target.Numero ?? '?'}` : '(élément supprimé)';
-    }
-
-    return String(v);
+  pieceDe(item: AuditEntity): string {
+    return this.data.pieceLabel(item['Piece'] as string | null | undefined);
   }
 
   add(): void {

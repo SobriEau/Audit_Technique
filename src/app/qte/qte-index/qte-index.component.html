@@ -19,6 +19,21 @@
   }
 </div>
 
+<div class="panel">
+  <h2>Avancer pièce par pièce</h2>
+  <p class="muted">
+    Les sections ci-dessous rangent l'audit par type d'équipement, comme le
+    classeur. Pour relever un local après l'autre, passez par les pièces
+    définies à la préparation : vous y retrouverez les points d'eau attendus.
+  </p>
+  <div class="grid">
+    <button type="button" class="card-btn card-btn--pieces" (click)="nav('/pieces')">
+      <span>Pièces du bâtiment</span>
+      <span class="count">{{ nbPieces }}</span>
+    </button>
+  </div>
+</div>
+
 @for (group of visibleGroups; track group.label) {
   <div class="panel">
     <h2>{{ group.label }}</h2>

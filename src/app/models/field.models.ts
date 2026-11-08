@@ -22,7 +22,7 @@
  * `priority` affichée en pastille, un `requirement` affiché en badge neutre et
  * pilotant la validation — portant exactement les mêmes valeurs, tirées des
  * mêmes cellules. Un champ en montrait alors deux à la suite. Voir
- * `MAJ/done/fusion-origin-main.md`.
+ * `MAJ/realisations/2026-09-16-fusion-origin-main.md`.
  *
  * Un champ sans `requirement` (le classeur ne dit rien, ou l'onglet a disparu)
  * n'affiche aucune pastille, est traité comme `facultatif` pour le filtrage, et

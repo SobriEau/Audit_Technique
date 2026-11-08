@@ -7,6 +7,8 @@ import { RichEditorComponent } from '../shared/components/rich-editor/rich-edito
 import { DictationFieldComponent } from '../shared/components/dictation-field/dictation-field.component';
 import { PlanManagerComponent } from '../shared/components/plan-manager/plan-manager.component';
 import { PhotoEditorComponent } from '../shared/components/photo-editor/photo-editor.component';
+import { PieceManagerComponent } from '../shared/components/piece-manager/piece-manager.component';
+import { FusionAuditComponent } from '../shared/components/fusion-audit/fusion-audit.component';
 import { AssetRef, AuditSummary, NiveauRemplissage } from '../models/data.models';
 import { PhotoMode, photoMode, setPhotoMode } from '../core/utils/photo-mode';
 import { UTILISATIONS_EAU, UtilisationEau } from '../models/utilisations-eau';
@@ -35,6 +37,8 @@ type Arbitrage =
     DictationFieldComponent,
     PlanManagerComponent,
     PhotoEditorComponent,
+    PieceManagerComponent,
+    FusionAuditComponent,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -63,7 +67,7 @@ export class HomeComponent implements OnInit {
    * Entités hors classeur (le surpresseur) : aucun usage de l'eau ne les
    * commande, elles s'affichent d'une case à part. Leur onglet a disparu en V3
    * mais origin/main les a conservées, masquées par défaut — décision reprise
-   * à la fusion (voir `MAJ/done/fusion-origin-main.md`).
+   * à la fusion (voir `MAJ/realisations/2026-09-16-fusion-origin-main.md`).
    */
   readonly horsClasseur: EntityDef[] = AUDIT_SCHEMA.filter((e) => e.horsClasseur);
 

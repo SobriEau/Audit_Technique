@@ -4,6 +4,8 @@ import {
   AssetRef,
   AuditEntity,
   AuditSummary,
+  CLE_PIECE,
+  Piece,
   PlanLocation,
   QteData,
   Robinet,
@@ -15,6 +17,17 @@ import { addressKey, htmlToText } from '../utils/address-key';
 import { encoderCp1252 } from '../utils/cp1252';
 import { csvAudit, nomAudit } from '../utils/csv-export';
 import { uid } from '../utils/uid';
+import { RapportFusion, fusionner, prochainNumero } from '../utils/fusion';
+import { dossierAudit } from '../utils/photo-mode';
+
+/** Réunion calculée, prête à être appliquée — ou abandonnée. */
+export interface PreparationFusion {
+  /** L'audit réuni, tel qu'il sera enregistré si l'auditeur confirme. */
+  data: AppData;
+  rapport: RapportFusion;
+  /** Images transportées par le fichier reçu, par identifiant d'origine. */
+  embarquees: Record<string, { name: string; data: string }>;
+}
 
 /**
  * Données de l'audit ouvert.
@@ -96,12 +109,39 @@ export class DataService {
     this.save();
   }
 
-  /** Crée un élément doté de son identité stable et l'ajoute à la liste. */
-  createEntity<T extends AuditEntity = AuditEntity>(entityKey: string): T {
+  /**
+   * Crée un élément doté de son identité stable et l'ajoute à la liste.
+   *
+   * `pieceId` rattache l'élément à une pièce dès sa création : c'est le chemin
+   * emprunté depuis la page d'une pièce, où l'auditeur déclare ce qu'il y voit
+   * sans avoir à le redire sur la fiche.
+   */
+  createEntity<T extends AuditEntity = AuditEntity>(entityKey: string, pieceId?: string | null): T {
     const list = this.getEntities(entityKey);
-    const item = { Id: uid(), Numero: String(list.length + 1), Photos: [] } as unknown as T;
+    // Le plus grand numéro, plus un — et non le rang dans la liste, qui recule
+    // à chaque suppression et redonnerait un numéro déjà porté. Deux éléments
+    // portant « n° 3 » ne cassent rien (le numéro n'est qu'un libellé, voir
+    // `AuditEntity`) mais sont indiscernables à l'écran.
+    const item = { Id: uid(), Numero: String(prochainNumero(list)), Photos: [] } as unknown as T;
+    if (pieceId) (item as unknown as Record<string, unknown>)[CLE_PIECE] = pieceId;
     this.setEntities(entityKey, [...list, item]);
     return item;
+  }
+
+  /** Éléments d'une entité rattachés à cette pièce, dans l'ordre de la liste. */
+  getEntitiesOfPiece<T extends AuditEntity = AuditEntity>(entityKey: string, pieceId: string): T[] {
+    return this.getEntities<T>(entityKey).filter((e) => e[CLE_PIECE] === pieceId);
+  }
+
+  /** Nombre d'éléments de chaque entité rattachés à cette pièce, par clé. */
+  countsByPiece(pieceId: string): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const def of AUDIT_SCHEMA) {
+      if (def.single) continue;
+      const n = this.getEntitiesOfPiece(def.key, pieceId).length;
+      if (n) counts[def.key] = n;
+    }
+    return counts;
   }
 
   getEntity<T extends AuditEntity = AuditEntity>(entityKey: string, id: string): T | undefined {
@@ -320,6 +360,18 @@ export class DataService {
       if (touched) this.setEntities(def.key, list);
     }
 
+    // Une pièce est posée sur un plan comme un élément : elle perd sa punaise
+    // en même temps, sinon la page de la pièce afficherait un plan absent.
+    const pieces = this.getPieces();
+    let piecesTouchees = false;
+    for (const piece of pieces) {
+      if (piece.Localisation?.planId === planId) {
+        piece.Localisation = null;
+        piecesTouchees = true;
+      }
+    }
+    if (piecesTouchees) this.setPieces(pieces);
+
     const locations = this._data.Qte?.Localisations;
     if (locations) {
       for (const [key, loc] of Object.entries(locations)) {
@@ -327,6 +379,87 @@ export class DataService {
       }
     }
     this.save();
+  }
+
+  // ── Pièces du bâtiment ───────────────────────────────────────────────────
+
+  getPieces(): Piece[] {
+    return this._data.Pieces ?? [];
+  }
+
+  setPieces(pieces: Piece[]): void {
+    this._data.Pieces = pieces;
+    this.save();
+  }
+
+  findPiece(id: string | null | undefined): Piece | undefined {
+    if (!id) return undefined;
+    return this.getPieces().find((p) => p.Id === id);
+  }
+
+  /** Nom affichable d'une pièce, niveau compris quand il est renseigné. */
+  pieceLabel(id: string | null | undefined): string {
+    const piece = this.findPiece(id);
+    if (!piece) return '';
+    const nom = (piece.Nom || '').trim() || 'Pièce sans nom';
+    const niveau = (piece.Niveau || '').trim();
+    return niveau ? `${nom} — ${niveau}` : nom;
+  }
+
+  /** Crée une pièce dotée de son identité stable, et l'ajoute à la liste. */
+  createPiece(nom = '', niveau: string | null = null): Piece {
+    const piece: Piece = { Id: uid(), Nom: nom, Niveau: niveau, Localisation: null, Remarques: null };
+    this.setPieces([...this.getPieces(), piece]);
+    return piece;
+  }
+
+  updatePiece(piece: Piece): void {
+    const pieces = [...this.getPieces()];
+    const i = pieces.findIndex((p) => p.Id === piece.Id);
+    if (i === -1) return;
+    pieces[i] = { ...piece };
+    this.setPieces(pieces);
+  }
+
+  /**
+   * Supprime une pièce, mais **jamais les points d'eau qu'elle désignait** :
+   * ils se retrouvent simplement sans pièce, et restent atteignables par la
+   * liste de leur type. Supprimer une pièce est un geste d'organisation ;
+   * effacer au passage une fiche remplie sur le terrain serait sans rapport
+   * avec ce que l'auditeur a demandé.
+   *
+   * @returns le nombre d'éléments qui ont perdu leur rattachement.
+   */
+  deletePiece(id: string): number {
+    const detaches = this.purgePieceReferences(id);
+    this.setPieces(this.getPieces().filter((p) => p.Id !== id));
+    return detaches;
+  }
+
+  /** Retire de tous les éléments le renvoi vers une pièce disparue. */
+  purgePieceReferences(pieceId: string): number {
+    let detaches = 0;
+    for (const def of AUDIT_SCHEMA) {
+      const traiter = (item: Record<string, unknown>): boolean => {
+        if (item[CLE_PIECE] !== pieceId) return false;
+        item[CLE_PIECE] = null;
+        detaches++;
+        return true;
+      };
+
+      if (def.single) {
+        const fiche = this.getSingle<Record<string, unknown>>(def.key);
+        if (traiter(fiche)) this.setSingle(def.key, fiche);
+        continue;
+      }
+
+      const list = this.getEntities(def.key);
+      let touched = false;
+      for (const item of list) touched = traiter(item as unknown as Record<string, unknown>) || touched;
+      if (touched) this.setEntities(def.key, list);
+    }
+    this.save();
+    return detaches;
   }
 
   // ── Galerie générale ─────────────────────────────────────────────────────
@@ -367,6 +500,16 @@ export class DataService {
     if (!this._data.Qte.PhotosSections) this._data.Qte.PhotosSections = {};
     this._data.Qte.PhotosSections[sectionKey] = photos;
     this.save();
+  }
+
+  // ── Nom de dossier d'un audit ────────────────────────────────────────────
+
+  /**
+   * Dossier de l'audit ouvert : celui que porte le chemin des photos et que
+   * l'archive crée. Voir `dossierAudit`.
+   */
+  dossierAuditCourant(): string {
+    return dossierAudit(nomAudit(this._data), this.currentAuditId);
   }
 
   // ── Import / Export JSON ─────────────────────────────────────────────────
@@ -415,25 +558,47 @@ export class DataService {
    * la portabilité prime pour transmettre un audit.
    */
   /**
-   * Contenu exportable de l'audit ouvert, images comprises.
-   * Partagé par le téléchargement et par la synchronisation Drive.
+   * Contenu exportable d'un audit, images comprises.
+   * Partagé par le téléchargement, la synchronisation Drive et l'archive.
+   *
+   * **Les images viennent de la base, jamais du chemin relatif.** Une page
+   * `file://` ne peut pas lire ses fichiers voisins (`fetch` y est refusé,
+   * mesuré) : un audit dont les binaires auraient disparu produirait un JSON
+   * aux vignettes vides. D'où le compte `manquantes`, qui le dit au lieu de le
+   * taire.
    */
-  async buildExportPayload(): Promise<AppData & { __assets: Record<string, { name: string; data: string }> }> {
+  async buildExportPayload(
+    data: AppData = this._data
+  ): Promise<{
+    payload: AppData & { __assets: Record<string, { name: string; data: string }> };
+    manquantes: string[];
+  }> {
     const embedded: Record<string, { name: string; data: string }> = {};
-    for (const id of this.collectAssetIds(this._data)) {
+    const manquantes: string[] = [];
+    for (const id of this.collectAssetIds(data)) {
       const asset = await this.assets.toDataUrl(id);
       if (asset) embedded[id] = asset;
+      else manquantes.push(id);
     }
-    return { ...this._data, __assets: embedded };
+    return { payload: { ...data, __assets: embedded }, manquantes };
   }
 
-  async exportJson(filename?: string): Promise<void> {
+  /**
+   * Exporte l'audit ouvert en JSON.
+   *
+   * @returns le nom du fichier et le nombre d'images qui n'ont pas pu y être
+   * embarquées — à signaler à l'auditeur : le fichier reste importable, mais
+   * ces images-là ne voyageront pas avec lui.
+   */
+  async exportJson(filename?: string): Promise<{ fichier: string; manquantes: number }> {
     const name = filename ?? `sobrieau_${new Date().toISOString().slice(0, 10)}`;
-    const payload = await this.buildExportPayload();
+    const { payload, manquantes } = await this.buildExportPayload();
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json',
     });
-    this.telecharger(blob, `${name}.json`);
+    const fichier = `${name}.json`;
+    this.telecharger(blob, fichier);
+    return { fichier, manquantes: manquantes.length };
   }
 
   /**
@@ -461,7 +626,8 @@ export class DataService {
     return { fichier, lignes: lignes.length, remplaces };
   }
 
-  private telecharger(blob: Blob, fichier: string): void {
+  /** Remet un fichier à l'auditeur. Partagé par les exports et par l'archive. */
+  telecharger(blob: Blob, fichier: string): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -519,6 +685,50 @@ export class DataService {
     return this.registry.find(summary.Id) ?? summary;
   }
 
+  // ── Réunion de deux copies d'un même audit ────────────────────────────────
+
+  /**
+   * Prépare la réunion d'un fichier reçu avec l'audit ouvert, **sans rien
+   * modifier**.
+   *
+   * Deux auditeurs se répartissent les pièces d'un grand bâtiment : chacun
+   * remplit sa part hors connexion, puis l'un intègre le fichier de l'autre.
+   * L'opération n'est pas réversible — elle touche à des relevés de terrain —
+   * d'où ces deux temps : on calcule, on montre, et l'auditeur décide. Voir
+   * `fusion.ts` pour les règles.
+   */
+  async prepareMerge(file: File): Promise<PreparationFusion> {
+    const recu = JSON.parse(await file.text()) as AppData & {
+      __assets?: Record<string, { name: string; data: string }>;
+    };
+    const embarquees = recu.__assets ?? {};
+
+    // Les identifiants déjà pris sont ceux du magasin, pas seulement ceux de
+    // l'audit ouvert : écraser l'image d'un autre audit serait aussi grave.
+    const { data, rapport } = fusionner(this.snapshot(), recu, {
+      assetsPris: new Set(await this.assets.allIds()),
+    });
+    return { data, rapport, embarquees };
+  }
+
+  /**
+   * Applique une réunion préparée : les images d'abord, l'audit ensuite.
+   *
+   * Dans cet ordre parce qu'une référence sans image donne une vignette vide,
+   * tandis qu'une image sans référence n'est qu'un octet de trop — et parce
+   * qu'un échec en cours d'écriture laisse alors l'audit intact.
+   */
+  async applyMerge(prep: PreparationFusion): Promise<void> {
+    for (const { source, cible } of prep.rapport.assets) {
+      const image = prep.embarquees[source];
+      if (!image) continue; // fichier sans `__assets` : la référence reste, l'image manque
+      await this.assets.addFromDataUrl(image.name, image.data, cible);
+    }
+    this._data = prep.data;
+    this.ensureEntityIds();
+    this.save();
+  }
+
   /** Réécrit les références d'images d'un audit importé vers leurs nouveaux identifiants. */
   private remapAssetIds(data: AppData, remap: Map<string, string>): void {
     const fix = (refs?: AssetRef[]) => {
@@ -548,6 +758,10 @@ export class DataService {
       const neuf = remap.get(loc.planId);
       if (neuf) loc.planId = neuf;
     };
+    // Les pièces sont posées sur les plans comme les éléments : sans cette
+    // reprise, un audit importé affichait des pièces pointées sur un plan
+    // introuvable — l'image est bien là, mais sous un autre identifiant.
+    for (const piece of data.Pieces ?? []) fixLoc(piece.Localisation);
     for (const value of Object.values(qte)) {
       if (Array.isArray(value)) {
         for (const item of value as Array<Record<string, unknown>>) {

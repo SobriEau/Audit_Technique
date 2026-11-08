@@ -1,0 +1,14 @@
+footer {
+  margin: var(--sp-4) 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.lien {
+  background: none;
+  border: none;
+  color: var(--c-primary);
+  text-decoration: underline;
+  padding: 0;
+}

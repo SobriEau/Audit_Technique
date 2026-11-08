@@ -133,8 +133,8 @@ classeur — `366a323`, archivé par `65e1f5c` :
 ### Fusion de deux migrations parallèles (17 septembre)
 
 Une seconde migration V3 avait été menée sur un autre poste. Fusion et
-arbitrages, consignés dans `MAJ/done/fusion-origin-main.md` et
-`MAJ/done/arbitrages-v3.md` — `eb09088` :
+arbitrages, consignés dans `MAJ/realisations/2026-09-16-fusion-origin-main.md` et
+`MAJ/realisations/2026-08-21-arbitrages-v3.md` — `eb09088` :
 
 - `tools/lib/classeur.js`, lecture unique du classeur : sections lues aux
   styles, exigence rattachée en deux passes, faux champs écartés ;
@@ -152,9 +152,9 @@ documents, des questionnaires, des plans et des fiches techniques — `962cb9a`.
 
 ## 3. Retour de test de Victor Ledoux — 29 septembre 2026 (non commité)
 
-Support : `MAJ/to_do/retours_test_html_victor.txt`. Vérification remarque par
+Support : `MAJ/retours/2026-09-16-victor-ledoux-test-html.txt`. Vérification remarque par
 remarque, et liste des modifications hors remarques :
-[MAJ/verification-retours-victor.md](MAJ/verification-retours-victor.md).
+[MAJ/realisations/2026-09-29-verification-retours-victor.md](MAJ/realisations/2026-09-29-verification-retours-victor.md).
 
 ### Sur toutes les fiches
 

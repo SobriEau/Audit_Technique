@@ -81,3 +81,43 @@
   object-fit: contain;
   opacity: 0.85;
 }
+
+/* ── Archive complète ─────────────────────────────────────────────────── */
+
+.option-archive {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  font-weight: 600;
+}
+
+.rapport-archive {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-alt);
+}
+
+.rapport-archive p {
+  margin: 0 0 var(--sp-2);
+}
+
+.dossiers {
+  margin: 0;
+  padding-left: var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+.avertissement {
+  color: var(--c-priority-facultatif-text);
+}
+
+.erreur {
+  color: var(--c-danger);
+  background: var(--c-danger-bg);
+  border: 1px solid var(--c-danger-border);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+}

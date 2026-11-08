@@ -26,6 +26,12 @@
   opacity: 1;
 }
 
+/* L'entrée par pièce n'est pas une section du classeur : elle se distingue
+   des cartes de section, sans couleur en dur (voir CLAUDE.md §10). */
+.card-btn--pieces {
+  border-color: var(--c-primary-light);
+}
+
 .count {
   flex-shrink: 0;
   min-width: 26px;

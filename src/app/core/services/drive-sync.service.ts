@@ -166,7 +166,7 @@ export class DriveSyncService {
     const audit = this.data.currentAudit;
     if (!audit) throw new Error('Aucun audit ouvert.');
 
-    const payload = await this.data.buildExportPayload();
+    const { payload } = await this.data.buildExportPayload();
     const contenu = JSON.stringify(payload);
     const nom = this.nomDeFichier(audit);
 

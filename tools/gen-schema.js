@@ -84,7 +84,7 @@ const L = {
  * Le classeur laisse cohabiter plusieurs versions d'une même liste, et l'écart
  * est un défaut, non une intention. Corriger le classeur serait plus juste ;
  * en attendant, la correction vit ici — sourcée, et limitée aux cas arbitrés
- * (voir `MAJ/done/arbitrages-v3.md`).
+ * (voir `MAJ/realisations/2026-08-21-arbitrages-v3.md`).
  *
  * **Ne rien ajouter ici sans arbitrage** : deux listes différentes décrivent le
  * plus souvent deux notions différentes, et les fusionner effacerait une

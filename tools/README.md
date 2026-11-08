@@ -1,6 +1,6 @@
 # Outils de transcription du classeur
 
-`MAJ/done/audit_technique.xlsx` est la **spécification de référence** de la partie
+`MAJ/classeurs/audit_technique.xlsx` est la **spécification de référence** de la partie
 technique. Le schéma de l'application et la documentation en sont dérivés par
 ces scripts : ne pas les modifier à la main, sinon la prochaine régénération
 écrasera le travail.
@@ -29,11 +29,12 @@ Expand-Archive "$dst\book.zip" -DestinationPath $dst -Force
 Remove-Item "$dst\book.zip"
 ```
 
-Sous Linux : `mkdir -p tools/.cache/xlsx && unzip -o MAJ/done/audit_technique.xlsx -d tools/.cache/xlsx`.
+Sous Linux : `mkdir -p tools/.cache/xlsx && unzip -o MAJ/classeurs/audit_technique.xlsx -d tools/.cache/xlsx`.
 
-Les classeurs, archives datées comprises, et les notes d'arbitrage
-(`arbitrages-v3.md`, `fusion-origin-main.md`) sont rangés dans `MAJ/done/`
-depuis 2026-09-29 ; les retours de test à traiter dans `MAJ/to_do/`.
+Le dossier `MAJ/` suit les mises à jour, et sa convention est décrite dans
+[MAJ/AVANCEMENT.md](../MAJ/AVANCEMENT.md) : les **classeurs** dans
+`MAJ/classeurs/`, les **retours bruts** dans `MAJ/retours/`, ce qu'on en a tiré
+dans `MAJ/to_do/`, et les **notes d'arbitrage** dans `MAJ/realisations/`.
 
 `xlsx-extract.js` accepte un dossier source et un fichier de sortie en
 arguments, ce qui permet de garder deux versions du classeur côte à côte pour

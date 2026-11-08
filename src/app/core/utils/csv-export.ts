@@ -97,7 +97,7 @@ const GENERALITES: [string, string][] = [
 ];
 
 /** Parties de l'audit qui ont leur propre section dans l'export. */
-const PARTIES = new Set(['UtilisationsEau', 'EquipementsPresents', 'Documents', 'Plans', 'Photos', 'Qge', 'Qus', 'Qte']);
+const PARTIES = new Set(['UtilisationsEau', 'EquipementsPresents', 'Documents', 'Plans', 'Pieces', 'Photos', 'Qge', 'Qus', 'Qte']);
 
 /** Valeurs en texte enrichi : le balisage est retiré, le texte et ses retours à la ligne gardés. */
 const TEXTE_ENRICHI = new Set(['Info', 'Adresse']);
@@ -108,6 +108,15 @@ const LIBELLES_IMAGE: Record<string, string> = {
   path: 'fichier',
   driveId: 'identifiant Drive',
   date: 'date',
+};
+
+/** Clés d'une pièce du bâtiment (`AppData.Pieces`). */
+const LIBELLES_PIECE: Record<string, string> = {
+  Id: 'Identifiant',
+  Nom: 'Nom',
+  Niveau: 'Niveau ou bâtiment',
+  Remarques: 'Remarques',
+  Localisation: 'Localisation sur plan',
 };
 
 const LIBELLES_LOCALISATION: Record<string, string> = {
@@ -247,7 +256,7 @@ function ordreDesCles(item: Objet, champs: readonly FieldDef[]): string[] {
     prevues.push(f.key, cleAutre(f));
     if (f.parOption) prevues.push(f.parOption.cle);
   }
-  prevues.push('Localisation', 'Photos');
+  prevues.push('Piece', 'Localisation', 'Photos');
   const vues = new Set<string>();
   const ordre: string[] = [];
   for (const k of [...prevues, ...Object.keys(item)]) {
@@ -357,6 +366,7 @@ class Releve {
       if (!h) {
         if (k === 'Photos') this.deposer(cadre, v, ch, cl, 'Photo', '', LIBELLES_IMAGE);
         else if (k === 'Localisation') this.deposerLocalisation(cadre, v, ch, cl);
+        else if (k === 'Piece') this.deposerPiece(cadre, v, ch, cl);
         else this.deposer(cadre, v, ch, cl, k);
         continue;
       }
@@ -415,6 +425,26 @@ class Releve {
     const cible = liste.find((e) => estObjet(e) && e['Id'] === id) as Objet | undefined;
     const numero = cible ? texteDe(cible['Numero']) : '';
     if (numero) this.calcul(cadre, `${question} — numéro`, `${cle}.Numero`, numero);
+  }
+
+  /**
+   * Pièce de l'élément. La valeur stockée est l'identité de la pièce — jamais
+   * son nom, qui peut être corrigé après coup ; le nom est ajouté en ligne
+   * calculée, pour que le fichier se lise sans rapprochement.
+   *
+   * La clé `Piece` n'est pas dans le schéma, et ne peut pas y être :
+   * `audit-schema.ts` est généré depuis le classeur, qui ne décrit pas les
+   * pièces (voir `CLE_PIECE`). Elle est donc habillée ici, comme `Photos` et
+   * `Localisation` le sont déjà.
+   */
+  private deposerPiece(cadre: Cadre, v: unknown, chemin: string, cle: string): void {
+    this.deposer(cadre, v, chemin, cle, 'Pièce');
+    if (typeof v !== 'string' || !v) return;
+    const pieces = this.audit['Pieces'];
+    if (!Array.isArray(pieces)) return;
+    const piece = pieces.find((p) => estObjet(p) && p['Id'] === v) as Objet | undefined;
+    const nom = piece ? texteDe(piece['Nom']) : '';
+    if (nom) this.calcul(cadre, 'Pièce — nom', `${cle}.Nom`, nom);
   }
 
   /** Punaise sur un plan : ses coordonnées, puis le nom du plan pour la lecture. */
@@ -523,6 +553,37 @@ export function lignesAudit(audit: unknown, schema: readonly EntityDef[] = AUDIT
     }
   } else {
     r.deposer(cadreDocuments, documents, 'Documents', 'Documents', 'Documents');
+  }
+
+  // ── Pièces du bâtiment ───────────────────────────────────────────────────
+  //
+  // Une pièce n'est pas une fiche du classeur — ni numéro, ni champ, ni
+  // rubrique — mais elle a une identité, et c'est elle que la colonne `Piece`
+  // des éléments désigne. Elle part donc dans `ElementId`, comme une fiche :
+  // `Cle` reste alors indépendante du rang (`Pieces[].Nom`), et une ligne se
+  // retrouve par le couple élément / clé, sans ambiguïté.
+  const pieces = prendre('Pieces');
+  if (Array.isArray(pieces)) {
+    pieces.forEach((piece, i) => {
+      const chemin = `Pieces[${i}]`;
+      if (!estObjet(piece)) {
+        r.deposer(cadreDe('Pièces du bâtiment'), piece, chemin, chemin, `Pièce ${i + 1}`);
+        return;
+      }
+      const cadre: Cadre = {
+        section: 'Pièces du bâtiment',
+        element: texteDe(piece['Nom']),
+        elementId: texteDe(piece['Id']),
+        rubrique: '',
+      };
+      for (const [k, v] of Object.entries(piece)) {
+        const question = LIBELLES_PIECE[k] ?? k;
+        const libelles = k === 'Localisation' ? LIBELLES_LOCALISATION : {};
+        r.deposer(cadre, v, joindre(chemin, k), joindre('Pieces[]', k), question, '', libelles);
+      }
+    });
+  } else {
+    r.deposer(cadreDe('Pièces du bâtiment'), pieces, 'Pieces', 'Pieces', 'Pièces');
   }
 
   // ── Plans et photos : leurs références, pas les images ───────────────────

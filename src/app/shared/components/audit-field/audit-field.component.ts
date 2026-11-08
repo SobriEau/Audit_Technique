@@ -125,7 +125,7 @@ export class AuditFieldComponent implements ControlValueAccessor, OnInit {
    * curée à la main, un badge neutre tiré du classeur — pour la même donnée.
    * Le badge neutre visait à ne pas confondre exigence et validation ; le rouge
    * de l'encadré des champs manquants s'en charge, et l'orange ne se lit pas
-   * comme une erreur. Voir `MAJ/done/fusion-origin-main.md`.
+   * comme une erreur. Voir `MAJ/realisations/2026-09-16-fusion-origin-main.md`.
    */
   get requirementLabel(): string | null {
     return this.def.requirement ? REQUIREMENT_LABEL[this.def.requirement] : null;

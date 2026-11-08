@@ -145,6 +145,36 @@
 </div>
 
 <div class="panel">
+  <h2>Pièces du bâtiment</h2>
+  <p class="muted">
+    Reprenez les pièces du plan et nommez-les comme elles y figurent. Vous
+    pourrez ensuite, sur chaque pièce, déclarer les points d'eau qu'elle
+    contient — et retrouver cette liste sur place, pièce par pièce, au lieu
+    d'enchaîner les fiches par type d'équipement.
+  </p>
+  <p class="muted">
+    Facultatif : les listes par type restent le chemin d'origine, et un audit
+    sans pièces fonctionne comme avant.
+  </p>
+  <app-piece-manager />
+</div>
+
+<div class="panel">
+  <h2>Travailler à deux sur le même bâtiment</h2>
+  <p class="muted">
+    Pour un grand bâtiment, répartissez les pièces : préparez l'audit (plans,
+    pièces), envoyez-le à votre collègue avec « Sauvegarder l'audit », puis
+    intégrez ici le fichier qu'il vous renvoie. Son travail s'ajoute au vôtre.
+  </p>
+  <p class="muted">
+    <strong>Rien n'est écrasé.</strong> Ce qui est déjà là est reconnu et laissé
+    en place ; une fiche remplie des deux côtés est ajoutée en double plutôt
+    qu'arbitrée. Le détail de ce qui sera fait s'affiche avant d'intégrer.
+  </p>
+  <app-fusion-audit />
+</div>
+
+<div class="panel">
   <h2>Photos de l'audit</h2>
   <p class="muted">
     Galerie des photos déjà prises dans les fiches techniques. Pour en ajouter,
@@ -161,10 +191,11 @@
       Les photos sont conservées par le navigateur. Fonctionne hors connexion,
       mais l'export les recopie toutes : au-delà d'une trentaine, il peut échouer.
     } @else {
-      Chaque photo est <strong>téléchargée à côté de cette page</strong> ; l'audit
-      ne garde qu'un chemin relatif. Suppose que la page se trouve dans le dossier
-      de téléchargement et que le navigateur accepte d'y écrire. Une vignette
-      signalée en rouge indique que le fichier n'a pas pu être relu.
+      Chaque photo est <strong>en plus téléchargée à côté de cette page</strong>,
+      et l'audit en garde le chemin : de quoi les retrouver dans l'explorateur de
+      fichiers, et les récupérer si le navigateur vide ses données. L'affichage,
+      lui, vient toujours du navigateur — une photo s'affiche donc aussitôt, même
+      si le téléchargement tarde ou échoue.
       <br />
       <strong>À penser :</strong> l'application ne peut pas effacer ces fichiers.
       Une fois l'audit transmis, il revient à l'auditeur de faire le ménage dans

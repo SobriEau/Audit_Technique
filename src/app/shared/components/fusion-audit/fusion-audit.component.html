@@ -1,0 +1,178 @@
+<input #fichier type="file" accept=".json,application/json" hidden (change)="fichierChoisi($event)" />
+
+<div class="actions actions--top">
+  <button type="button" class="secondary" [disabled]="!!occupe" (click)="choisir(fichier)">
+    Intégrer un audit reçu…
+  </button>
+</div>
+
+@if (occupe) {
+  <p class="muted" role="status">{{ occupe }}</p>
+}
+
+@if (erreur) {
+  <p class="erreur" role="alert">{{ erreur }}</p>
+}
+
+@if (prep) {
+  <div class="rapport" role="region" aria-label="Ce qui sera intégré">
+    <h3>Fichier reçu : {{ prep.rapport.nomRecu }}</h3>
+
+    @if (!prep.rapport.memeAudit) {
+      <p class="avertissement" role="alert">
+        Ce fichier ne porte pas l'identité de l'audit ouvert : ce n'est pas une
+        copie du même audit, mais un <strong>autre</strong> audit. L'intégrer
+        reste possible — rien ne sera écrasé — mais vérifiez qu'il s'agit bien
+        du bâtiment en cours.
+      </p>
+    }
+
+    @if (rien) {
+      <p class="muted">
+        Rien à intégrer : tout ce que ce fichier contient est déjà dans l'audit
+        ouvert. Votre collègue a-t-il bien enregistré après sa visite ?
+      </p>
+    } @else {
+      <ul class="bilan">
+        @if (nbElements) {
+          <li>
+            <strong>{{ nbElements }}</strong> point(s) d'eau repris :
+            <span class="detail">
+              @for (e of prep.rapport.entites; track e.entite) {
+                @if (e.ajoutes + e.dupliques > 0) {
+                  <span class="puce">{{ e.libelle }} : {{ e.ajoutes + e.dupliques }}</span>
+                }
+              }
+            </span>
+          </li>
+        }
+        @if (nbCompletes) {
+          <li>
+            <strong>{{ nbCompletes }}</strong> fiche(s) déjà là, complétée(s) par
+            votre collègue : champs que vous aviez laissés vides, photos ajoutées.
+          </li>
+        }
+        @if (prep.rapport.piecesAjoutees.length) {
+          <li>
+            <strong>{{ prep.rapport.piecesAjoutees.length }}</strong> pièce(s) reprise(s) :
+            {{ prep.rapport.piecesAjoutees.join(', ') }}
+          </li>
+        }
+        @if (prep.rapport.plansAjoutes.length) {
+          <li>
+            <strong>{{ prep.rapport.plansAjoutes.length }}</strong> plan(s) repris :
+            {{ prep.rapport.plansAjoutes.join(', ') }}
+          </li>
+        }
+        @if (prep.rapport.photosAjoutees) {
+          <li><strong>{{ prep.rapport.photosAjoutees }}</strong> photo(s) de la galerie générale</li>
+        }
+        @if (prep.rapport.champsRepris.length) {
+          <li>
+            Champs vides ici et remplis par le fichier :
+            {{ prep.rapport.champsRepris.join(', ') }}
+          </li>
+        }
+      </ul>
+
+      <p class="muted deja">
+        Déjà présent, donc laissé en place :
+        {{ prep.rapport.piecesDeja }} pièce(s), {{ prep.rapport.plansDeja }} plan(s),
+        @for (e of prep.rapport.entites; track e.entite) {
+          @if (e.identiques) {
+            <span class="puce">{{ e.libelle }} : {{ e.identiques }}</span>
+          }
+        }
+      </p>
+    }
+
+    @if (nbDoublons) {
+      <div class="attention">
+        <p>
+          <strong>{{ nbDoublons }} fiche(s) portent des réponses différentes des
+          deux côtés.</strong>
+          Aucune n'est écrasée : la version reçue est ajoutée
+          <strong>en double</strong>, pour que vous compariez et supprimiez celle
+          de trop.
+        </p>
+        <ul class="conflits">
+          @for (c of prep.rapport.conflitsFiches; track c.libelle + c.champs.join()) {
+            <li><strong>{{ c.libelle }}</strong> — {{ c.champs.join(', ') }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (prep.rapport.divergences.length) {
+      <details class="divergences">
+        <summary>
+          {{ prep.rapport.divergences.length }} champ(s) renseigné(s) des deux côtés —
+          la valeur d'ici est conservée
+        </summary>
+        <ul>
+          @for (d of prep.rapport.divergences; track d.libelle) {
+            <li>
+              <span class="cle">{{ d.libelle }}</span>
+              <span class="ici">ici : {{ d.local }}</span>
+              <span class="recu">reçu : {{ d.recu }}</span>
+            </li>
+          }
+        </ul>
+      </details>
+    }
+
+    @if (prep.rapport.renumerotes.length) {
+      <details class="renumerotes">
+        <summary>
+          {{ prep.rapport.renumerotes.length }} élément(s) renumérotés à la suite
+          des vôtres
+        </summary>
+        <p class="muted">
+          Les deux listes numérotaient chacune à partir de 1. Le numéro n'est
+          qu'un libellé — les renvois entre fiches désignent une identité, et
+          ne bougent pas.
+        </p>
+        <ul>
+          @for (r of prep.rapport.renumerotes; track r.libelle + r.vers) {
+            <li>{{ r.libelle }} → n° {{ r.vers }}</li>
+          }
+        </ul>
+      </details>
+    }
+
+    @if (prep.rapport.piecesHomonymes.length) {
+      <p class="muted">
+        Pièces portant le nom d'une pièce déjà présente, sans être la même :
+        {{ prep.rapport.piecesHomonymes.join(', ') }}. Les deux sont conservées —
+        à vous de trancher.
+      </p>
+    }
+
+    @if (prep.rapport.piecesIntrouvables) {
+      <p class="muted">
+        {{ prep.rapport.piecesIntrouvables }} élément(s) désignent une pièce
+        absente des deux fichiers. Ils restent dans la liste de leur type, sans
+        pièce.
+      </p>
+    }
+
+    @if (prep.rapport.imagesManquantes) {
+      <p class="avertissement">
+        {{ prep.rapport.imagesManquantes }} image(s) sont référencées mais
+        absentes du fichier reçu : il a probablement été produit par une version
+        antérieure, ou exporté sans ses images.
+      </p>
+    }
+
+    <div class="actions">
+      <button type="button" class="primary" [disabled]="!!occupe || rien" (click)="integrer()">
+        Intégrer dans cet audit
+      </button>
+      <button type="button" class="ghost" (click)="annuler()">Annuler</button>
+    </div>
+  </div>
+}
+
+@if (fait) {
+  <p class="muted" role="status">{{ fait }}</p>
+}

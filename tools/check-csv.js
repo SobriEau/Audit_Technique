@@ -103,6 +103,8 @@ function elementComplet(def, lettre, numero) {
     { id: `${item.Id}-p2`, name: 'photo 2.jpg' },
   ];
   item.Localisation = { planId: 'plan-1', x: 0.25, y: 0.75 };
+  // Renvoi vers une pièce : clé hors schéma, habillée par l'export.
+  item.Piece = 'piece-A';
   item.ChampHorsSchema = texte();
   item.StructureHorsSchema = { a: 1, b: ['x', 'y'], c: [{ d: true }, { d: false, e: null }], 'clé à espace': 'oui' };
   return item;
@@ -111,6 +113,8 @@ function elementComplet(def, lettre, numero) {
 /** Élément saisi sous d'anciennes formes : la forme réelle prime sur le type annoncé. */
 function elementAncien(def, lettre, numero) {
   const item = { Id: idDe(def.key, lettre), Numero: numero };
+  // Pièce supprimée depuis : la valeur reste, le nom ne peut plus être calculé.
+  item.Piece = 'piece-disparue';
   for (const f of def.fields) {
     if (f.kind === 'select' && f.multiple && f.options?.length) item[f.key] = f.options[0]; // chaîne d'avant le choix multiple
     else if (f.kind === 'mesures-debit') item[f.key] = 7.5; // ancien « Débit en sortie »
@@ -159,6 +163,17 @@ function auditComplet() {
     StructureRacineInconnue: { a: { b: [1, 2] }, liste: [{ x: 1 }, { x: 2.5 }] },
     ImageEnLigne: 'data:image/png;base64,' + 'A'.repeat(4000),
     Plans: [{ id: 'plan-1', name: 'RDC', date: '2025-01-01' }, { id: 'plan-2', name: 'Étage' }],
+    Pieces: [
+      {
+        Id: 'piece-A',
+        Nom: 'Sanitaires « hommes » ; RDC',
+        Niveau: 'R+0',
+        Localisation: { planId: 'plan-1', x: 0.4, y: 0.6 },
+        Remarques: 'Accès par la cour\nclé au gardien',
+      },
+      { Id: 'piece-B', Nom: 'Cuisine', Niveau: null, Localisation: null, Remarques: null },
+      { Id: 'piece-C', Nom: '0123', ChampPieceInconnu: 'valeur' },
+    ],
     Photos: [{ id: 'g1', name: 'façade.jpg' }],
     UtilisationsEau: { wc: true, piscine: false, usage_inconnu: true },
     EquipementsPresents: { robinets: true, surpresseurs: false },
@@ -206,6 +221,37 @@ function feuilles(v, chemin, out) {
 }
 
 // ── Relecture du fichier ───────────────────────────────────────────────────
+
+/**
+ * Caractères de la plage 0x80–0x9F de cp-1252, d'après la table publiée.
+ *
+ * Écrits ici une seconde fois, comme les règles de réinterprétation d'Excel
+ * plus bas : relire avec l'inverse de la table de l'application ne prouverait
+ * rien. Et `TextDecoder('windows-1252')` ne suffit pas — un Node compilé sans
+ * ICU complète (`--with-intl=small-icu`, le cas de bien des paquets système)
+ * **laisse tomber silencieusement toute cette plage** : « cœur d'îlot — 12 € »
+ * revenait « cur dîlot  12  », et le contrôle signalait 181 échecs sur un
+ * encodeur parfaitement juste. Cinq octets n'ont pas d'attribution.
+ */
+const CP1252_HAUT = {
+  0x80: '\u20ac', 0x82: '\u201a', 0x83: '\u0192', 0x84: '\u201e', 0x85: '\u2026',
+  0x86: '\u2020', 0x87: '\u2021', 0x88: '\u02c6', 0x89: '\u2030', 0x8a: '\u0160',
+  0x8b: '\u2039', 0x8c: '\u0152', 0x8e: '\u017d', 0x91: '\u2018', 0x92: '\u2019',
+  0x93: '\u201c', 0x94: '\u201d', 0x95: '\u2022', 0x96: '\u2013', 0x97: '\u2014',
+  0x98: '\u02dc', 0x99: '\u2122', 0x9a: '\u0161', 0x9b: '\u203a', 0x9c: '\u0153',
+  0x9e: '\u017e', 0x9f: '\u0178',
+};
+
+/** Décode des octets cp-1252. Un octet sans attribution donne « \uFFFD ». */
+function decoderCp1252(octets) {
+  let out = '';
+  for (const b of octets) {
+    if (b < 0x80 || b >= 0xa0) out += String.fromCharCode(b);
+    else out += CP1252_HAUT[b] || '\uFFFD';
+  }
+  return out;
+}
+
 
 /** Lecteur CSV strict (RFC 4180), séparateur « ; ». */
 function lireCsv(texteCsv) {
@@ -260,7 +306,7 @@ function controler(nom, audit, schema) {
   const { octets, remplaces } = encoderCp1252(csv);
   ok(remplaces.length === 0, `${nom} : caractères remplacés à l'encodage`, remplaces.join(' '));
 
-  const relu = new TextDecoder('windows-1252').decode(octets);
+  const relu = decoderCp1252(octets);
   ok(relu === csv.normalize('NFC'), `${nom} : le fichier relu en cp-1252 diffère du texte écrit`);
   ok(relu.endsWith('\r\n') && !/[^\r]\n$/.test(relu), `${nom} : fins de ligne`);
 
@@ -349,6 +395,56 @@ for (const def of AUDIT_SCHEMA) {
   }
 }
 console.log(`  ${'habillage par le schéma'.padEnd(44)} ${String(habilles).padStart(5)} champs retrouvés sous leur libellé et leur rubrique`);
+
+// ── Pièces du bâtiment ─────────────────────────────────────────────────────
+//
+// La pièce n'est pas une fiche du classeur : rien dans le schéma ne la décrit.
+// Son identité part donc dans `ElementId`, et c'est elle que la colonne
+// `Piece` d'un élément désigne — c'est ce rapprochement qui permet de compter
+// les points d'eau par local dans un tableur.
+const dePiece = relues.filter((l) => l.relu[col('Section')] === 'Pièces du bâtiment');
+ok(dePiece.length > 0, 'pièces : aucune ligne');
+ok(
+  dePiece.every((l) => l.relu[col('Cle')].startsWith('Pieces[]')),
+  'pièces : la clé doit être indépendante du rang',
+  dePiece.map((l) => l.relu[col('Cle')]).join(' ¦ ')
+);
+ok(
+  dePiece.some((l) => l.relu[col('ElementId')] === 'piece-A' && l.relu[col('Element')].includes('Sanitaires')),
+  "pièces : l'identité et le nom doivent figurer en colonnes"
+);
+ok(
+  dePiece.some((l) => l.relu[col('Cle')] === 'Pieces[].Localisation.planId'),
+  'pièces : la punaise de la pièce doit sortir'
+);
+ok(
+  dePiece.some((l) => l.relu[col('Cle')] === 'Pieces[].ChampPieceInconnu'),
+  "pièces : une clé que l'export ignore doit sortir quand même"
+);
+// Le renvoi d'un élément vers sa pièce, et le nom calculé qui le rend lisible.
+ok(
+  relues.some((l) => l.relu[col('Cle')].endsWith('[].Piece') && l.relu[col('Valeur')] === 'piece-A'),
+  "élément : le renvoi vers la pièce doit sortir sous sa clé"
+);
+ok(
+  relues.some(
+    (l) =>
+      l.origine === 'calcul' &&
+      l.relu[col('Cle')].endsWith('[].Piece.Nom') &&
+      l.relu[col('Valeur')].includes('Sanitaires')
+  ),
+  'élément : le nom de la pièce doit être ajouté en ligne calculée'
+);
+// Une pièce supprimée depuis : la valeur reste, aucun nom n'est inventé.
+ok(
+  relues.some((l) => l.relu[col('Valeur')] === 'piece-disparue'),
+  'élément : un renvoi vers une pièce disparue doit rester dans le fichier'
+);
+ok(
+  !relues.some((l) => l.origine === 'calcul' && l.relu[col('Cle')].endsWith('.Piece.Nom') && l.relu[col('Element')] === '3'),
+  'élément : aucun nom ne doit être calculé pour une pièce disparue'
+);
+console.log(`  ${'pièces du bâtiment'.padEnd(44)} ${String(dePiece.length).padStart(5)} lignes, renvois des éléments compris`);
 
 // ── Lignes calculées ───────────────────────────────────────────────────────
 const calculee = (suffixe, valeur) =>

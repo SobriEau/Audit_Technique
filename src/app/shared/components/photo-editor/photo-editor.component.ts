@@ -9,9 +9,17 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { AssetStoreService } from '../../../core/services/asset-store.service';
 import { AssetRef } from '../../../models/data.models';
-import { photoMode, nomDeFichier } from '../../../core/utils/photo-mode';
+import {
+  photoMode,
+  nomDeFichier,
+  cheminPhoto,
+  sourcePhoto,
+  SourcePhoto,
+  SourcesPhoto,
+} from '../../../core/utils/photo-mode';
 import { uid } from '../../../core/utils/uid';
 import { PhotoSyncService } from '../../../core/services/photo-sync.service';
+import { DataService } from '../../../core/services/data.service';
 import { CameraCaptureComponent } from '../camera-capture/camera-capture.component';
 
 /**
@@ -23,11 +31,20 @@ import { CameraCaptureComponent } from '../camera-capture/camera-capture.compone
  * - **IndexedDB** (par défaut) : l'image est écrite dans la base du navigateur
  *   et affichée par une URL d'objet. Fonctionne partout, hors connexion
  *   comprise, mais l'export la recopie en base64.
- * - **Fichiers voisins** : l'image est téléchargée à côté de la page, et
- *   l'audit ne garde qu'un chemin relatif. L'export reste léger quel que soit
- *   le nombre de photos, mais tout dépend du navigateur : s'il refuse
- *   d'écrire, ou renomme le fichier, l'image ne se rechargera pas. C'est
- *   pourquoi chaque vignette signale explicitement si elle a pu être relue.
+ * - **Fichiers voisins** : l'image est en plus téléchargée à côté de la page,
+ *   et l'audit garde son chemin relatif — de quoi retrouver les photos dans
+ *   l'explorateur de fichiers, et les récupérer si la base du navigateur est
+ *   vidée. Le binaire reste en base dans les deux modes.
+ *
+ * **L'affichage se fait toujours depuis la base, jamais depuis le fichier
+ * voisin.** Le chemin relatif était la source préférée ; or le téléchargement
+ * n'est ni instantané ni notifiable, et sur mobile il n'aboutit pas toujours
+ * dans le dossier de la page. La vignette tombait donc sur un fichier
+ * inexistant, le navigateur retenait l'échec, et il fallait recharger la page
+ * pour voir la photo (retour de la première visite terrain, 2026-10). Le
+ * binaire local, lui, est écrit avant même que la vignette soit rendue : il
+ * s'affiche du premier coup et hors connexion. Le fichier voisin et le Drive
+ * restent en secours, dans cet ordre, pour le jour où la base est vidée.
  */
 @Component({
   selector: 'app-photo-editor',
@@ -68,6 +85,12 @@ export class PhotoEditorComponent implements ControlValueAccessor {
   /** URL de secours obtenue depuis le Drive, par identifiant. */
   secours: Record<string, string> = {};
 
+  /**
+   * Sources déjà mises en échec, par identifiant de photo. Écarte une piste
+   * morte au lieu de la réessayer indéfiniment — voir `sourcePhoto`.
+   */
+  private echoues: Record<string, Partial<Record<SourcePhoto, boolean>>> = {};
+
   busy = false;
 
   /** Dialogue de prise de vue affiché. */
@@ -79,6 +102,7 @@ export class PhotoEditorComponent implements ControlValueAccessor {
   constructor(
     private assets: AssetStoreService,
     private sync: PhotoSyncService,
+    private data: DataService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -182,6 +206,7 @@ export class PhotoEditorComponent implements ControlValueAccessor {
    */
   private async ajouterCommeFichier(file: File): Promise<AssetRef> {
     const nom0 = nomDeFichier(this.contexte, file.name, uid());
+    const dossier = this.data.dossierAuditCourant();
 
     // Le binaire est conservé en base malgré le fichier voisin : c'est la seule
     // source disponible pour un envoi différé vers le Drive, et un secours si
@@ -198,40 +223,77 @@ export class PhotoEditorComponent implements ControlValueAccessor {
     lien.click();
     lien.remove();
 
-    // L'écriture n'est pas instantanée, et rien ne permet d'en être notifié :
-    // on laisse au navigateur le temps d'écrire avant de tenter l'affichage.
+    // L'attente ne sert plus l'affichage — celui-ci vient de la base — mais
+    // le téléchargement lui-même : révoquer l'URL trop tôt l'interrompt.
     await new Promise((r) => setTimeout(r, 1200));
     URL.revokeObjectURL(url);
 
     await this.resolveUrl(id);
-    return { id, name: file.name, path: './' + nom };
+    // Le chemin décrit l'arborescence de l'archive — un dossier par audit — et
+    // non l'endroit où le navigateur vient d'écrire : il aplatit les
+    // séparateurs, et ne sait pas créer de sous-dossier (voir `cheminPhoto`).
+    return { id, name: file.name, path: cheminPhoto(dossier, nom) };
+  }
+
+  /** Les sources disponibles pour cette photo, dans l'état où elles sont. */
+  private etatDe(photo: AssetRef): SourcesPhoto {
+    return {
+      base: this.urls[photo.id],
+      chemin: photo.path,
+      drive: this.secours[photo.id],
+      echoues: this.echoues[photo.id],
+    };
   }
 
   /**
-   * Source d'affichage, par ordre de préférence : le fichier voisin, puis le
-   * binaire local, puis le Drive. Les deux premiers sont immédiats et
-   * fonctionnent hors connexion ; le troisième est le filet.
+   * Où afficher cette photo. L'ordre et ses raisons sont dans `sourcePhoto`
+   * (`photo-mode.ts`), fonction pure éprouvée par `tools/check-photos.js` :
+   * l'ordre est une règle, et il a déjà été corrigé une fois.
    */
   source(photo: AssetRef): string | null {
-    return photo.path ?? this.urls[photo.id] ?? this.secours[photo.id] ?? null;
+    return sourcePhoto(this.etatDe(photo))?.url ?? null;
+  }
+
+  /**
+   * Cette photo n'existe plus que sous la forme d'un chemin : son binaire a
+   * disparu de la base.
+   *
+   * À dire, parce que l'export JSON embarque les images **depuis la base** :
+   * une photo sans binaire ne partira pas avec l'audit, et le fichier reçu
+   * par un collègue aura une vignette vide. Un chemin relatif ne vaut que sur
+   * le poste où le fichier se trouve.
+   */
+  sansBinaire(photo: AssetRef): boolean {
+    return !this.urls[photo.id] && !this.resolutionEnCours;
+  }
+
+  /** Vrai le temps que `resolveAll` ait interrogé la base, pour ne rien alléguer trop tôt. */
+  resolutionEnCours = true;
+
+  get nbSansBinaire(): number {
+    return this.resolutionEnCours ? 0 : this.photos.filter((p) => !this.urls[p.id]).length;
   }
 
   /**
    * Une source qui échoue fait passer à la suivante. L'échec n'est signalé à
-   * l'auditeur qu'une fois toutes les pistes épuisées.
+   * l'auditeur qu'une fois toutes les pistes épuisées — y compris le Drive,
+   * qu'on ne va chercher qu'à ce moment-là, puisqu'il suppose le réseau.
    */
   async onImageError(photo: AssetRef): Promise<void> {
-    // Le fichier voisin a échoué : on tente le binaire local.
-    if (photo.path && !this.urls[photo.id]) {
-      await this.resolveUrl(photo.id);
-      if (this.urls[photo.id]) {
-        photo.path = undefined;
-        this.cdr.markForCheck();
-        return;
-      }
+    const ko = (this.echoues[photo.id] ??= {});
+
+    // C'est la source que `sourcePhoto` venait de désigner qui a échoué : on la
+    // marque, et la suivante prend sa place. Désigner et écarter par la même
+    // fonction interdit aux deux de diverger.
+    const essayee = sourcePhoto(this.etatDe(photo));
+    if (essayee) ko[essayee.source] = true;
+
+    // Une autre source reste à essayer : le rendu s'en chargera.
+    if (this.source(photo)) {
+      this.cdr.markForCheck();
+      return;
     }
 
-    // Reste le Drive.
     if (photo.driveId && !this.secours[photo.id]) {
       const url = await this.sync.depuisDrive(photo);
       if (url) {
@@ -252,13 +314,20 @@ export class PhotoEditorComponent implements ControlValueAccessor {
     }
   }
 
-  /** Nouvelle tentative : le téléchargement s'est peut-être terminé depuis. */
-  reessayer(photo: AssetRef): void {
+  /**
+   * Nouvelle tentative : le téléchargement s'est peut-être terminé depuis.
+   * Toutes les sources redeviennent candidates, binaire local compris.
+   */
+  async reessayer(photo: AssetRef): Promise<void> {
     delete this.echecs[photo.id];
+    delete this.echoues[photo.id];
+    delete this.secours[photo.id];
     if (photo.path) {
-      // Le paramètre force le navigateur à retenter au lieu de servir son cache.
+      // Le paramètre force le navigateur à retenter au lieu de servir son
+      // cache, qui a retenu l'échec du premier essai.
       photo.path = photo.path.split('?')[0] + '?r=' + Date.now();
     }
+    await this.resolveUrl(photo.id);
     this.cdr.markForCheck();
   }
 
@@ -270,6 +339,8 @@ export class PhotoEditorComponent implements ControlValueAccessor {
     this.photos = this.photos.filter((_, i) => i !== index);
     delete this.urls[ref.id];
     delete this.echecs[ref.id];
+    delete this.echoues[ref.id];
+    delete this.secours[ref.id];
 
     // Un fichier voisin n'est pas effaçable depuis une page : on le laisse en
     // place et on le dit, plutôt que de faire croire à une suppression.
@@ -296,9 +367,18 @@ export class PhotoEditorComponent implements ControlValueAccessor {
     if (url) this.urls[id] = url;
   }
 
+  /**
+   * Résout l'URL d'affichage de **toutes** les photos, celles qui portent un
+   * chemin relatif comprises : c'est désormais le binaire local qui s'affiche,
+   * et les sauter laissait précisément les vignettes du mode « fichiers
+   * voisins » sans source.
+   */
   private async resolveAll(): Promise<void> {
-    for (const p of this.photos) {
-      if (!p.path) await this.resolveUrl(p.id);
+    this.resolutionEnCours = true;
+    try {
+      for (const p of this.photos) await this.resolveUrl(p.id);
+    } finally {
+      this.resolutionEnCours = false;
     }
     this.sync.rafraichir();
     this.cdr.markForCheck();
@@ -311,6 +391,7 @@ export class PhotoEditorComponent implements ControlValueAccessor {
     this.urls = {};
     this.echecs = {};
     this.secours = {};
+    this.echoues = {};
     void this.resolveAll();
   }
 

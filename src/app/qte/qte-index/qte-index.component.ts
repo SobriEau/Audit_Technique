@@ -7,7 +7,7 @@ import { AuditFieldComponent } from '../../shared/components/audit-field/audit-f
 import { AUDIT_SCHEMA } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
 import { CHAMPS_CONTEXTE } from '../../models/tableau-de-bord';
-import { sectionsDemandees } from '../../models/utilisations-eau';
+import { sectionVisible } from '../sections-visibles';
 
 /**
  * Regroupement des sections en grandes familles.
@@ -79,30 +79,14 @@ export class QteIndexComponent {
       .filter((g) => g.sections.length > 0);
   }
 
-  /**
-   * Deux régimes cohabitent, et c'est voulu :
-   *
-   *  - les audits ouverts depuis le passage à la V3 déclarent des
-   *    **utilisations de l'eau** (`UtilisationsEau`), comme le prescrit le
-   *    classeur : rien n'est affiché qui n'ait été demandé ;
-   *  - les audits antérieurs n'en ont pas ; ils retombent sur
-   *    `EquipementsPresents`, où une clé absente valait « présent ».
-   *
-   * Faire basculer les seconds sur la règle du classeur ferait disparaître,
-   * d'une mise à jour à l'autre, des sections que l'auditeur voyait la veille.
-   */
+  /** Règle partagée avec la page d'une pièce — voir `sections-visibles.ts`. */
   private isVisible(section: EntityDef): boolean {
-    const d = this.dataService.data;
-    if ((this.count(section) ?? 0) > 0) return true;
-    if (section.single) return true;
+    return sectionVisible(section, this.dataService.data, this.count(section) ?? 0);
+  }
 
-    // Hors classeur (aucune depuis le retrait du surpresseur) : aucun usage de
-    // l'eau ne la commande. Masquée tant que l'auditeur ne l'a pas affichée
-    // depuis l'accueil du projet.
-    if (section.horsClasseur) return d.EquipementsPresents?.[section.key] === true;
-
-    if (d.UtilisationsEau) return sectionsDemandees(d.UtilisationsEau).has(section.key);
-    return d.EquipementsPresents?.[section.key] !== false;
+  /** Pièces définies à la préparation, pour proposer l'entrée par pièce. */
+  get nbPieces(): number {
+    return this.dataService.getPieces().length;
   }
 
   /** Nombre d'éléments saisis, affiché en regard de chaque section. */

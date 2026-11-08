@@ -61,7 +61,7 @@ façon :
   sur la fiche Incendie (`F19`). Conservé un temps (champs figés de la V2), il
   a été **retiré** à la demande de Victor Ledoux (retour de test, 2026-09).
 
-Historique des arbitrages : `MAJ/done/fusion-origin-main.md`.
+Historique des arbitrages : `MAJ/realisations/2026-09-16-fusion-origin-main.md`.
 
 ### Ce qui s'ajoute aux fiches du classeur
 

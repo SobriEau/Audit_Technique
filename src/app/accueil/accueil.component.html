@@ -39,6 +39,75 @@
   <app-drive-actions layout="accueil" />
 </div>
 
+<div class="panel">
+  <h2>Tout emporter dans une archive</h2>
+  <p class="muted">
+    Un fichier unique contenant <strong>l'application</strong> et
+    <strong>tous les audits de ce poste</strong> — un dossier par audit, avec
+    ses photos, ses plans et ses données. Dépliez-le où vous voulez et ouvrez
+    <code>index.html</code> : les photos s'y retrouvent par leurs chemins, parce
+    que l'arborescence est celle qu'ils décrivent.
+  </p>
+  <p class="muted">
+    Format <strong>ZIP</strong> et non RAR : le format RAR est propriétaire,
+    aucun navigateur ni aucune bibliothèque ne sait en produire. Un ZIP s'ouvre
+    d'un double-clic sous Windows comme sous macOS, sans rien installer.
+  </p>
+
+  <label class="option-archive">
+    <input type="checkbox" [(ngModel)]="imagesDansJson" name="imagesDansJson" />
+    Embarquer aussi les images dans chaque <code>audit.json</code>
+  </label>
+  <p class="muted field-help">
+    @if (imagesDansJson) {
+      Chaque dossier d'audit est réutilisable seul : son JSON se recharge
+      ailleurs sans les fichiers voisins. L'archive est environ deux fois plus
+      lourde.
+    } @else {
+      Archive légère, mais un <code>audit.json</code> sorti de son dossier n'a
+      plus ses images.
+    }
+  </p>
+
+  <div class="actions">
+    <button type="button" class="secondary" [disabled]="!!occupe" (click)="exporterArchive()">
+      {{ occupe || 'Exporter tout en ZIP' }}
+    </button>
+  </div>
+
+  @if (erreurArchive) {
+    <p class="erreur" role="alert">{{ erreurArchive }}</p>
+  }
+
+  @if (archive) {
+    <div class="rapport-archive" role="status">
+      <p>
+        <strong>{{ archive.fichier }}</strong> — {{ archive.taille }} Ko,
+        {{ archive.audits.length }} audit(s), {{ totalImages }} image(s).
+      </p>
+      @if (!archive.avecApplication) {
+        <p class="avertissement">
+          L'application n'a pas pu être placée à la racine : {{ archive.raisonSansApplication }}
+        </p>
+      }
+      @if (totalManquantes) {
+        <p class="avertissement">
+          {{ totalManquantes }} image(s) sont référencées par un audit mais
+          absentes de ce navigateur : elles ne sont pas dans l'archive.
+        </p>
+      }
+      <ul class="dossiers">
+        @for (a of archive.audits; track a.dossier) {
+          <li>
+            <code>{{ a.dossier }}/</code> — {{ a.nom }}, {{ a.images }} image(s)
+            @if (a.manquantes) { <span class="avertissement">({{ a.manquantes }} manquante(s))</span> }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</div>
+
 <!-- Maquette du classeur V3 (onglet « Accueil ») : le bloc des financeurs
      sous « Ce projet est financé par : », puis les porteurs du projet. -->
 <footer class="financeurs">

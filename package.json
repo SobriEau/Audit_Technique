@@ -12,6 +12,10 @@
     "check:smoke": "node tools/smoke-test.js",
     "check:exigences": "node tools/check-exigences.js",
     "check:csv": "node tools/check-csv.js",
+    "check:fusion": "node tools/check-fusion.js",
+    "check:photos": "node tools/check-photos.js",
+    "check:zip": "node tools/check-zip.js",
+    "check:archive": "node --experimental-websocket tools/check-archive.js",
     "csv": "node tools/json-to-csv.js",
     "gen": "node tools/xlsx-extract.js && node tools/gen-schema.js && node tools/gen-pages.js && node tools/gen-illustrations.js && node tools/gen-docs.js && node tools/gen-referentiel.js"
   },

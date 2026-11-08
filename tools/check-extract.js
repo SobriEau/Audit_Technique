@@ -40,6 +40,7 @@ const CHROMES = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   '/usr/bin/google-chrome',
   '/usr/bin/chromium',
+  '/snap/bin/chromium',
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
 ];
 

@@ -41,6 +41,28 @@
     </div>
   }
 
+  @if (pieces.length) {
+    <div class="panel">
+      <h2>Pièce</h2>
+      <p class="muted">
+        Le local où se trouve cet élément, parmi les pièces définies à la
+        préparation. Il apparaîtra alors sur la page de cette pièce.
+      </p>
+      <select
+        id="piece-de-l-element"
+        [ngModel]="pieceId"
+        (ngModelChange)="onPieceChange($event)"
+        [ngModelOptions]="{ standalone: true }"
+        aria-label="Pièce où se trouve cet élément"
+      >
+        <option value="">— aucune pièce —</option>
+        @for (p of pieces; track p.Id) {
+          <option [value]="p.Id">{{ pieceLabel(p.Id) }}</option>
+        }
+      </select>
+    </div>
+  }
+
   <div class="panel">
     <h2>Photos</h2>
     <app-photo-editor
@@ -112,8 +134,8 @@
     </div>
     <p class="muted annuler-note">
       Annuler abandonne les champs de cette fiche non validés, mais pas les
-      photos ni la localisation déjà posée : celles-ci sont enregistrées
-      immédiatement.
+      photos, la localisation déjà posée ni la pièce choisie : celles-ci sont
+      enregistrées immédiatement.
     </p>
   </div>
 
