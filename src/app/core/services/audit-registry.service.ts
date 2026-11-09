@@ -191,6 +191,7 @@ export class AuditRegistryService {
       !documents &&
       !Object.values(data.UtilisationsEau ?? {}).some(Boolean) &&
       !(data.Plans ?? []).length &&
+      !(data.Batiments ?? []).length &&
       !(data.Pieces ?? []).length &&
       !(data.Photos ?? []).length &&
       !Object.keys(data.Qge ?? {}).length &&

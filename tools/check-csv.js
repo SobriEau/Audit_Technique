@@ -115,6 +115,8 @@ function elementAncien(def, lettre, numero) {
   const item = { Id: idDe(def.key, lettre), Numero: numero };
   // Pièce supprimée depuis : la valeur reste, le nom ne peut plus être calculé.
   item.Piece = 'piece-disparue';
+  // Un élément hors pièce désigne son bâtiment directement (réseau, toiture…).
+  item.Batiment = 'bat-A';
   for (const f of def.fields) {
     if (f.kind === 'select' && f.multiple && f.options?.length) item[f.key] = f.options[0]; // chaîne d'avant le choix multiple
     else if (f.kind === 'mesures-debit') item[f.key] = 7.5; // ancien « Débit en sortie »
@@ -163,15 +165,27 @@ function auditComplet() {
     StructureRacineInconnue: { a: { b: [1, 2] }, liste: [{ x: 1 }, { x: 2.5 }] },
     ImageEnLigne: 'data:image/png;base64,' + 'A'.repeat(4000),
     Plans: [{ id: 'plan-1', name: 'RDC', date: '2025-01-01' }, { id: 'plan-2', name: 'Étage' }],
+    Batiments: [
+      {
+        Id: 'bat-A',
+        Nom: 'Bâtiment B — gymnase',
+        AnneeConstruction: '1998',
+        AnneeDerniereRenovation: '2016',
+        TravauxDerniereRenovation: 'Toiture ; menuiseries',
+        Remarques: 'Accès par la cour\nclé au gardien',
+      },
+      { Id: 'bat-B', Nom: '0123', ChampBatimentInconnu: 'valeur' },
+    ],
     Pieces: [
       {
         Id: 'piece-A',
         Nom: 'Sanitaires « hommes » ; RDC',
         Niveau: 'R+0',
+        Batiment: 'bat-A',
         Localisation: { planId: 'plan-1', x: 0.4, y: 0.6 },
         Remarques: 'Accès par la cour\nclé au gardien',
       },
-      { Id: 'piece-B', Nom: 'Cuisine', Niveau: null, Localisation: null, Remarques: null },
+      { Id: 'piece-B', Nom: 'Cuisine', Niveau: null, Batiment: 'bat-disparu', Localisation: null, Remarques: null },
       { Id: 'piece-C', Nom: '0123', ChampPieceInconnu: 'valeur' },
     ],
     Photos: [{ id: 'g1', name: 'façade.jpg' }],
@@ -445,6 +459,61 @@ ok(
   'élément : aucun nom ne doit être calculé pour une pièce disparue'
 );
 console.log(`  ${'pièces du bâtiment'.padEnd(44)} ${String(dePiece.length).padStart(5)} lignes, renvois des éléments compris`);
+
+// ── Bâtiments de l'établissement ───────────────────────────────────────────
+//
+// Même traitement que les pièces : l'identité en colonne `ElementId`, la clé
+// indépendante du rang. Et le bâtiment d'un point d'eau est **déduit de sa
+// pièce** : sans la ligne calculée, un tableur devrait rapprocher trois tables
+// pour compter les points d'eau par bâtiment.
+const deBatiment = relues.filter((l) => l.relu[col('Section')] === "Bâtiments de l'établissement");
+ok(deBatiment.length > 0, 'bâtiments : aucune ligne');
+ok(
+  deBatiment.every((l) => l.relu[col('Cle')].startsWith('Batiments[]')),
+  'bâtiments : la clé doit être indépendante du rang',
+  deBatiment.map((l) => l.relu[col('Cle')]).join(' ¦ ')
+);
+ok(
+  deBatiment.some((l) => l.relu[col('ElementId')] === 'bat-A' && l.relu[col('Element')].includes('gymnase')),
+  "bâtiments : l'identité et le nom doivent figurer en colonnes"
+);
+ok(
+  deBatiment.some((l) => l.relu[col('Cle')] === 'Batiments[].AnneeConstruction'),
+  "bâtiments : l'année de construction doit sortir"
+);
+ok(
+  deBatiment.some((l) => l.relu[col('Cle')] === 'Batiments[].ChampBatimentInconnu'),
+  "bâtiments : une clé que l'export ignore doit sortir quand même"
+);
+// Le rattachement d'une pièce à son bâtiment, et le nom calculé.
+ok(
+  relues.some((l) => l.relu[col('Cle')] === 'Pieces[].Batiment' && l.relu[col('Valeur')] === 'bat-A'),
+  'pièce : le renvoi vers le bâtiment doit sortir'
+);
+ok(
+  relues.some(
+    (l) => l.origine === 'calcul' && l.relu[col('Cle')] === 'Pieces[].Batiment.Nom' && /gymnase/.test(l.relu[col('Valeur')])
+  ),
+  'pièce : le nom du bâtiment doit être ajouté en ligne calculée'
+);
+// Un bâtiment supprimé depuis : la valeur reste, aucun nom n'est inventé.
+ok(
+  relues.some((l) => l.relu[col('Valeur')] === 'bat-disparu'),
+  'pièce : un renvoi vers un bâtiment disparu doit rester dans le fichier'
+);
+// Le bâtiment déduit de la pièce, sur un élément.
+ok(
+  relues.some(
+    (l) => l.origine === 'calcul' && l.relu[col('Cle')].endsWith('[].Piece.Batiment') && l.relu[col('Valeur')] === 'bat-A'
+  ),
+  "élément : le bâtiment déduit de la pièce doit sortir en ligne calculée"
+);
+// Un élément hors pièce désigne son bâtiment directement.
+ok(
+  relues.some((l) => l.relu[col('Cle')].endsWith('[].Batiment') && l.relu[col('Valeur')] === 'bat-A'),
+  'élément hors pièce : le renvoi direct vers le bâtiment doit sortir'
+);
+console.log(`  ${"bâtiments de l'établissement".padEnd(44)} ${String(deBatiment.length).padStart(5)} lignes, renvois compris`);
 
 // ── Lignes calculées ───────────────────────────────────────────────────────
 const calculee = (suffixe, valeur) =>

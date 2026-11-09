@@ -43,6 +43,47 @@ export interface PlanLocation {
 }
 
 /**
+ * Bâtiment d'un établissement.
+ *
+ * Un établissement peut en compter plusieurs — un groupe scolaire, un campus,
+ * un port — et le remplir comme un bâtiment unique obligeait à ressaisir le
+ * même contexte autant de fois (Martin Perrin, 2026-11). L'arborescence est
+ * **bâtiment → pièces → points d'eau** (arbitrage du 2026-11-09).
+ *
+ * Le bâtiment porte ce qui lui est propre : son nom, son année de construction
+ * et sa dernière rénovation. Les **utilisations de l'eau restent déclarées pour
+ * l'établissement entier** (même arbitrage) : elles ne décident que des
+ * sections *proposées*, et une section proposée mais vide ne coûte rien, là où
+ * dix cases à cocher par bâtiment coûteraient à chaque saisie.
+ *
+ * Comme la pièce, le bâtiment ne **contient** rien : c'est la pièce qui le
+ * désigne, par un renvoi (voir `CLE_BATIMENT`). Le JSON reste donc lisible par
+ * une version qui ignore les bâtiments, et un audit sans bâtiment est un audit
+ * d'un seul bâtiment — ce qu'il a toujours été.
+ */
+export interface Batiment {
+  /** Identité technique stable. Ne jamais la réattribuer. */
+  Id: string;
+  Nom: string;
+  /** Année, saisie sur quatre chiffres. */
+  AnneeConstruction?: string | null;
+  AnneeDerniereRenovation?: string | null;
+  TravauxDerniereRenovation?: string | null;
+  Remarques?: string | null;
+}
+
+/**
+ * Clé portant l'identité du bâtiment — sur une pièce, et sur un élément
+ * d'audit qui n'est dans aucune pièce (réseau ECS, toiture, structure,
+ * ventilation, opportunités).
+ *
+ * Un élément **rattaché à une pièce ne la porte pas** : son bâtiment se déduit
+ * de sa pièce. Une seule vérité par niveau, donc rien à resynchroniser quand
+ * une pièce change de bâtiment.
+ */
+export const CLE_BATIMENT = 'Batiment';
+
+/**
  * Pièce du bâtiment, définie à la préparation de l'audit.
  *
  * Le classeur raisonne par **type d'équipement** : un onglet « Robinets », un
@@ -63,6 +104,11 @@ export interface Piece {
   Id: string;
   /** Nom tel qu'il figure sur le plan : « Sanitaires RDC », « Cuisine ». */
   Nom: string;
+  /**
+   * Bâtiment où se trouve la pièce (`Batiment.Id`), ou absent sur un audit à
+   * bâtiment unique. Voir `CLE_BATIMENT`.
+   */
+  Batiment?: string | null;
   /** Niveau ou bâtiment, quand les noms de pièces se répètent d'un étage à l'autre. */
   Niveau?: string | null;
   /**
@@ -107,6 +153,13 @@ export interface AuditEntity {
    * l'élément, c'est l'élément qui la désigne. Voir `CLE_PIECE`.
    */
   Piece?: string | null;
+  /**
+   * Bâtiment de l'élément, **seulement** quand il n'est dans aucune pièce — un
+   * réseau ECS, une toiture, une structure. Sinon il se déduit de la pièce, et
+   * ce champ reste vide : deux vérités pour un même rattachement finiraient par
+   * se contredire. Voir `CLE_BATIMENT`.
+   */
+  Batiment?: string | null;
   /**
    * Les autres champs sont déclarés dans le schéma (`audit-schema.ts`) et non
    * dans le type : c'est ce qui permet à un même moteur de rendre les dix
@@ -237,6 +290,11 @@ export interface AppData {
   Effectif?: string | null;
   /** Plans du bâtiment chargés depuis l'accueil, communs à tout l'audit. */
   Plans?: AssetRef[];
+  /**
+   * Bâtiments de l'établissement. Absent ou vide : l'audit porte sur un seul
+   * bâtiment, et c'est le cas d'origine — voir `Batiment`.
+   */
+  Batiments?: Batiment[];
   /**
    * Pièces du bâtiment, définies à la préparation de l'audit et repérées sur
    * les plans. Un élément technique les désigne par son champ `Piece`.

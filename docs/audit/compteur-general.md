@@ -2,7 +2,7 @@
 
 Entité `releve_compteur_general` — route `#/qte/compteur-general`.
 
-22 champ(s), 7 section(s). Colonnes du tableau : `Emplacement`, `Type`, `Teletransmission`.
+23 champ(s), 7 section(s). Colonnes du tableau : `Emplacement`, `Type`, `Teletransmission`.
 
 
 ## Localisation
@@ -21,6 +21,7 @@ Entité `releve_compteur_general` — route `#/qte/compteur-general`.
 | `H17` | Année de pose | Facultatif | Champ Libre |
 | `L17` | Propriétaire du compteur | Facultatif | Champ Libre |
 | `H20` | Nombre d'abonnement eau potable du bâtiment | Facultatif | Champ Libre |
+| `H21` | Pression mesurée au compteur général (bar) | Facultatif | — |
 
 ## Connexion
 

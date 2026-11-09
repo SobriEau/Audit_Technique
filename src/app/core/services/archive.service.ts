@@ -184,6 +184,7 @@ export class ArchiveService {
     // l'archive suit celui de l'audit.
     parcourir(audit.Plans);
     parcourir(audit.Photos);
+    parcourir(audit.Batiments);
     parcourir(audit.Pieces);
     parcourir(audit.Qte);
     return out;

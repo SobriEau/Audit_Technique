@@ -66,7 +66,11 @@
     <table>
       <thead>
         <tr>
+          <th class="col-etat" title="Champs obligatoires remplis, et présence d'une photo">État</th>
           <th>Numéro</th>
+          @if (avecBatiments) {
+            <th>Bâtiment</th>
+          }
           @if (avecPieces) {
             <th>Pièce</th>
           }
@@ -81,7 +85,18 @@
       <tbody>
         @for (item of items; track item.Id) {
           <tr class="clickable" (click)="open(item)">
+            <td class="col-etat" [title]="etatTitre(item)">
+              <span class="pastille" [class.pastille--ok]="etat(item).complet">
+                {{ etat(item).complet ? '✓' : etat(item).manquants }}
+              </span>
+              <span class="pastille pastille--photo" [class.pastille--ok]="etat(item).photos > 0">
+                {{ etat(item).photos > 0 ? '📷' : '—' }}
+              </span>
+            </td>
             <td>{{ item.Numero ?? '' }}</td>
+            @if (avecBatiments) {
+              <td>{{ batimentDe(item) || '—' }}</td>
+            }
             @if (avecPieces) {
               <td>{{ pieceDe(item) || '—' }}</td>
             }
@@ -91,6 +106,20 @@
               }
             }
             <td class="col-actions">
+              <button
+                class="ghost btn-rang"
+                [disabled]="premier(item)"
+                (click)="deplacer(item, -1, $event)"
+                title="Monter dans la liste"
+                aria-label="Monter dans la liste"
+              >↑</button>
+              <button
+                class="ghost btn-rang"
+                [disabled]="dernier(item)"
+                (click)="deplacer(item, 1, $event)"
+                title="Descendre dans la liste"
+                aria-label="Descendre dans la liste"
+              >↓</button>
               <button class="ghost" (click)="open(item)">Modifier</button>
               <button class="ghost" (click)="duplicate(item, $event)">Dupliquer</button>
               <button class="ghost btn-delete" (click)="remove(item, $event)">
@@ -101,7 +130,10 @@
         }
         @empty {
           <tr>
-            <td [attr.colspan]="columns.length + (avecPieces ? 3 : 2)" class="empty-row">
+            <td
+              [attr.colspan]="columns.length + 3 + (avecPieces ? 1 : 0) + (avecBatiments ? 1 : 0)"
+              class="empty-row"
+            >
               Aucun élément. Cliquez sur « Ajouter — {{ def.singular }} ».
             </td>
           </tr>

@@ -128,7 +128,8 @@ AppData
 ├── EquipementsPresents {} ancien régime d'affichage, et entités hors classeur
 ├── Documents {}         documents récupérés, par identifiant stable
 ├── Plans[]              AssetRef — plans du bâtiment, communs à l'audit
-├── Pieces[]             pièces du bâtiment, pointées sur un plan
+├── Batiments[]          bâtiments de l'établissement (§3bis)
+├── Pieces[]             pièces, rattachées à un bâtiment (§3bis)
 ├── Photos[]             AssetRef — galerie générale
 ├── Qge {}               JSON libre (éditeur brut)
 ├── Qus {}               JSON libre (éditeur brut)
@@ -200,6 +201,50 @@ photos sur son voisin.
 `Qte.Localisations` et `Qte.PhotosSections` sont un vestige de l'époque où les
 sections étaient éditées en JSON brut. Ils ne sont plus alimentés, et ne
 subsistent que pour relire les audits enregistrés à ce moment-là.
+
+### Bâtiments et pièces — trois niveaux, posés par renvois
+
+L'arborescence est **bâtiment → pièces → points d'eau** (arbitrage du
+2026-11-09), et les trois niveaux tiennent par des **renvois**, jamais par
+imbrication :
+
+| Niveau | Où | Désigne son parent par |
+|---|---|---|
+| `AppData.Batiments[]` | hors du schéma, comme les pièces | — |
+| `AppData.Pieces[]` | idem | `Piece.Batiment` |
+| un point d'eau | dans sa liste sous `Qte` | `Piece` (clé `CLE_PIECE`) |
+| un élément **hors pièce** — réseau ECS, toiture, structure, ventilation, opportunités | idem | `Batiment` (clé `CLE_BATIMENT`) |
+
+Quatre règles à ne pas défaire :
+
+- **Le bâtiment d'un point d'eau se déduit de sa pièce**, il n'est pas recopié
+  (`DataService.batimentDeElement`). Une seule vérité par niveau : déplacer une
+  pièce d'un bâtiment à l'autre emmène ses points d'eau, sans rien à
+  resynchroniser. Un élément porte `Batiment` **seulement** s'il n'est dans
+  aucune pièce.
+- **Un audit sans bâtiment est un audit d'un seul bâtiment.** C'est le cas
+  d'origine, et celui de tous les audits en circulation : la forme du JSON ne
+  change pas, et une version qui ignore `Batiments` continue de le relire.
+- **Les utilisations de l'eau restent déclarées pour l'établissement entier**
+  (même arbitrage). Elles ne décident que des sections *proposées* ; une section
+  proposée mais vide ne coûte rien, là où dix cases par bâtiment coûteraient à
+  chaque saisie.
+- **Supprimer un bâtiment détache ses pièces et les éléments qui le
+  désignaient** (`purgeBatimentReferences`), sans rien supprimer, et le nombre
+  est annoncé avant. Même règle que pour une pièce.
+
+**Deux seuils d'affichage**, pour que rien n'apparaisse sans raison : avec
+**un** bâtiment, le contexte reste sur le tableau de bord et une pièce créée lui
+est rattachée d'office ; à partir de **deux**, apparaissent le sélecteur de
+bâtiment d'une pièce, le filtre par bâtiment de la liste des pièces, la colonne
+« Bâtiment » des listes par type, et l'année de construction / rénovation qui
+passe au niveau du bâtiment.
+
+⚠️ Les trois champs ainsi déplacés (`AnneeConstruction`,
+`AnneeDerniereRenovation`, `TravauxDerniereRenovation` du tableau de bord) ne
+sont **jamais effacés** : déjà remplis, ils restent consultables et modifiables
+dans un volet dépliable du tableau de bord. Une saisie ne doit pas devenir
+inatteignable — même règle que le niveau de remplissage (§8).
 
 ### Les pièces — une seconde entrée, pas une seconde structure
 
@@ -724,6 +769,11 @@ Le support est dans `MAJ/retours/2026-10-16-premiere-visite-terrain.md`, les arb
 |---|---|
 | Intégrer un JSON dans l'audit en cours (deux auditeurs, un bâtiment) | [fusion.ts](src/app/core/utils/fusion.ts), `DataService.prepareMerge` / `applyMerge`, `fusion-audit` (§5) |
 | Avancer par pièce plutôt que par type d'équipement | `AppData.Pieces`, clé `Piece`, `piece-manager`, `#/pieces` (§3bis) |
+| Bâtiment → pièces → points d'eau (établissements à plusieurs bâtiments) | `AppData.Batiments`, clés `Batiment` et `Piece`, `batiment-manager` (§3bis) |
+| Déplacer une ligne dans une liste | `DataService.moveEntity` — **les numéros ne suivent pas** : `Numero` est un libellé noté sur place, et les renvois désignent l'`Id` (§3) |
+| Voir d'un coup d'œil ce qui reste à remplir | colonne « État » d'`entity-list` : champs obligatoires restants, via `champsManquants()`, et présence d'une photo |
+| Télécharger les photos déjà prises en passant en « fichiers voisins » | `DataService.telechargerPhotosVoisines`, par un bouton — un téléchargement multiple demande l'accord du navigateur |
+| Dictée muette sur un Android sans services Google (/e/OS) | `SpeechService.MOTEUR_ABSENT` : trois codes d'erreur rendent la dictée **durablement** indisponible, sur tous les champs, avec le message qui dit quoi faire (§7) |
 | Photos mal affichées jusqu'au rechargement de la page | `PhotoEditorComponent.source` (§4) |
 
 ### Demandes complémentaires (2026-11-08)
@@ -747,6 +797,20 @@ choix y défont explicitement ce qu'une des deux versions avait écrit.
 depuis `audit_technique.xlsx` — voir [tools/README.md](tools/README.md). Une
 modification manuelle serait perdue à la prochaine régénération. Pour changer un
 champ, corriger le classeur ; pour changer une liste de valeurs, `value-lists.ts`.
+
+**Régénérer ne perd pas les corrections déjà apportées**, et c'est important de
+le savoir avant de toucher au classeur. Le générateur ne lit pas que le
+classeur : il applique par-dessus des tables de corrections tenues à la main —
+`REQUIREMENT_OVERRIDES`, `OPTION_OVERRIDES`, `UNIT_OVERRIDES`,
+`MULTIPLES_IMPOSES`, `CHAMPS_PAR_OPTION`, `CHAMPS_RETIRES`, `CHAMPS_DETACHES`,
+`HELP_OVERRIDES` (`gen-schema.js`), `ENTITIES`, `CHAMPS_AJOUTES`, `LABEL_FIXES`,
+`MESURES_DEBIT`, `ILLUSTRATIONS`, `LEGENDES_AJOUTEES` (`lib/classeur.js`). Elles
+vivent dans le dépôt, et portent les corrections des retours de test.
+
+Et si une cellule bouge, **le générateur s'arrête** en nommant la cellule, au
+lieu de produire un schéma amputé en silence. C'est le garde-fou à ne pas
+retirer : il change une perte invisible en un échec bruyant. Voir
+[MAJ/AVANCEMENT.md](MAJ/AVANCEMENT.md).
 
 Modifier l'apparence d'un type de saisie se fait dans `audit-field`, et vaut
 aussitôt pour tous les formulaires.
@@ -1068,7 +1132,7 @@ point d'entrée :
 
 | Dossier | Contenu | Règle |
 |---|---|---|
-| `retours/` | Les éléments de retour **bruts**, tels que reçus | Jamais modifiés. C'est la seule pièce qu'on ne peut pas reconstituer. |
+| `retours/` | Les éléments de retour **bruts**, tels que reçus | Jamais modifiés. C'est la seule pièce qu'on ne peut pas reconstituer. `retours-cumules.html` est le document vivant où les remarques s'ajoutent. |
 | `to_do/` | Une fiche par retour : chaque demande, son état, et l'endroit du code où elle a abouti | Le document de travail — c'est là que vivent les réserves et les lectures tranchées. |
 | `realisations/` | Les notes d'arbitrage : ce qui a été fait, et pourquoi plutôt qu'autrement | À lire avant de défaire quelque chose. |
 | `classeurs/` | Les versions du classeur Excel dont le schéma est généré | `audit_technique.xlsx` est la version courante. |

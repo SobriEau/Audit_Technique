@@ -118,6 +118,12 @@ export class PieceDetailComponent implements OnInit {
     return this.piece ? this.data.pieceLabel(this.piece.Id) || 'Pièce' : 'Pièce';
   }
 
+  /** Bâtiment de la pièce, affiché en tête quand l'établissement en compte plusieurs. */
+  get batiment(): string {
+    if (!this.piece || this.data.getBatiments().length < 2) return '';
+    return this.data.batimentLabel(this.piece.Batiment);
+  }
+
   get total(): number {
     return this.blocs.reduce((n, b) => n + b.items.length, 0);
   }

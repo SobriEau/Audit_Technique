@@ -46,6 +46,14 @@ export const TYPE_COMPTEUR = [
  * partagent.
  */
 export const CLASSE_METROLOGIQUE = [
+  // « Dans les classes métrologiques des compteurs, faire rajouter 1, 2, 3, 4 »
+  // (formation d'Angers, 2026-10). Les plaques anciennes portent un chiffre là
+  // où les récentes portent une lettre ou un rapport R : les trois notations
+  // cohabitent sur le terrain.
+  '1',
+  '2',
+  '3',
+  '4',
   'Classe A',
   'Classe B',
   'Classe C',

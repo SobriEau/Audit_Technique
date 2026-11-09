@@ -88,3 +88,42 @@ tbody tr:last-child td {
 .total-detail {
   font-size: var(--fs-sm);
 }
+
+/* ── État d'une ligne : complétude et photo ────────────────────────────── */
+/*
+ * Deux pastilles plutôt qu'une barre : « complet » et « photographié » sont
+ * deux informations distinctes, et une fiche complète sans photo reste une
+ * fiche à repasser.
+ */
+
+.col-etat {
+  width: 74px;
+  white-space: nowrap;
+}
+
+.pastille {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px var(--sp-1);
+  margin-right: 2px;
+  border-radius: var(--r-sm);
+  background: var(--c-priority-facultatif-bg);
+  color: var(--c-priority-obligatoire-text);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-align: center;
+}
+
+.pastille--ok {
+  background: var(--c-surface-hover);
+  color: var(--c-primary);
+}
+
+.pastille--photo {
+  font-weight: 400;
+}
+
+.btn-rang {
+  min-width: 26px;
+  padding: var(--sp-1);
+}

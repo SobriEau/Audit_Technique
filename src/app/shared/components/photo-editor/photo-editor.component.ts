@@ -205,8 +205,8 @@ export class PhotoEditorComponent implements ControlValueAccessor {
    * identifiant, pour qu'aucune collision n'amène le navigateur à renommer.
    */
   private async ajouterCommeFichier(file: File): Promise<AssetRef> {
-    const nom0 = nomDeFichier(this.contexte, file.name, uid());
     const dossier = this.data.dossierAuditCourant();
+    const nom0 = nomDeFichier(dossier, this.contexte, file.name, uid());
 
     // Le binaire est conservé en base malgré le fichier voisin : c'est la seule
     // source disponible pour un envoi différé vers le Drive, et un secours si

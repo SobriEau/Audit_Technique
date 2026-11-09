@@ -52,6 +52,12 @@
             votre collègue : champs que vous aviez laissés vides, photos ajoutées.
           </li>
         }
+        @if (prep.rapport.batimentsAjoutes.length) {
+          <li>
+            <strong>{{ prep.rapport.batimentsAjoutes.length }}</strong> bâtiment(s) repris :
+            {{ prep.rapport.batimentsAjoutes.join(', ') }}
+          </li>
+        }
         @if (prep.rapport.piecesAjoutees.length) {
           <li>
             <strong>{{ prep.rapport.piecesAjoutees.length }}</strong> pièce(s) reprise(s) :
@@ -77,7 +83,8 @@
 
       <p class="muted deja">
         Déjà présent, donc laissé en place :
-        {{ prep.rapport.piecesDeja }} pièce(s), {{ prep.rapport.plansDeja }} plan(s),
+        {{ prep.rapport.batimentsDeja }} bâtiment(s), {{ prep.rapport.piecesDeja }} pièce(s),
+        {{ prep.rapport.plansDeja }} plan(s),
         @for (e of prep.rapport.entites; track e.entite) {
           @if (e.identiques) {
             <span class="puce">{{ e.libelle }} : {{ e.identiques }}</span>
@@ -150,9 +157,9 @@
 
     @if (prep.rapport.piecesIntrouvables) {
       <p class="muted">
-        {{ prep.rapport.piecesIntrouvables }} élément(s) désignent une pièce
-        absente des deux fichiers. Ils restent dans la liste de leur type, sans
-        pièce.
+        {{ prep.rapport.piecesIntrouvables }} renvoi(s) désignent une pièce ou un
+        bâtiment absents des deux fichiers. Les valeurs sont conservées, et les
+        fiches restent dans la liste de leur type.
       </p>
     }
 

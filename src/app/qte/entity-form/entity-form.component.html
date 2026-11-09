@@ -41,6 +41,36 @@
     </div>
   }
 
+  @if (batiments.length) {
+    <div class="panel">
+      <h2>Bâtiment</h2>
+      @if (pieceId) {
+        <p class="muted">
+          Déduit de la pièce choisie ci-dessous :
+          <strong>{{ batimentHerite || 'la pièce n’est rattachée à aucun bâtiment' }}</strong>.
+          Il se met à jour tout seul si la pièce change de bâtiment.
+        </p>
+      } @else {
+        <p class="muted">
+          Cet élément n'est dans aucune pièce — un réseau, une toiture, une
+          structure. Indiquez le bâtiment concerné.
+        </p>
+        <select
+          id="batiment-de-l-element"
+          [ngModel]="batimentId"
+          (ngModelChange)="onBatimentChange($event)"
+          [ngModelOptions]="{ standalone: true }"
+          aria-label="Bâtiment où se trouve cet élément"
+        >
+          <option value="">— aucun bâtiment —</option>
+          @for (b of batiments; track b.Id) {
+            <option [value]="b.Id">{{ batimentLabel(b.Id) }}</option>
+          }
+        </select>
+      }
+    </div>
+  }
+
   @if (pieces.length) {
     <div class="panel">
       <h2>Pièce</h2>

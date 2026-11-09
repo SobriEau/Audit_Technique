@@ -2,7 +2,7 @@
 
 Entité `robinets` — route `#/qte/robinets`.
 
-30 champ(s), 5 section(s). Colonnes du tableau : `Emplacement`, `Utilisation1`, `NombreDEquipementsIdentiques`.
+33 champ(s), 5 section(s). Colonnes du tableau : `Emplacement`, `Utilisation1`, `NombreDEquipementsIdentiques`.
 
 
 ## Localisation
@@ -37,6 +37,7 @@ Entité `robinets` — route `#/qte/robinets`.
 | `F33` | Présence d'un limiteur de débit | Recommandé | Liste déroulante Oui/Non |
 | `J33` | Particularité (cold start, double butée, encastré , antivol, accessibilité des organes du robinet…) | Recommandé | Champ libre |
 | `F36` | Informations sur le bec du robinet (hauteur, bec fixe, orientable, col de cygne, extractible, douchette, rabatable) | Facultatif | Champ libre |
+| `F37` | Marque du robinet (si lisible) | Facultatif | — |
 
 ## Mesures
 
@@ -49,6 +50,8 @@ Entité `robinets` — route `#/qte/robinets`.
 | `N40` | Mesure directe débit (L/min) - bol | — | champ libre |
 | `F45` | Température max ECS (°C) | Facultatif | Champ libre |
 | `K45` | Temps d'obtention (s) ECS | Facultatif | Champ libre |
+| `F46` | Pression mesurée au robinet (bar) | Facultatif | — |
+| `J46` | Arrivée de l'eau chaude | Facultatif | Liste déroulante : froide / tiède / chaude / très chaude / pas d’eau chaude |
 
 ## Etat lors de la visite
 

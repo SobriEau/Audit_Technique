@@ -64,8 +64,26 @@ egal(nomSeul('./mon-audit/photo.jpg'), 'photo.jpg', 'nomSeul');
 egal(nomSeul('./mon-audit/photo.jpg?r=1731000000'), 'photo.jpg', 'nomSeul : le paramètre anti-cache est retiré');
 egal(nomSeul('photo.jpg'), 'photo.jpg', 'nomSeul : un nom déjà seul');
 
-const compose = nomDeFichier('Robinet 3', 'IMG_0421.JPEG', 'ab12cd34ef');
-ok(/^\d{8}T\d{6}_robinet-3_ab12cd34\.jpeg$/.test(compose), 'nomDeFichier : horodatage, contexte, identité, extension', compose);
+// Le nom du fichier téléchargé : l'audit, l'horodatage à la seconde, la fiche,
+// puis un discriminant. Le nom d'origine n'est pas conservé — tous les fichiers
+// atterrissent à plat dans le même dossier, tous audits confondus.
+const DOSSIER = 'ecole-jean-moulin-a1b2c3d4';
+const compose = nomDeFichier(DOSSIER, 'Robinet 3', 'IMG_0421.JPEG', 'ab12cd34ef');
+ok(
+  new RegExp('^' + DOSSIER + '_\\d{8}T\\d{6}_robinet-3_ab12cd34\\.jpeg$').test(compose),
+  "nomDeFichier : audit, horodatage à la seconde, fiche, discriminant, extension",
+  compose
+);
+// Le préfixe est exactement le nom du dossier : c'est ce qui permet de
+// rattacher un fichier isolé à son audit quand on réunit plusieurs archives.
+ok(compose.startsWith(dossierAudit('École Jean Moulin', 'a1b2c3d4-ef') + '_'), "nomDeFichier : le préfixe est le nom du dossier de l'audit", compose);
+// Deux photos ajoutées dans la même seconde, pour le même audit, ne doivent pas
+// porter le même nom : c'est à cela que sert le discriminant.
+const n1 = nomDeFichier(DOSSIER, 'Robinet 3', 'a.jpg', 'aaaaaaaa11');
+const n2 = nomDeFichier(DOSSIER, 'Robinet 3', 'a.jpg', 'bbbbbbbb22');
+ok(n1 !== n2, 'nomDeFichier : deux photos de la même seconde ne collisionnent pas', n1 + ' / ' + n2);
+// Un audit sans nom ni identité ne doit pas produire un nom vide.
+ok(/^audit_\d{8}T\d{6}_fiche_/.test(nomDeFichier('', '', '', '')), 'nomDeFichier : replis quand tout manque', nomDeFichier('', '', '', ''));
 
 // ── Ordre des sources ──────────────────────────────────────────────────────
 //

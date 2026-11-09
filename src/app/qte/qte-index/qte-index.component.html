@@ -7,7 +7,15 @@
     s'enregistrent au fur et à mesure.
   </p>
 
-  @for (f of champsContexte; track f.key) {
+  @if (parBatiment) {
+    <p class="muted" role="status">
+      L'établissement compte plusieurs bâtiments : l'année de construction et la
+      dernière rénovation se saisissent <strong>par bâtiment</strong>, sur
+      l'accueil du projet. Ce qui reste ici vaut pour l'établissement entier.
+    </p>
+  }
+
+  @for (f of champsIci; track f.key) {
     <div class="field-row">
       <app-audit-field
         [def]="f"
@@ -16,6 +24,30 @@
         [ngModelOptions]="{ standalone: true }"
       />
     </div>
+  }
+
+  @if (champsDeplacesRemplis.length) {
+    <details class="contexte-deplace">
+      <summary>
+        {{ champsDeplacesRemplis.length }} champ(s) renseignés avant la création
+        des bâtiments
+      </summary>
+      <p class="muted">
+        Rien n'est perdu : ces valeurs restent dans l'audit et à l'export. Elles
+        décrivent l'établissement tel qu'il était saisi d'un seul tenant ;
+        reportez-les sur le bâtiment concerné si besoin.
+      </p>
+      @for (f of champsDeplacesRemplis; track f.key) {
+        <div class="field-row">
+          <app-audit-field
+            [def]="f"
+            [ngModel]="valeurContexte(f)"
+            (ngModelChange)="changerContexte(f, $event)"
+            [ngModelOptions]="{ standalone: true }"
+          />
+        </div>
+      }
+    </details>
   }
 </div>
 

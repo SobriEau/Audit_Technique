@@ -96,3 +96,10 @@
   font-size: var(--fs-sm);
   color: var(--c-danger);
 }
+
+/* Moteur de reconnaissance absent de l'appareil : dit une fois, sur place. */
+.mic-indispo {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}

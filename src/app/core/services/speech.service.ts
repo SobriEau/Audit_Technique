@@ -231,11 +231,38 @@ export class SpeechService {
     if (this.isSupported) this.setState('ready');
   }
 
+  /**
+   * Codes qui disent que **le moteur de reconnaissance manque à l'appareil**,
+   * et non qu'une tentative a échoué : le navigateur expose l'API, mais rien ne
+   * répond derrière. C'est le cas d'un Android sans services Google (/e/OS),
+   * signalé par Victor Ledoux (2026-09).
+   */
+  private static readonly MOTEUR_ABSENT = new Set([
+    'service-not-allowed',
+    'network',
+    'language-not-supported',
+  ]);
+
+  /** Pourquoi la dictée est indisponible sur cet appareil, une fois su. */
+  raisonIndisponible: string | null = null;
+
   private fail(code: string): void {
     this.wantListening = false;
     this.owner = null;
     this.errorMessage = describeError(code);
     this.recognition = null;
+
+    // Le moteur manque : c'est vrai pour **tous** les champs et pour le reste
+    // de la session, pas seulement pour la tentative en cours. Sans cela, le
+    // bouton redevenait invitant sur le champ suivant, et l'auditeur
+    // réessayait indéfiniment sans comprendre — alors que rien ne peut
+    // marcher. On ne peut pas le savoir avant d'avoir essayé une fois :
+    // l'API est bien là, c'est le service derrière qui manque.
+    if (SpeechService.MOTEUR_ABSENT.has(code)) {
+      this.raisonIndisponible = this.errorMessage;
+      this.setState('unsupported');
+      return;
+    }
     this.setState('error');
   }
 

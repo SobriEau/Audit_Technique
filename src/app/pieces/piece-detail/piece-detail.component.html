@@ -11,6 +11,9 @@
 
   <div class="panel">
     <h2>Repérage</h2>
+    @if (batiment) {
+      <p class="muted">Bâtiment : <strong>{{ batiment }}</strong></p>
+    }
     @if (piece.Remarques) {
       <p class="remarques">{{ piece.Remarques }}</p>
     }

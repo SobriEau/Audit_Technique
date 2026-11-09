@@ -9,6 +9,24 @@
   </p>
 }
 
+@if (avecBatiments && pieces.length) {
+  <div class="filtre-batiment" role="group" aria-label="Filtrer les pièces par bâtiment">
+    <button type="button" [class.actif]="filtre === ''" class="ghost" (click)="filtre = ''">
+      Tous les bâtiments
+    </button>
+    @for (b of batiments; track b.Id) {
+      <button type="button" [class.actif]="filtre === b.Id" class="ghost" (click)="filtre = b.Id">
+        {{ batimentLabel(b.Id) }}
+      </button>
+    }
+    @if (nbSansBatiment) {
+      <button type="button" [class.actif]="filtre === '-'" class="ghost" (click)="filtre = '-'">
+        Sans bâtiment ({{ nbSansBatiment }})
+      </button>
+    }
+  </div>
+}
+
 @if (pieces.length === 0) {
   <p class="muted empty">
     Aucune pièce définie. Reprenez les pièces du plan — « Sanitaires RDC »,
@@ -17,7 +35,7 @@
   </p>
 } @else {
   <ul class="piece-list">
-    @for (p of pieces; track p.Id; let i = $index) {
+    @for (p of piecesAffichees; track p.Id; let i = $index) {
       <li class="piece-item" [class.ouverte]="deplie === p.Id">
         <div class="piece-head">
           <div class="piece-nom">
@@ -30,6 +48,11 @@
               [ariaLabel]="'Nom de la pièce ' + (i + 1)"
             />
             <p class="muted piece-resume">
+              @if (avecBatiments) {
+                <span class="piece-batiment">
+                  {{ batimentLabel(p.Batiment) || 'sans bâtiment' }}
+                </span>
+              }
               @if (p.Niveau) { <span class="piece-niveau">{{ p.Niveau }}</span> }
               @if (nomPlan(p)) { <span class="piece-plan">📍 {{ nomPlan(p) }}</span> }
               @else { <span class="muted">non pointée sur un plan</span> }
@@ -62,8 +85,27 @@
 
         @if (deplie === p.Id) {
           <div class="piece-details">
+            @if (avecBatiments) {
+              <label [attr.for]="'piece-batiment-' + i">Bâtiment</label>
+              <select
+                [id]="'piece-batiment-' + i"
+                [ngModel]="p.Batiment ?? ''"
+                (ngModelChange)="changerBatiment(p, $event)"
+                [name]="'pieceBatiment' + i"
+              >
+                <option value="">— aucun bâtiment —</option>
+                @for (b of batiments; track b.Id) {
+                  <option [value]="b.Id">{{ batimentLabel(b.Id) }}</option>
+                }
+              </select>
+              <p class="muted field-help">
+                Les points d'eau de cette pièce suivent : leur bâtiment se déduit
+                du sien, il n'est pas à ressaisir sur chaque fiche.
+              </p>
+            }
+
             <label [attr.for]="'piece-niveau-' + i">
-              Niveau ou bâtiment
+              Niveau ou étage
               <span class="badge-neutre">Facultatif</span>
             </label>
             <app-dictation-field
@@ -97,6 +139,8 @@
           </div>
         }
       </li>
+    } @empty {
+      <li class="muted empty">Aucune pièce dans ce bâtiment. Le filtre en masque {{ pieces.length }}.</li>
     }
   </ul>
 }

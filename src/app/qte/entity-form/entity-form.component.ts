@@ -8,7 +8,7 @@ import { PlanLocatorComponent } from '../../shared/components/plan-locator/plan-
 import { PhotoEditorComponent } from '../../shared/components/photo-editor/photo-editor.component';
 import { entityByRoute } from '../../models/audit-schema';
 import { EntityDef, FieldDef } from '../../models/field.models';
-import { AssetRef, CLE_PIECE, NiveauRemplissage, Piece, PlanLocation } from '../../models/data.models';
+import { AssetRef, Batiment, CLE_BATIMENT, CLE_PIECE, NiveauRemplissage, Piece, PlanLocation } from '../../models/data.models';
 import { FormSection, buildSections, champEmplacement, cleAutre, formFields } from '../form-layout';
 import { NIVEAU_LABELS, blocActif, champsManquants, champsMasques, requirementVisible } from '../exigences';
 
@@ -267,6 +267,36 @@ export class EntityFormComponent implements OnInit {
    */
   onPieceChange(id: string): void {
     this.item[CLE_PIECE] = id || null;
+    this.persist();
+  }
+
+  // ── Bâtiment ─────────────────────────────────────────────────────────────
+  //
+  // Un élément rattaché à une pièce **n'a pas** de bâtiment propre : il se
+  // déduit de sa pièce, et c'est la seule vérité (voir `CLE_BATIMENT`). Le
+  // sélecteur n'apparaît donc que pour les éléments qui ne sont dans aucune
+  // pièce — un réseau ECS, une toiture, une structure, une ventilation.
+
+  get batiments(): Batiment[] {
+    return this.data.getBatiments();
+  }
+
+  /** Bâtiment hérité de la pièce, le cas échéant : affiché, non modifiable ici. */
+  get batimentHerite(): string {
+    const piece = this.data.findPiece(this.pieceId);
+    return piece ? this.data.batimentLabel(piece.Batiment) : '';
+  }
+
+  get batimentId(): string {
+    return (this.item[CLE_BATIMENT] as string | null) ?? '';
+  }
+
+  batimentLabel(id: string): string {
+    return this.data.batimentLabel(id);
+  }
+
+  onBatimentChange(id: string): void {
+    this.item[CLE_BATIMENT] = id || null;
     this.persist();
   }
 

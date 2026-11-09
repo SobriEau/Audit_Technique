@@ -4,6 +4,8 @@ import {
   AssetRef,
   AuditEntity,
   AuditSummary,
+  Batiment,
+  CLE_BATIMENT,
   CLE_PIECE,
   Piece,
   PlanLocation,
@@ -18,7 +20,7 @@ import { encoderCp1252 } from '../utils/cp1252';
 import { csvAudit, nomAudit } from '../utils/csv-export';
 import { uid } from '../utils/uid';
 import { RapportFusion, fusionner, prochainNumero } from '../utils/fusion';
-import { dossierAudit } from '../utils/photo-mode';
+import { cheminPhoto, dossierAudit, nomDeFichier } from '../utils/photo-mode';
 
 /** Réunion calculée, prête à être appliquée — ou abandonnée. */
 export interface PreparationFusion {
@@ -154,6 +156,30 @@ export class DataService {
     if (i === -1) return;
     list[i] = { ...item };
     this.setEntities(entityKey, list);
+  }
+
+  /**
+   * Déplace un élément d'un rang dans sa liste.
+   *
+   * Demandé trois fois — « rendre les listes agiles », « ajouter la possibilité
+   * de déplacer une ligne » : l'ordre de création n'est pas celui de la visite,
+   * et une liste de trente robinets ne se relit pas.
+   *
+   * **Les numéros ne suivent pas.** `Numero` est un libellé que l'auditeur a
+   * peut-être noté sur place, et les renvois entre fiches désignent l'`Id`
+   * (CLAUDE.md §3) : renuméroter en déplaçant ferait glisser un libellé d'un
+   * élément à l'autre pour un simple geste de rangement.
+   *
+   * @returns vrai si le déplacement a eu lieu.
+   */
+  moveEntity(entityKey: string, id: string, sens: -1 | 1): boolean {
+    const liste = [...this.getEntities(entityKey)];
+    const i = liste.findIndex((e) => e.Id === id);
+    const j = i + sens;
+    if (i === -1 || j < 0 || j >= liste.length) return false;
+    [liste[i], liste[j]] = [liste[j], liste[i]];
+    this.setEntities(entityKey, liste);
+    return true;
   }
 
   /** Supprime un élément et les photos qui n'appartiennent qu'à lui. */
@@ -381,6 +407,120 @@ export class DataService {
     this.save();
   }
 
+  // ── Bâtiments de l'établissement ─────────────────────────────────────────
+
+  getBatiments(): Batiment[] {
+    return this._data.Batiments ?? [];
+  }
+
+  setBatiments(batiments: Batiment[]): void {
+    this._data.Batiments = batiments;
+    this.save();
+  }
+
+  findBatiment(id: string | null | undefined): Batiment | undefined {
+    if (!id) return undefined;
+    return this.getBatiments().find((b) => b.Id === id);
+  }
+
+  /** Nom affichable d'un bâtiment. Vide si l'identité ne désigne rien. */
+  batimentLabel(id: string | null | undefined): string {
+    const b = this.findBatiment(id);
+    return b ? (b.Nom || '').trim() || 'Bâtiment sans nom' : '';
+  }
+
+  createBatiment(nom = ''): Batiment {
+    const batiment: Batiment = {
+      Id: uid(),
+      Nom: nom,
+      AnneeConstruction: null,
+      AnneeDerniereRenovation: null,
+      TravauxDerniereRenovation: null,
+      Remarques: null,
+    };
+    this.setBatiments([...this.getBatiments(), batiment]);
+    return batiment;
+  }
+
+  updateBatiment(batiment: Batiment): void {
+    const liste = [...this.getBatiments()];
+    const i = liste.findIndex((b) => b.Id === batiment.Id);
+    if (i === -1) return;
+    liste[i] = { ...batiment };
+    this.setBatiments(liste);
+  }
+
+  /**
+   * Supprime un bâtiment, mais **ni ses pièces ni ses points d'eau** : ils se
+   * retrouvent simplement sans bâtiment. Même raison que pour une pièce —
+   * supprimer un bâtiment est un geste d'organisation, et effacer au passage
+   * des relevés de terrain n'aurait aucun rapport avec ce qui est demandé.
+   *
+   * @returns le nombre de pièces et d'éléments qui ont perdu leur rattachement.
+   */
+  deleteBatiment(id: string): { pieces: number; elements: number } {
+    const detaches = this.purgeBatimentReferences(id);
+    this.setBatiments(this.getBatiments().filter((b) => b.Id !== id));
+    return detaches;
+  }
+
+  /** Retire de toutes les pièces et de tous les éléments le renvoi vers ce bâtiment. */
+  purgeBatimentReferences(batimentId: string): { pieces: number; elements: number } {
+    let pieces = 0;
+    const liste = this.getPieces();
+    for (const p of liste) {
+      if (p.Batiment === batimentId) {
+        p.Batiment = null;
+        pieces++;
+      }
+    }
+    if (pieces) this.setPieces(liste);
+
+    let elements = 0;
+    for (const def of AUDIT_SCHEMA) {
+      const traiter = (item: Record<string, unknown>): boolean => {
+        if (item[CLE_BATIMENT] !== batimentId) return false;
+        item[CLE_BATIMENT] = null;
+        elements++;
+        return true;
+      };
+
+      if (def.single) {
+        const fiche = this.getSingle<Record<string, unknown>>(def.key);
+        if (traiter(fiche)) this.setSingle(def.key, fiche);
+        continue;
+      }
+
+      const items = this.getEntities(def.key);
+      let touched = false;
+      for (const item of items) touched = traiter(item as unknown as Record<string, unknown>) || touched;
+      if (touched) this.setEntities(def.key, items);
+    }
+
+    this.save();
+    return { pieces, elements };
+  }
+
+  /**
+   * Bâtiment d'un élément : **celui de sa pièce**, et à défaut celui qu'il
+   * désigne lui-même.
+   *
+   * L'ordre a de l'importance : un élément dans une pièce n'a pas de bâtiment
+   * propre, et la pièce est la seule vérité. Déduire plutôt que recopier évite
+   * d'avoir à resynchroniser quoi que ce soit quand une pièce change de
+   * bâtiment.
+   */
+  batimentDeElement(item: Record<string, unknown>): string | null {
+    const piece = this.findPiece(item[CLE_PIECE] as string | null | undefined);
+    if (piece) return piece.Batiment ?? null;
+    return (item[CLE_BATIMENT] as string | null) ?? null;
+  }
+
+  /** Pièces rattachées à ce bâtiment, dans l'ordre de la liste. */
+  getPiecesOfBatiment(batimentId: string): Piece[] {
+    return this.getPieces().filter((p) => p.Batiment === batimentId);
+  }
+
   // ── Pièces du bâtiment ───────────────────────────────────────────────────
 
   getPieces(): Piece[] {
@@ -406,9 +546,23 @@ export class DataService {
     return niveau ? `${nom} — ${niveau}` : nom;
   }
 
-  /** Crée une pièce dotée de son identité stable, et l'ajoute à la liste. */
-  createPiece(nom = '', niveau: string | null = null): Piece {
-    const piece: Piece = { Id: uid(), Nom: nom, Niveau: niveau, Localisation: null, Remarques: null };
+  /**
+   * Crée une pièce dotée de son identité stable, et l'ajoute à la liste.
+   *
+   * Rattachée d'office au bâtiment quand il n'y en a qu'un : demander à quel
+   * bâtiment appartient la pièce n'a de sens qu'à partir de deux.
+   */
+  createPiece(nom = '', niveau: string | null = null, batimentId?: string | null): Piece {
+    const batiments = this.getBatiments();
+    const batiment = batimentId ?? (batiments.length === 1 ? batiments[0].Id : null);
+    const piece: Piece = {
+      Id: uid(),
+      Nom: nom,
+      Niveau: niveau,
+      Batiment: batiment,
+      Localisation: null,
+      Remarques: null,
+    };
     this.setPieces([...this.getPieces(), piece]);
     return piece;
   }
@@ -510,6 +664,85 @@ export class DataService {
    */
   dossierAuditCourant(): string {
     return dossierAudit(nomAudit(this._data), this.currentAuditId);
+  }
+
+  // ── Rattrapage du mode « fichiers voisins » ──────────────────────────────
+
+  /**
+   * Photos de l'audit avec le contexte de leur fiche, pour composer un nom de
+   * fichier lisible. Les **plans** en sont exclus : ils viennent déjà de
+   * fichiers choisis par l'auditeur, et n'ont jamais de chemin.
+   */
+  private photosAvecContexte(): { ref: AssetRef; contexte: string }[] {
+    const out: { ref: AssetRef; contexte: string }[] = [];
+    const vus = new Set<string>();
+    const ajouter = (refs: AssetRef[] | undefined, contexte: string) => {
+      for (const ref of refs ?? []) {
+        if (!ref?.id || vus.has(ref.id)) continue;
+        vus.add(ref.id);
+        out.push({ ref, contexte });
+      }
+    };
+
+    ajouter(this._data.Photos, 'galerie');
+    for (const def of AUDIT_SCHEMA) {
+      if (def.single) {
+        ajouter(this.getSingle<{ Photos?: AssetRef[] }>(def.key).Photos, def.singular);
+        continue;
+      }
+      for (const item of this.getEntities(def.key)) {
+        const numero = item.Numero ? ` ${item.Numero}` : '';
+        ajouter(item['Photos'] as AssetRef[] | undefined, `${def.singular}${numero}`);
+      }
+    }
+    return out;
+  }
+
+  /** Photos qui n'ont pas encore de fichier voisin. */
+  get nbPhotosSansFichier(): number {
+    return this.photosAvecContexte().filter(({ ref }) => !ref.path).length;
+  }
+
+  /**
+   * Télécharge à côté de la page les photos **déjà prises** qui n'ont pas de
+   * fichier voisin, et leur donne leur chemin.
+   *
+   * Demandé au 16/10 : « si on change le champ "photos dans le navigateur" à
+   * "photos à côté de la page", prévoir de télécharger les photos lorsqu'on
+   * sauvegarde l'audit ». Sans cela, basculer de mode ne valait que pour les
+   * photos suivantes, et les précédentes manquaient à l'arborescence.
+   *
+   * **Déclenché par un bouton, jamais automatiquement** : le navigateur
+   * demande son accord pour un téléchargement multiple, et cent fichiers
+   * partant sans prévenir seraient inacceptables. Les envois sont espacés —
+   * Chrome refuse une rafale — et le chemin n'est inscrit qu'une fois le
+   * fichier remis au navigateur.
+   */
+  async telechargerPhotosVoisines(
+    avancement: (fait: number, total: number) => void = () => {}
+  ): Promise<{ telechargees: number; absentes: number }> {
+    const dossier = this.dossierAuditCourant();
+    const aFaire = this.photosAvecContexte().filter(({ ref }) => !ref.path);
+    let telechargees = 0;
+    let absentes = 0;
+
+    for (const [i, { ref, contexte }] of aFaire.entries()) {
+      avancement(i + 1, aFaire.length);
+      const stocke = await this.assets.get(ref.id);
+      if (!stocke?.blob) {
+        absentes++;
+        continue;
+      }
+      const nom = nomDeFichier(dossier, contexte, ref.name || stocke.name, ref.id);
+      this.telecharger(stocke.blob, nom);
+      ref.path = cheminPhoto(dossier, nom);
+      telechargees++;
+      // Le navigateur refuse une rafale de téléchargements : on espace.
+      await new Promise((r) => setTimeout(r, 350));
+    }
+
+    this.save();
+    return { telechargees, absentes };
   }
 
   // ── Import / Export JSON ─────────────────────────────────────────────────

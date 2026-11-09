@@ -91,6 +91,64 @@ const L = {
  * distinction voulue.
  */
 const OPTION_OVERRIDES = {
+  // ── Retours de terrain d'octobre 2026, option par option ────────────────
+  //
+  // Chacune complète une liste que le classeur fournit : l'ajout est fait ici
+  // plutôt que dans le classeur pour que la demande reste rattachée à son
+  // retour, et il disparaîtra de lui-même si une version future du classeur
+  // porte la même liste (`check-coverage.js` signalerait alors le doublon).
+
+  // « Ajouter dans le champ ventilation - WC, le choix : naturelle »
+  // (audit Stade le Parco, 2026-10). Également demandé à la formation d'Angers.
+  'WC1!F45': [
+    'pas de ventilation',
+    'naturelle',
+    'en continu',
+    'intermittente',
+    'à détection',
+    'indépendante du reste du bâtiment',
+  ],
+  // « Indiquer un choix "impossible" sur le test de la feuille bouche
+  // d'extraction WC » (Stade le Parco) : la bouche est souvent hors de portée
+  // sans escabeau, et « Rien ne se passe » ne dit pas la même chose qu'un test
+  // qu'on n'a pas pu faire.
+  'WC1!J45': ['Feuille aspirée', 'Feuille repoussée', 'Rien ne se passe', 'test impossible'],
+  // « Ajouter "autre" dans les appareils de lavage - karcher » (Stade le
+  // Parco). Aucune rubrique conditionnelle ne s'ouvre sur « autre » : la fiche
+  // se limite alors aux champs communs, et les remarques accueillent le détail.
+  'Appareils de lavage!E8': ['lave linge', 'lave vaisselle', 'autolaveuse', 'lavage du sol manuel', 'autre'],
+  // « Adapter la partie lavage manuel pour les véhicules » (Stade le Parco) :
+  // une zone et une surface de plus, plutôt qu'une rubrique à part — c'est le
+  // même geste, avec le même matériel.
+  'Appareils de lavage!E138': [
+    'logement',
+    'bureaux',
+    'sanitaire',
+    'salle de cours',
+    'cuisine',
+    'espace de restauration',
+    'zone technique (garage, atelier, etc.)',
+    'zone sportive',
+    'circulation du publique',
+    'véhicules',
+  ],
+  'Appareils de lavage!H138': [
+    'carrelage (grès, faïence)',
+    'pierre (marbre, granit, travertin)',
+    'résine époxy / polyuréthane',
+    'béton ciré',
+    'béton brut',
+    'parquet massif',
+    'parquet contrecollé',
+    'bois stratifié',
+    'Linoléum',
+    'PVC / vinyle',
+    'Moquette en rouleau',
+    'dalles de moquette',
+    'carrosserie de véhicule',
+    'autre',
+  ],
+
   // Les trois utilisations d'un même robinet n'offraient pas les mêmes choix :
   // « Lavage matériel » manquait à la deuxième, et la troisième disait « Evier
   // cuisine » là où les autres disaient « Evier ». Un auditeur ne pouvait donc
@@ -149,6 +207,11 @@ const MULTIPLES_IMPOSES = new Set([
   // Second retour de test (2026-10) : une même fiche peut porter à la fois une
   // « autre information » et une « autre utilisation de l'eau ».
   'Autre1!F8', // Choix
+  // « Possibilité de cocher plusieurs réponses sur le "pilotage de
+  // l'arrosage" » (audit Stade le Parco, 2026-10) : une horloge et une sonde
+  // d'humidité se combinent, et le « Mode d'arrosage » voisin acceptait déjà
+  // plusieurs réponses.
+  'Extérieur1!I41', // Pilotage de l'arrosage
 ]);
 
 /**
@@ -177,10 +240,16 @@ const REQUIREMENT_OVERRIDES = {
   'Production Stockage ECS!F33': 'facultatif', // Combustible
   'Robinets!K21': 'recommande', // Numéro réseau ECS d'appartenance
   'Douche-baignoire1!I11': 'recommande', // Numéro réseau ECS d'appartenance
-  'Douche-baignoire1!E41': 'facultatif', // Présence d'un limiteur de débit — douche
-  // Même question, même raison, sur la baignoire : étendu par cohérence.
-  'Douche-baignoire1!E80': 'facultatif',
+  // Les deux « Présence d'un limiteur de débit » (E41 douche, E80 baignoire)
+  // étaient ici en `facultatif` à la demande de Victor Ledoux (2026-09). Le
+  // champ est **retiré** depuis (voir `CHAMPS_RETIRES`) : les corriger
+  // n'aurait plus de cible, et le générateur s'arrêterait.
   'Douche-baignoire1!E114': 'facultatif', // Diamètre nominal de l'alimentation
+  // « Ne pas rendre obligatoire "Opportunités à documenter". Mettre
+  // recommandé » (audit Stade le Parco, 2026-10) : obligatoire, le champ
+  // empêchait d'enregistrer une fiche Opportunités où l'on n'avait rien
+  // d'autre à dire que « rien à documenter ici ».
+  'Opportunités1!I11': 'recommande',
 };
 
 /** Unités absentes ou ambiguës dans le libellé (Victor Ledoux, 2026-09). */
@@ -212,7 +281,22 @@ const HELP_OVERRIDES = {
  * bon / moyen / mauvais de l'isolant, demandé juste après (second retour de
  * test, 2026-10).
  */
-const CHAMPS_RETIRES = new Set(['Structure1!F45', 'Réseaux ECS!F38']);
+const CHAMPS_RETIRES = new Set([
+  'Structure1!F45',
+  'Réseaux ECS!F38',
+  // « Comment voir un limiteur de débit ? — supprimer le champ "limiteur de
+  // débit" » (formation d'Angers, 2026-10) : on ne peut pas le constater sans
+  // démonter le robinet, et la réponse était donc inventée.
+  //
+  // ⚠️ Cela **défait** une décision antérieure : Victor Ledoux (2026-09) avait
+  // demandé de le passer en facultatif sur les douches, ce qui le conservait.
+  // Le retour d'Angers est postérieur et explicite. Les réponses déjà saisies
+  // restent dans le JSON et continuent de sortir à l'export, qui suit les
+  // données et non le schéma (CLAUDE.md §5).
+  'Robinets!F33', // robinet
+  'Douche-baignoire1!E41', // douche
+  'Douche-baignoire1!E80', // baignoire
+]);
 
 /**
  * Remarques générales rangées par le classeur sous la dernière rubrique de la

@@ -64,18 +64,44 @@ export function dossierAudit(nomAffiche: string, auditId: string): string {
 }
 
 /**
- * Nom de fichier composé, pensé pour qu'aucune collision ne survienne : le
- * navigateur renommerait sinon en « … (1).jpg » et le chemin enregistré
- * pointerait dans le vide.
+ * Nom du fichier téléchargé : **l'audit, l'horodatage à la seconde, la fiche,
+ * puis un discriminant**.
+ *
+ * ```
+ * ecole-jean-moulin-a1b2c3d4_20261109T093012_robinet-3_1f2e3d4c.jpg
+ * └── dossier de l'audit ──┘ └─ à la seconde ┘ └ fiche ┘ └ unicité ┘
+ * ```
+ *
+ * Le nom d'origine de la photo n'est **pas** conservé, et c'est voulu
+ * (arbitrage du 2026-11-09) : tous les fichiers atterrissent à plat dans le
+ * même dossier de téléchargement, tous audits confondus, et deux
+ * « IMG_0421.jpg » venus du même téléphone s'y rencontrent. Le navigateur
+ * écrirait alors « IMG_0421 (1).jpg » — en silence — et le chemin enregistré
+ * dans l'audit pointerait dans le vide.
+ *
+ * Le préfixe est **exactement le nom du dossier de l'audit** (`dossierAudit`).
+ * Deux conséquences utiles : les photos d'un même audit se suivent dans le
+ * dossier de téléchargement, et on voit d'un coup d'œil à quel dossier un
+ * fichier isolé appartient — ce qu'il faut pour réunir à la main le travail de
+ * plusieurs auditeurs.
+ *
+ * Les huit caractères finals restent nécessaires **malgré** l'horodatage à la
+ * seconde : choisir cinq photos d'un coup les ajoute toutes dans la même
+ * seconde, et le même audit.
  */
-export function nomDeFichier(contexte: string, original: string, id: string): string {
+export function nomDeFichier(
+  dossier: string,
+  contexte: string,
+  original: string,
+  id: string
+): string {
   const horodatage = new Date()
     .toISOString()
     .replace(/[-:]/g, '')
     .replace(/\..+$/, '');
 
   const ext = (original.match(/\.[A-Za-z0-9]+$/)?.[0] || '.jpg').toLowerCase();
-  return [horodatage, propre(contexte) || 'audit', id.slice(0, 8)].join('_') + ext;
+  return [dossier || 'audit', horodatage, propre(contexte) || 'fiche', id.slice(0, 8)].join('_') + ext;
 }
 
 /**

@@ -69,3 +69,24 @@
     flex: 1 1 auto;
   }
 }
+
+.piece-batiment {
+  font-weight: 600;
+  color: var(--c-primary);
+}
+
+/* ── Filtre par bâtiment ───────────────────────────────────────────────── */
+
+.filtre-batiment {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.filtre-batiment .actif {
+  background: var(--c-surface-hover);
+  border-color: var(--c-primary-light);
+  color: var(--c-primary);
+  font-weight: 700;
+}

@@ -8,6 +8,7 @@ import { DictationFieldComponent } from '../shared/components/dictation-field/di
 import { PlanManagerComponent } from '../shared/components/plan-manager/plan-manager.component';
 import { PhotoEditorComponent } from '../shared/components/photo-editor/photo-editor.component';
 import { PieceManagerComponent } from '../shared/components/piece-manager/piece-manager.component';
+import { BatimentManagerComponent } from '../shared/components/batiment-manager/batiment-manager.component';
 import { FusionAuditComponent } from '../shared/components/fusion-audit/fusion-audit.component';
 import { AssetRef, AuditSummary, NiveauRemplissage } from '../models/data.models';
 import { PhotoMode, photoMode, setPhotoMode } from '../core/utils/photo-mode';
@@ -38,6 +39,7 @@ type Arbitrage =
     PlanManagerComponent,
     PhotoEditorComponent,
     PieceManagerComponent,
+    BatimentManagerComponent,
     FusionAuditComponent,
   ],
   templateUrl: './home.component.html',
@@ -228,6 +230,39 @@ export class HomeComponent implements OnInit {
   changerMode(m: string): void {
     this.mode = m === 'fichiers' ? 'fichiers' : 'indexeddb';
     setPhotoMode(this.mode);
+    this.rattrapage = null;
+  }
+
+  /** Compte rendu du rattrapage des photos, affiché sous le bouton. */
+  rattrapage: string | null = null;
+  rattrapageEnCours = '';
+
+  /** Photos déjà prises qui n'ont pas encore de fichier voisin. */
+  get nbPhotosSansFichier(): number {
+    return this.dataService.nbPhotosSansFichier;
+  }
+
+  /**
+   * Télécharge à côté de la page les photos prises avant le passage en mode
+   * « fichiers voisins ». Par un bouton : le navigateur demande son accord
+   * pour un téléchargement multiple (voir `telechargerPhotosVoisines`).
+   */
+  async rattraperPhotos(): Promise<void> {
+    this.rattrapage = null;
+    try {
+      const { telechargees, absentes } = await this.dataService.telechargerPhotosVoisines(
+        (fait, total) => (this.rattrapageEnCours = `Téléchargement ${fait} / ${total}…`)
+      );
+      this.rattrapage =
+        `${telechargees} photo(s) téléchargée(s) à côté de la page.` +
+        (absentes
+          ? ` ${absentes} n'ont pas pu l'être : leur image n'est plus dans ce navigateur.`
+          : '');
+    } catch (e) {
+      this.rattrapage = 'Échec : ' + (e instanceof Error ? e.message : String(e));
+    } finally {
+      this.rattrapageEnCours = '';
+    }
   }
 
   /** Compte rendu du dernier export CSV, affiché sous le bouton. */

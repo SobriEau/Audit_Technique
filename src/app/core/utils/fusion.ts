@@ -1,6 +1,6 @@
 import { AUDIT_SCHEMA } from '../../models/audit-schema';
 import { EntityDef } from '../../models/field.models';
-import { AppData, AssetRef, AuditEntity, Piece, PlanLocation } from '../../models/data.models';
+import { AppData, AssetRef, AuditEntity, Batiment, Piece, PlanLocation } from '../../models/data.models';
 import { uid } from './uid';
 
 /**
@@ -122,6 +122,10 @@ export interface RapportFusion {
   champsRepris: string[];
   /** Champs renseignés des deux côtés : la valeur locale est conservée. */
   divergences: Divergence[];
+  /** Noms des bâtiments repris du fichier reçu. */
+  batimentsAjoutes: string[];
+  /** Bâtiments déjà présents, reconnus à leur identité. */
+  batimentsDeja: number;
   /** Noms des pièces reprises du fichier reçu. */
   piecesAjoutees: string[];
   /** Pièces déjà présentes, reconnues à leur identité. */
@@ -162,6 +166,7 @@ export interface RapportFusion {
 export function rapportVide(r: RapportFusion): boolean {
   return (
     r.champsRepris.length === 0 &&
+    r.batimentsAjoutes.length === 0 &&
     r.piecesAjoutees.length === 0 &&
     r.plansAjoutes.length === 0 &&
     r.photosAjoutees === 0 &&
@@ -199,6 +204,7 @@ const PARTIES = new Set([
   'AdresseKey',
   '__assets',
   'Plans',
+  'Batiments',
   'Pieces',
   'Photos',
   'Documents',
@@ -327,6 +333,7 @@ export function assetsReferences(data: AppData): Set<string> {
   parcourir(data.Photos);
   parcourir(data.Qte);
   parcourir(data.Pieces);
+  parcourir(data.Batiments);
   return ids;
 }
 
@@ -371,6 +378,8 @@ export function fusionner(
     memeAudit: !!source.Id && source.Id === local.Id,
     champsRepris: [],
     divergences: [],
+    batimentsAjoutes: [],
+    batimentsDeja: 0,
     piecesAjoutees: [],
     piecesDeja: 0,
     piecesHomonymes: [],
@@ -463,6 +472,25 @@ export function fusionner(
     rapport.plansAjoutes.push(repris.name || 'plan sans nom');
   }
 
+  // ── Bâtiments ────────────────────────────────────────────────────────────
+  //
+  // Reconnus à leur identité, comme les pièces et les plans : c'est ce qui
+  // permet de retrouver la base préparée en commun. Un bâtiment homonyme mais
+  // d'identité différente est conservé à part — les deux auditeurs l'ont créé
+  // chacun de leur côté, et fusionner supposerait de choisir laquelle des deux
+  // années de construction est la bonne.
+  const batiments = (data.Batiments ??= []);
+  for (const batiment of (source.Batiments ?? []) as Batiment[]) {
+    if (!batiment?.Id) continue;
+    if (batiments.some((b) => b.Id === batiment.Id)) {
+      rapport.batimentsDeja++;
+      continue;
+    }
+    const repris = clone(batiment);
+    batiments.push(repris);
+    rapport.batimentsAjoutes.push((repris.Nom || '').trim() || 'bâtiment sans nom');
+  }
+
   // ── Pièces ───────────────────────────────────────────────────────────────
   const pieces = (data.Pieces ??= []);
   for (const piece of (source.Pieces ?? []) as Piece[]) {
@@ -547,13 +575,25 @@ export function fusionner(
     for (const [k, v] of Object.entries(recues)) reprendreChamp(ici, k, v, `${cle}.${k}`);
   }
 
-  // ── Pièces introuvables ──────────────────────────────────────────────────
+  // ── Renvois introuvables ─────────────────────────────────────────────────
+  //
+  // Une pièce ou un bâtiment désigné des deux côtés mais absent des deux
+  // fichiers : la valeur est conservée — on n'efface pas une saisie — et le
+  // rapport le dit, parce qu'une vignette orpheline ne s'explique pas d'elle-même.
   const connues = new Set((data.Pieces ?? []).map((p) => p.Id));
+  const batimentsConnus = new Set((data.Batiments ?? []).map((b) => b.Id));
+  for (const piece of data.Pieces ?? []) {
+    if (typeof piece.Batiment === 'string' && piece.Batiment && !batimentsConnus.has(piece.Batiment)) {
+      rapport.piecesIntrouvables++;
+    }
+  }
   for (const v of Object.values((data.Qte ?? {}) as Objet)) {
     if (!Array.isArray(v)) continue;
     for (const item of v as AuditEntity[]) {
       const ref = item?.Piece;
       if (typeof ref === 'string' && ref && !connues.has(ref)) rapport.piecesIntrouvables++;
+      const bat = item?.Batiment;
+      if (typeof bat === 'string' && bat && !batimentsConnus.has(bat)) rapport.piecesIntrouvables++;
     }
   }
 

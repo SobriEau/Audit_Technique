@@ -97,7 +97,7 @@ const GENERALITES: [string, string][] = [
 ];
 
 /** Parties de l'audit qui ont leur propre section dans l'export. */
-const PARTIES = new Set(['UtilisationsEau', 'EquipementsPresents', 'Documents', 'Plans', 'Pieces', 'Photos', 'Qge', 'Qus', 'Qte']);
+const PARTIES = new Set(['UtilisationsEau', 'EquipementsPresents', 'Documents', 'Plans', 'Batiments', 'Pieces', 'Photos', 'Qge', 'Qus', 'Qte']);
 
 /** Valeurs en texte enrichi : le balisage est retiré, le texte et ses retours à la ligne gardés. */
 const TEXTE_ENRICHI = new Set(['Info', 'Adresse']);
@@ -110,11 +110,22 @@ const LIBELLES_IMAGE: Record<string, string> = {
   date: 'date',
 };
 
+/** Clés d'un bâtiment de l'établissement (`AppData.Batiments`). */
+const LIBELLES_BATIMENT: Record<string, string> = {
+  Id: 'Identifiant',
+  Nom: 'Nom',
+  AnneeConstruction: 'Année de construction',
+  AnneeDerniereRenovation: 'Année de dernière rénovation',
+  TravauxDerniereRenovation: 'Travaux de la dernière rénovation',
+  Remarques: 'Remarques',
+};
+
 /** Clés d'une pièce du bâtiment (`AppData.Pieces`). */
 const LIBELLES_PIECE: Record<string, string> = {
   Id: 'Identifiant',
   Nom: 'Nom',
-  Niveau: 'Niveau ou bâtiment',
+  Niveau: 'Niveau ou étage',
+  Batiment: 'Bâtiment',
   Remarques: 'Remarques',
   Localisation: 'Localisation sur plan',
 };
@@ -256,7 +267,7 @@ function ordreDesCles(item: Objet, champs: readonly FieldDef[]): string[] {
     prevues.push(f.key, cleAutre(f));
     if (f.parOption) prevues.push(f.parOption.cle);
   }
-  prevues.push('Piece', 'Localisation', 'Photos');
+  prevues.push('Batiment', 'Piece', 'Localisation', 'Photos');
   const vues = new Set<string>();
   const ordre: string[] = [];
   for (const k of [...prevues, ...Object.keys(item)]) {
@@ -299,6 +310,11 @@ class Releve {
 
   private calcul(cadre: Cadre, question: string, cle: string, valeur: Scalaire, unite = ''): void {
     this.lignes.push({ ...cadre, question, cle, valeur, unite, origine: 'calcul' });
+  }
+
+  /** Même chose, pour les sections qui ne passent pas par une fiche (pièces, plans…). */
+  calculer(cadre: Cadre, question: string, cle: string, valeur: Scalaire, unite = ''): void {
+    this.calcul(cadre, question, cle, valeur, unite);
   }
 
   /**
@@ -367,6 +383,7 @@ class Releve {
         if (k === 'Photos') this.deposer(cadre, v, ch, cl, 'Photo', '', LIBELLES_IMAGE);
         else if (k === 'Localisation') this.deposerLocalisation(cadre, v, ch, cl);
         else if (k === 'Piece') this.deposerPiece(cadre, v, ch, cl);
+        else if (k === 'Batiment') this.deposerBatiment(cadre, v, ch, cl);
         else this.deposer(cadre, v, ch, cl, k);
         continue;
       }
@@ -445,6 +462,35 @@ class Releve {
     const piece = pieces.find((p) => estObjet(p) && p['Id'] === v) as Objet | undefined;
     const nom = piece ? texteDe(piece['Nom']) : '';
     if (nom) this.calcul(cadre, 'Pièce — nom', `${cle}.Nom`, nom);
+
+    // Le bâtiment de l'élément se déduit de sa pièce : sans cette ligne, un
+    // tableur ne saurait pas compter les points d'eau par bâtiment sans
+    // rapprocher trois tables.
+    const batiment = piece ? texteDe(piece['Batiment']) : '';
+    if (!batiment) return;
+    this.calcul(cadre, 'Bâtiment (déduit de la pièce)', `${cle}.Batiment`, batiment);
+    const nomBatiment = this.nomDuBatiment(batiment);
+    if (nomBatiment) this.calcul(cadre, 'Bâtiment — nom', `${cle}.Batiment.Nom`, nomBatiment);
+  }
+
+  /**
+   * Bâtiment désigné par un élément — seulement ceux qui ne sont dans aucune
+   * pièce, les autres le déduisant de la leur (voir `CLE_BATIMENT`). Comme pour
+   * la pièce, le nom est ajouté en ligne calculée.
+   */
+  private deposerBatiment(cadre: Cadre, v: unknown, chemin: string, cle: string): void {
+    this.deposer(cadre, v, chemin, cle, 'Bâtiment');
+    if (typeof v !== 'string' || !v) return;
+    const nom = this.nomDuBatiment(v);
+    if (nom) this.calcul(cadre, 'Bâtiment — nom', `${cle}.Nom`, nom);
+  }
+
+  /** Nom d'un bâtiment par son identité, pour les lignes calculées. */
+  nomDuBatiment(id: string): string {
+    const batiments = this.audit['Batiments'];
+    if (!Array.isArray(batiments)) return '';
+    const b = batiments.find((x) => estObjet(x) && x['Id'] === id) as Objet | undefined;
+    return b ? texteDe(b['Nom']) : '';
   }
 
   /** Punaise sur un plan : ses coordonnées, puis le nom du plan pour la lecture. */
@@ -555,6 +601,33 @@ export function lignesAudit(audit: unknown, schema: readonly EntityDef[] = AUDIT
     r.deposer(cadreDocuments, documents, 'Documents', 'Documents', 'Documents');
   }
 
+  // ── Bâtiments de l'établissement ─────────────────────────────────────────
+  //
+  // Comme les pièces : l'identité part dans `ElementId`, si bien que `Cle`
+  // reste indépendante du rang et qu'une ligne se retrouve par le couple
+  // élément / clé.
+  const batiments = prendre('Batiments');
+  if (Array.isArray(batiments)) {
+    batiments.forEach((batiment, i) => {
+      const chemin = `Batiments[${i}]`;
+      if (!estObjet(batiment)) {
+        r.deposer(cadreDe("Bâtiments de l'établissement"), batiment, chemin, chemin, `Bâtiment ${i + 1}`);
+        return;
+      }
+      const cadre: Cadre = {
+        section: "Bâtiments de l'établissement",
+        element: texteDe(batiment['Nom']),
+        elementId: texteDe(batiment['Id']),
+        rubrique: '',
+      };
+      for (const [k, v] of Object.entries(batiment)) {
+        r.deposer(cadre, v, joindre(chemin, k), joindre('Batiments[]', k), LIBELLES_BATIMENT[k] ?? k);
+      }
+    });
+  } else {
+    r.deposer(cadreDe("Bâtiments de l'établissement"), batiments, 'Batiments', 'Batiments', 'Bâtiments');
+  }
+
   // ── Pièces du bâtiment ───────────────────────────────────────────────────
   //
   // Une pièce n'est pas une fiche du classeur — ni numéro, ni champ, ni
@@ -581,6 +654,8 @@ export function lignesAudit(audit: unknown, schema: readonly EntityDef[] = AUDIT
         const libelles = k === 'Localisation' ? LIBELLES_LOCALISATION : {};
         r.deposer(cadre, v, joindre(chemin, k), joindre('Pieces[]', k), question, '', libelles);
       }
+      const nomBatiment = typeof piece['Batiment'] === 'string' ? r.nomDuBatiment(piece['Batiment']) : '';
+      if (nomBatiment) r.calculer(cadre, 'Bâtiment — nom', 'Pieces[].Batiment.Nom', nomBatiment);
     });
   } else {
     r.deposer(cadreDe('Pièces du bâtiment'), pieces, 'Pieces', 'Pieces', 'Pièces');

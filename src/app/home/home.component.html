@@ -145,6 +145,22 @@
 </div>
 
 <div class="panel">
+  <h2>Bâtiments de l'établissement</h2>
+  <p class="muted">
+    À ne remplir que si l'établissement compte <strong>plusieurs
+    bâtiments</strong> — un groupe scolaire, un campus, un port. Chaque bâtiment
+    porte alors son nom et ses dates, saisis une seule fois, et chaque pièce se
+    rattache au sien.
+  </p>
+  <p class="muted">
+    Sans bâtiment déclaré, l'audit porte sur un seul bâtiment : c'est le
+    fonctionnement d'origine, et rien ne change. Les utilisations de l'eau, elles,
+    se déclarent toujours pour l'établissement entier, plus bas sur cette page.
+  </p>
+  <app-batiment-manager />
+</div>
+
+<div class="panel">
   <h2>Pièces du bâtiment</h2>
   <p class="muted">
     Reprenez les pièces du plan et nommez-les comme elles y figurent. Vous
@@ -202,6 +218,34 @@
       son dossier de téléchargement.
     }
   </p>
+
+  @if (mode === 'fichiers' && nbPhotosSansFichier) {
+    <div class="rattrapage">
+      <p class="muted">
+        <strong>{{ nbPhotosSansFichier }} photo(s) déjà prises</strong> n'ont pas
+        encore de fichier à côté de la page : elles ont été ajoutées avant ce
+        changement de mode. Elles sont bien enregistrées dans le navigateur, mais
+        elles manqueront à l'arborescence des fichiers.
+      </p>
+      <div class="actions">
+        <button
+          type="button"
+          class="secondary"
+          [disabled]="!!rattrapageEnCours"
+          (click)="rattraperPhotos()"
+        >
+          {{ rattrapageEnCours || 'Télécharger ces ' + nbPhotosSansFichier + ' photo(s)' }}
+        </button>
+      </div>
+      <p class="muted field-help">
+        Le navigateur demandera votre accord pour un téléchargement multiple.
+        Les envois sont espacés : comptez environ une seconde pour trois photos.
+      </p>
+    </div>
+  }
+  @if (rattrapage) {
+    <p class="muted export-etat" role="status">{{ rattrapage }}</p>
+  }
 
   <app-photo-editor
     [(ngModel)]="photos"

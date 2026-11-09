@@ -2,7 +2,7 @@
 
 Entité `wc` — route `#/qte/wc`.
 
-22 champ(s), 7 section(s). Colonnes du tableau : `TypeDeToiletteOuUrinoir`, `Emplacement`, `NombreDEquipementsIdentiques`.
+24 champ(s), 7 section(s). Colonnes du tableau : `TypeDeToiletteOuUrinoir`, `Emplacement`, `NombreDEquipementsIdentiques`.
 
 
 ## Localisation
@@ -25,8 +25,10 @@ Entité `wc` — route `#/qte/wc`.
 |---|---|---|---|
 | `F18` | Type de toilette ou urinoir | Obligatoire | Urinoir masculin à eau Urinoir masculin sans eau Urinoir féminin sans eau Urinoir féminin à eau Stalle d'urinoir Toilette à eau standard Toilette avec broyeur T |
 | `J18` | Nombre d'équipements identiques | Obligatoire | Champ libre |
+| `F32` | Temporisation des urinoirs (s) | Facultatif | — |
 | `F33` | Type de chasse | Facultatif | Réservoir apparent Réservoir encastré Sans réservoir Non concerné |
 | `J33` | Marque ou modèle si connu | Facultatif | Champ libre |
+| `F34` | Présence d'une douchette | Facultatif | Liste déroulante : oui / non |
 | `F36` | Commande de la chasse | Obligatoire | Liste déroulante : manuelle double chasse manuelle simple chasse manuelle poussoir temporisé à pédale à détection à pas de temps écoulement en continu non conce |
 | `J36` | Origine de l'eau | Facultatif | A cocher : Eau potable Eau de pluie Eau forage brute Eau grise |
 

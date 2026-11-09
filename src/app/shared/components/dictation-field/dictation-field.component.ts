@@ -71,6 +71,26 @@ export class DictationFieldComponent implements ControlValueAccessor, OnInit, On
     private cdr: ChangeDetectorRef
   ) {}
 
+  /**
+   * Pourquoi la dictée est indisponible, quand on le sait.
+   *
+   * Vide au premier chargement — le navigateur expose l'API et rien ne dit
+   * encore que le service derrière manque. Renseigné dès la première tentative
+   * qui révèle l'absence de moteur, et alors **sur tous les champs**.
+   */
+  get raisonIndisponible(): string | null {
+    return this.speech.raisonIndisponible;
+  }
+
+  /** Infobulle du bouton désactivé : la raison connue, ou l'explication générale. */
+  get titreIndisponible(): string {
+    return (
+      this.raisonIndisponible ??
+      'Dictée indisponible : ce navigateur ne gère pas la reconnaissance vocale ' +
+        '(utilisez Chrome ou Edge, ou le micro du clavier du téléphone).'
+    );
+  }
+
   /** État du micro pour CE champ. */
   get micState(): MicState {
     switch (this.speech.state) {

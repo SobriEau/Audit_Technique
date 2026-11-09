@@ -13,13 +13,13 @@ Un fichier par onglet de `audit_technique.xlsx`. La spécification réelle vit d
 
 | Onglet | Champs | Sections |
 |---|---|---|
-| [Compteur général](compteur-general.md) | 22 | 7 |
+| [Compteur général](compteur-general.md) | 23 | 7 |
 | [Sous-compteur1](sous-compteur1.md) | 15 | 4 |
 | [Réseaux ECS](reseaux-ecs.md) | 34 | 5 |
 | [Production Stockage ECS](production-stockage-ecs.md) | 27 | 5 |
-| [Robinets](robinets.md) | 30 | 5 |
+| [Robinets](robinets.md) | 33 | 5 |
 | [Douche-baignoire1](douche-baignoire1.md) | 54 | 13 |
-| [WC1](wc1.md) | 22 | 7 |
+| [WC1](wc1.md) | 24 | 7 |
 | [Appareils de lavage](appareils-de-lavage.md) | 77 | 18 |
 | [Incendie](incendie.md) | 21 | 5 |
 | [Extérieur1](exterieur1.md) | 37 | 2 |

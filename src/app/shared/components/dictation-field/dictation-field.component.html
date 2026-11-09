@@ -31,7 +31,7 @@
         type="button"
         class="mic-btn"
         disabled
-        title="Dictée indisponible : ce navigateur ne gère pas la reconnaissance vocale (utilisez Chrome ou Edge, ou le micro du clavier du téléphone)."
+        [title]="titreIndisponible"
         aria-label="Dictée indisponible"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
@@ -84,6 +84,10 @@
 @if (micState === 'listening' && interimText) {
   <p class="interim-text" aria-live="polite">{{ interimText }}</p>
 }
+@if (micState === 'unsupported' && raisonIndisponible) {
+  <p class="mic-indispo" role="status">{{ raisonIndisponible }}</p>
+}
+
 @if (micState === 'error' && errorMessage) {
   <p class="mic-error-text" role="alert">{{ errorMessage }}</p>
 }

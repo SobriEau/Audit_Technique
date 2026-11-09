@@ -11,6 +11,8 @@ import { AuditEntity } from '../../models/data.models';
 import { FormSection, buildSections, cleAutre, formFields } from '../form-layout';
 import { Total, totaux } from '../totaux';
 import { valeurAffichee } from '../affichage';
+import { champsManquants } from '../exigences';
+import { AssetRef } from '../../models/data.models';
 
 /**
  * Page index générique : liste les éléments d'une entité et mène à leur fiche.
@@ -140,6 +142,59 @@ export class EntityListComponent implements OnInit {
 
   pieceDe(item: AuditEntity): string {
     return this.data.pieceLabel(item['Piece'] as string | null | undefined);
+  }
+
+  /**
+   * Colonne « Bâtiment », à partir de **deux** bâtiments : avec un seul, elle
+   * répéterait la même valeur sur chaque ligne.
+   */
+  get avecBatiments(): boolean {
+    return this.data.getBatiments().length > 1;
+  }
+
+  batimentDe(item: AuditEntity): string {
+    return this.data.batimentLabel(this.data.batimentDeElement(item as unknown as Record<string, unknown>));
+  }
+
+  /**
+   * État d'une ligne, pour qu'on voie d'un coup d'œil où il reste à travailler.
+   *
+   * Demandé deux fois — « ajouter une barre de progression pour afficher que la
+   * ligne a été validée », « jauge de progression basée sur la présence d'une
+   * photo ». Deux conditions, donc, et elles ne disent pas la même chose : une
+   * fiche complète sans photo reste une fiche à repasser.
+   *
+   * La complétude s'appuie sur `champsManquants`, la fonction même qui refuse
+   * l'enregistrement d'une fiche : l'indicateur ne peut donc pas annoncer
+   * « complet » là où la validation dirait le contraire.
+   */
+  etat(item: AuditEntity): { complet: boolean; manquants: number; photos: number } {
+    const manquants = champsManquants(this.def, item as unknown as Record<string, unknown>).length;
+    const photos = ((item['Photos'] as AssetRef[]) ?? []).length;
+    return { complet: manquants === 0, manquants, photos };
+  }
+
+  /** Infobulle de l'indicateur : ce qui manque, en clair. */
+  etatTitre(item: AuditEntity): string {
+    const e = this.etat(item);
+    const parts = [
+      e.complet ? 'champs obligatoires remplis' : `${e.manquants} champ(s) obligatoire(s) à remplir`,
+      e.photos ? `${e.photos} photo(s)` : 'aucune photo',
+    ];
+    return parts.join(' — ');
+  }
+
+  deplacer(item: AuditEntity, sens: -1 | 1, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.data.moveEntity(this.def.key, item.Id, sens)) this.reload();
+  }
+
+  premier(item: AuditEntity): boolean {
+    return this.items[0]?.Id === item.Id;
+  }
+
+  dernier(item: AuditEntity): boolean {
+    return this.items[this.items.length - 1]?.Id === item.Id;
   }
 
   add(): void {

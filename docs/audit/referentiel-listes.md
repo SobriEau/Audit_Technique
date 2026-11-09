@@ -10,7 +10,7 @@
 | Constante | Valeurs | Champs qui l’emploient |
 |---|---|---|
 | `TYPE_COMPTEUR` | 9 | `Compteur général!H14`, `Sous-compteur1!F18` |
-| `CLASSE_METROLOGIQUE` | 19 | `Compteur général!L14`, `Sous-compteur1!J18` |
+| `CLASSE_METROLOGIQUE` | 23 | `Compteur général!L14`, `Sous-compteur1!J18` |
 | `TYPE_ROBINET` | 5 | `Robinets!F24`, `Douche-baignoire1!E105` |
 | `COMMANDE_ROBINET` | 4 | `Robinets!K24` |
 | `TEMPORISATION` | 3 | `Robinets!F27`, `Douche-baignoire1!E108` |
@@ -41,7 +41,7 @@
 - `Sous-compteur1!F18` (sous_compteurs) — `L.TYPE_COMPTEUR`
 - `Production Stockage ECS!F27` (production_stockage_ecs) — « Chauffage + ECS », « ECS seule », « Ne sait pas »
 - `Douche-baignoire1!E105` (douches_baignoires) — `L.TYPE_ROBINET`
-- `Appareils de lavage!E8` (appareils_lavage) — « lave linge », « lave vaisselle », « autolaveuse », « lavage du sol manuel »
+- `Appareils de lavage!E8` (appareils_lavage) — « lave linge », « lave vaisselle », « autolaveuse », « lavage du sol manuel », « autre »
 - `Bassin1!F14` (piscines) — « Enterré », « Semi-enterrée », « Hors sol avec structure », « Hors sol tubulaire », « Hors sol autoportée »
 - `Liste Piscines!E27` (zone_piscine) — « passif », « à renouvellement continu », « avec rampes de lavage », « avec injection automatique de désinfectant »
 - `Structure1!I8` (structure) — « Structure et réseaux », « Espace technique aménageable »
@@ -80,6 +80,7 @@
 | `Production Stockage ECS!F33` | Combustible | gaz · fioul · bois · biomasse · réseau de chaleur urbain · ne sait pas · autre |
 | `Production Stockage ECS!F39` | Régulation / pilotage de la production | Pas de pilotage · Pilotage par la température · Pilotage par horloge programmable · Pilotage horaire et température · Pilotage par GTB/GTC · Pilotage intelligent · Ne sait pas · Autre |
 | `Production Stockage ECS!F62` | Montage des ballons | série · parallèle · ne sait pas |
+| `Robinets!J46` | Arrivée de l'eau chaude | froide · tiède · chaude · très chaude · pas d’eau chaude |
 | `Douche-baignoire1!E25` | Type de sol | receveur · à l'italienne carrellée · à l'italienne pierre naturelle · chape béton étanche |
 | `Douche-baignoire1!E66` | Type de baignoire | sur pied · autoportante · encastrée · sabot · îlot · autre |
 | `Douche-baignoire1!I105` | Commande du robinet | manuelle · à détection de présence · à effleurement · à détection RFID |
@@ -87,10 +88,10 @@
 | `WC1!F33` | Type de chasse | Réservoir apparent · Réservoir encastré · Sans réservoir · Non concerné |
 | `WC1!F39` | Volume chasse estimé ou connu | <3 · 2/4 · 3/6 · 6/9 · 6 · 9 · >9 · Inconnu · Non concerné |
 | `WC1!F42` | Teste de la feuille de papier toilette dans la cuvette | feuille mouillée - fuite observée · feuille semi-mouillée - fuite suspectée · feuille sèche - pas de fuite |
-| `WC1!F45` | Ventilation | pas de ventilation · en continu · intermittente · à détection · indépendante du reste du bâtiment |
-| `WC1!J45` | Test de la feuille de papier sur la bouche d'extraction | Feuille aspirée · Feuille repoussée · Rien ne se passe |
+| `WC1!F45` | Ventilation | pas de ventilation · naturelle · en continu · intermittente · à détection · indépendante du reste du bâtiment |
+| `WC1!J45` | Test de la feuille de papier sur la bouche d'extraction | Feuille aspirée · Feuille repoussée · Rien ne se passe · test impossible |
 | `WC1!F48` | Est-ce que les toilettes ont un mur qui donne sur l'extérieur (sur la parcelle du bâtiment uniquement) ? | non · oui · oui toutes · oui certaines |
-| `Appareils de lavage!E8` | Type | lave linge · lave vaisselle · autolaveuse · lavage du sol manuel |
+| `Appareils de lavage!E8` | Type | lave linge · lave vaisselle · autolaveuse · lavage du sol manuel · autre |
 | `Appareils de lavage!E22` | Taux de remplissage | peu rempli · semi-rempli · plein |
 | `Appareils de lavage!K28` | Classe énergétique | A · B · C · D · E · F · G |
 | `Appareils de lavage!K31` | Type d'alimentation en eau | EF seul · EF + ECS · Eau de pluie |
@@ -109,7 +110,6 @@
 | `Incendie!K37` | Destination des eaux de tests/purges | rejet au réseau d'assainissement · rejet au réseau pluvial · infiltration à la parcelle |
 | `Extérieur1!F38` | Exposition de la parcelle | Ensoleillée · Ombragée · Mi-ombragée |
 | `Extérieur1!I38` | Pente de la parcelle | nulle · faible · moyenne · forte |
-| `Extérieur1!I41` | Pilotage de l'arrosage | Manuel · En fonction de la météo · Horloge · Sonde humidité · Connecté |
 | `Extérieur1!L41` | Période d'arrosage dans la journée | Matin · Soir · En pleine journée · Nuit · Variable |
 | `Extérieur1!F60` | Origine de l'eau | eau potable · eau de pluie · eau pluviale · eau grise · eau souterraine |
 | `Bassin1!F14` | Type | Enterré · Semi-enterrée · Hors sol avec structure · Hors sol tubulaire · Hors sol autoportée |

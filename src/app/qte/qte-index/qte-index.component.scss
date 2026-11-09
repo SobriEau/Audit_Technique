@@ -50,3 +50,14 @@ footer {
   align-items: flex-start;
   gap: var(--sp-2);
 }
+
+/* Contexte saisi avant la création des bâtiments : conservé, consultable. */
+.contexte-deplace {
+  margin-top: var(--sp-3);
+}
+
+.contexte-deplace summary {
+  cursor: pointer;
+  color: var(--c-primary);
+  font-weight: 600;
+}

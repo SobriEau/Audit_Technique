@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DataService } from '../../../core/services/data.service';
-import { Piece, PlanLocation } from '../../../models/data.models';
+import { Batiment, Piece, PlanLocation } from '../../../models/data.models';
 import { DictationFieldComponent } from '../dictation-field/dictation-field.component';
 import { PlanLocatorComponent } from '../plan-locator/plan-locator.component';
 
@@ -35,6 +35,16 @@ export class PieceManagerComponent implements OnInit {
   /** Pièce dont le volet de réglages (niveau, plan, remarques) est ouvert. */
   deplie: string | null = null;
 
+  /**
+   * Bâtiment dont on ne veut voir que les pièces. `''` = toutes,
+   * `'-'` = celles qui ne sont rattachées à aucun.
+   *
+   * Un établissement de trois bâtiments peut compter trente pièces : la liste
+   * à plat devient inutilisable sur un téléphone, et l'auditeur n'est que dans
+   * un bâtiment à la fois.
+   */
+  filtre = '';
+
   constructor(
     private data: DataService,
     private router: Router,
@@ -43,6 +53,17 @@ export class PieceManagerComponent implements OnInit {
 
   ngOnInit(): void {
     this.recharger();
+  }
+
+  /** Pièces après filtrage. Le filtre n'est proposé qu'à partir de deux bâtiments. */
+  get piecesAffichees(): Piece[] {
+    if (!this.filtre) return this.pieces;
+    if (this.filtre === '-') return this.pieces.filter((p) => !this.data.findBatiment(p.Batiment));
+    return this.pieces.filter((p) => p.Batiment === this.filtre);
+  }
+
+  get nbSansBatiment(): number {
+    return this.pieces.filter((p) => !this.data.findBatiment(p.Batiment)).length;
   }
 
   private recharger(): void {
@@ -56,6 +77,29 @@ export class PieceManagerComponent implements OnInit {
 
   get aDesPlans(): boolean {
     return this.data.getPlans().length > 0;
+  }
+
+  /**
+   * Bâtiments déclarés. Le sélecteur n'apparaît qu'**à partir de deux** :
+   * demander à quel bâtiment appartient une pièce quand il n'y en a qu'un —
+   * ou aucun — est une question sans objet, et `createPiece` rattache alors
+   * d'office.
+   */
+  get batiments(): Batiment[] {
+    return this.data.getBatiments();
+  }
+
+  get avecBatiments(): boolean {
+    return this.batiments.length > 1;
+  }
+
+  batimentLabel(id: string | null | undefined): string {
+    return this.data.batimentLabel(id);
+  }
+
+  changerBatiment(piece: Piece, id: string): void {
+    piece.Batiment = id || null;
+    this.enregistrer();
   }
 
   /**

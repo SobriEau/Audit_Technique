@@ -215,6 +215,73 @@ const LEGENDES_AJOUTEES = {
  * normalement (le doublon serait alors signalé par `check-coverage.js`).
  */
 const CHAMPS_AJOUTES = {
+  // ── Questions demandées en octobre 2026, absentes du classeur ───────────
+  //
+  // Même mécanisme que « Présence d'un traçage » plus bas : la question est
+  // injectée ici, sur une **ligne libre** de sa feuille, avec la cellule qui la
+  // situe. Elle disparaîtra d'elle-même le jour où le classeur la décrira
+  // (`check-coverage.js` signalerait le doublon).
+  Robinets: [
+    {
+      // « Manque des choses : marque robinet » (formation d'Angers, 2026-10).
+      ref: 'F37',
+      r: 37,
+      c: 6,
+      label: 'Marque du robinet (si lisible)',
+      requirement: 'facultatif',
+    },
+    {
+      // « pression robinet » (même retour). Rangée avec les mesures, à côté de
+      // la température et du temps d'obtention de l'ECS.
+      ref: 'F46',
+      r: 46,
+      c: 6,
+      label: 'Pression mesurée au robinet (bar)',
+      requirement: 'facultatif',
+    },
+    {
+      // « prise temperature robinet/douche pr risque légionnelle […] Rajouter
+      // un champs disant arrivée eau tiede, chaude, etc. » (notes REX).
+      // Qualitatif, en complément de la température max déjà mesurée.
+      ref: 'J46',
+      r: 46,
+      c: 10,
+      label: "Arrivée de l'eau chaude",
+      note: 'Liste déroulante : froide / tiède / chaude / très chaude / pas d’eau chaude',
+      requirement: 'facultatif',
+    },
+  ],
+  'Compteur général': [
+    {
+      // « pression chaufferie (mise en remarque, note coupée) — ajouter un
+      // champ pression dans compteur général » (formation d'Angers, 2026-10).
+      ref: 'H21',
+      r: 21,
+      c: 8,
+      label: 'Pression mesurée au compteur général (bar)',
+      requirement: 'facultatif',
+    },
+  ],
+  WC1: [
+    {
+      // « Urinoirs : mesurer la tempo, rajouter — pr l'instant c'est une
+      // remarque » (formation d'Angers, 2026-10).
+      ref: 'F32',
+      r: 32,
+      c: 6,
+      label: "Temporisation des urinoirs (s)",
+      requirement: 'facultatif',
+    },
+    {
+      // « douchette dans les WC » (audit Camping Au port Punay, 2026-10).
+      ref: 'F34',
+      r: 34,
+      c: 6,
+      label: "Présence d'une douchette",
+      note: 'Liste déroulante : oui / non',
+      requirement: 'facultatif',
+    },
+  ],
   'Extérieur1': [
     {
       ref: 'F18',

@@ -84,10 +84,14 @@ function base() {
       { id: 'plan-1', name: 'RDC' },
       { id: 'plan-2', name: 'R+1' },
     ],
+    Batiments: [
+      { Id: 'b-1', Nom: 'Bâtiment A — primaire', AnneeConstruction: '1998' },
+      { Id: 'b-2', Nom: 'Bâtiment B — gymnase', AnneeConstruction: '2004' },
+    ],
     Pieces: [
-      { Id: 'p-1', Nom: 'Sanitaires RDC', Niveau: 'R+0', Localisation: { planId: 'plan-1', x: 0.2, y: 0.3 } },
-      { Id: 'p-2', Nom: 'Cuisine', Niveau: 'R+0', Localisation: null },
-      { Id: 'p-3', Nom: 'Sanitaires R+1', Niveau: 'R+1', Localisation: { planId: 'plan-2', x: 0.5, y: 0.5 } },
+      { Id: 'p-1', Nom: 'Sanitaires RDC', Niveau: 'R+0', Batiment: 'b-1', Localisation: { planId: 'plan-1', x: 0.2, y: 0.3 } },
+      { Id: 'p-2', Nom: 'Cuisine', Niveau: 'R+0', Batiment: 'b-1', Localisation: null },
+      { Id: 'p-3', Nom: 'Sanitaires R+1', Niveau: 'R+1', Batiment: 'b-2', Localisation: { planId: 'plan-2', x: 0.5, y: 0.5 } },
     ],
     Qte: {
       TableauDeBord: { AnneeConstruction: '1998' },
@@ -145,8 +149,9 @@ function recu() {
   d.Qte.robinets.push({ Id: 'r-b2', Numero: '4', Piece: 'p-4', TemperatureMaxEcs: 51, Photos: [] });
   d.Qte.wc.push({ Id: 'w-b1', Numero: '1', Piece: 'p-3', Photos: [] });
 
-  // Une pièce et un plan découverts sur place.
-  d.Pieces.push({ Id: 'p-4', Nom: 'Local ménage', Niveau: 'R+1', Localisation: { planId: 'plan-2', x: 0.1, y: 0.9 } });
+  // Un bâtiment, une pièce et un plan découverts sur place.
+  d.Batiments.push({ Id: 'b-3', Nom: 'Bâtiment C — préfabriqué', AnneeConstruction: '2019' });
+  d.Pieces.push({ Id: 'p-4', Nom: 'Local ménage', Niveau: 'R+1', Batiment: 'b-3', Localisation: { planId: 'plan-2', x: 0.1, y: 0.9 } });
   d.Plans.push({ id: 'plan-3', name: 'Sous-sol' });
 
   d.__assets = {
@@ -217,6 +222,17 @@ ok(fusion.Plans.length === 3, `plans : 3 attendus, ${fusion.Plans.length} obtenu
 ok(rapport.plansDeja === 2, `plans déjà présents : 2 attendus, ${rapport.plansDeja}`);
 ok(fusion.Pieces.length === 4, `pièces : 4 attendues, ${fusion.Pieces.length}`, fusion.Pieces.map((p) => p.Nom).join(', '));
 ok(rapport.piecesDeja === 3, `pièces déjà présentes : 3 attendues, ${rapport.piecesDeja}`);
+// Les bâtiments suivent la même règle : reconnus à leur identité, repris sinon.
+ok(fusion.Batiments.length === 3, `bâtiments : 3 attendus, ${fusion.Batiments.length}`, fusion.Batiments.map((b) => b.Nom).join(', '));
+ok(rapport.batimentsDeja === 2, `bâtiments déjà présents : 2 attendus, ${rapport.batimentsDeja}`);
+ok(
+  rapport.batimentsAjoutes.length === 1 && /préfabriqué/.test(rapport.batimentsAjoutes[0]),
+  'bâtiment ajouté',
+  rapport.batimentsAjoutes.join(', ')
+);
+// Et la pièce reprise garde son rattachement au bâtiment repris avec elle.
+const menage = fusion.Pieces.find((p) => p.Nom === 'Local ménage');
+ok(menage && menage.Batiment === 'b-3', 'la pièce reprise doit rester rattachée à son bâtiment', menage && menage.Batiment);
 ok(rapport.piecesAjoutees.length === 1 && rapport.piecesAjoutees[0] === 'Local ménage', 'pièce ajoutée');
 
 // robinets : 2 de la base + 1 de A + 2 de B + 1 doublon = 6
@@ -277,6 +293,11 @@ ok(accueil.Numero === '1' && fusion.Qte.robinets.find((r) => r.Id === 'r-a1').Nu
 ok(rapport.renumerotes.length >= 2, `renumérotations rapportées : ${rapport.renumerotes.length}`);
 
 // ── Pièces : les renvois restent valides ───────────────────────────────────
+// Aucun renvoi orphelin : ni pièce vers bâtiment, ni élément vers pièce.
+const idsBatiments = new Set(fusion.Batiments.map((b) => b.Id));
+const piecesOrphelines = fusion.Pieces.filter((p) => p.Batiment && !idsBatiments.has(p.Batiment));
+ok(piecesOrphelines.length === 0, `${piecesOrphelines.length} pièce(s) désignent un bâtiment absent`, piecesOrphelines.map((p) => p.Nom).join(', '));
+
 const idsPieces = new Set(fusion.Pieces.map((p) => p.Id));
 const orphelins = [];
 for (const liste of Object.values(fusion.Qte)) {
@@ -367,6 +388,7 @@ const { data: deuxFois, rapport: r2 } = fusionner(avecImages, B, {
 });
 ok(deuxFois.Qte.robinets.length === 6, `seconde intégration : ${deuxFois.Qte.robinets.length} robinets au lieu de 6`);
 ok(deuxFois.Pieces.length === 4, `seconde intégration : ${deuxFois.Pieces.length} pièces au lieu de 4`);
+ok(deuxFois.Batiments.length === 3, `seconde intégration : ${deuxFois.Batiments.length} bâtiments au lieu de 3`);
 ok(deuxFois.Plans.length === 3, `seconde intégration : ${deuxFois.Plans.length} plans au lieu de 3`);
 ok(r2.entites.every((e) => e.ajoutes === 0), 'seconde intégration : des éléments ont été ajoutés');
 // Le conflit persiste — la version reçue est déjà là en double, mais la fiche

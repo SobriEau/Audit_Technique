@@ -1,0 +1,115 @@
+<div class="actions actions--top">
+  <button type="button" class="primary" (click)="ajouter()">+ Ajouter un bâtiment</button>
+</div>
+
+@if (batiments.length === 0) {
+  <p class="muted empty">
+    Aucun bâtiment déclaré — l'audit porte alors sur un seul bâtiment, comme
+    d'habitude. N'en déclarez que si l'établissement en compte plusieurs : vous
+    pourrez alors rattacher chaque pièce au sien, et le contexte de chacun se
+    saisit une seule fois.
+  </p>
+} @else {
+  <ul class="batiment-list">
+    @for (b of batiments; track b.Id; let i = $index) {
+      <li class="batiment-item" [class.ouverte]="deplie === b.Id">
+        <div class="batiment-head">
+          <div class="batiment-nom">
+            <label [attr.for]="'batiment-nom-' + i">Nom du bâtiment</label>
+            <app-dictation-field
+              [id]="'batiment-nom-' + i"
+              [(ngModel)]="b.Nom"
+              (fieldBlur)="enregistrer()"
+              placeholder="Ex. Bâtiment B — gymnase"
+              [ariaLabel]="'Nom du bâtiment ' + (i + 1)"
+            />
+            <p class="muted batiment-resume">
+              @if (b.AnneeConstruction) { <span>construit en {{ b.AnneeConstruction }}</span> }
+              @if (b.AnneeDerniereRenovation) { <span>rénové en {{ b.AnneeDerniereRenovation }}</span> }
+              <span>{{ pieces0(b) }} pièce(s)</span>
+            </p>
+          </div>
+
+          <div class="batiment-boutons">
+            <button type="button" class="ghost" (click)="basculer(b.Id)" [attr.aria-expanded]="deplie === b.Id">
+              {{ deplie === b.Id ? 'Replier' : 'Dates, remarques…' }}
+            </button>
+            <button
+              type="button"
+              class="ghost btn-delete"
+              (click)="supprimer(b)"
+              [attr.aria-label]="'Supprimer le bâtiment ' + (b.Nom || (i + 1))"
+              title="Supprimer ce bâtiment"
+            >
+              🗑
+            </button>
+          </div>
+        </div>
+
+        @if (deplie === b.Id) {
+          <div class="batiment-details">
+            <div class="field-row">
+              <div class="champ">
+                <label [attr.for]="'batiment-construction-' + i">Année de construction</label>
+                <input
+                  [id]="'batiment-construction-' + i"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="4"
+                  placeholder="1998"
+                  [(ngModel)]="b.AnneeConstruction"
+                  (change)="enregistrer()"
+                />
+              </div>
+              <div class="champ">
+                <label [attr.for]="'batiment-renovation-' + i">Année de dernière rénovation</label>
+                <input
+                  [id]="'batiment-renovation-' + i"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="4"
+                  placeholder="2016"
+                  [(ngModel)]="b.AnneeDerniereRenovation"
+                  (change)="enregistrer()"
+                />
+              </div>
+            </div>
+
+            <label [attr.for]="'batiment-travaux-' + i">
+              Travaux de la dernière rénovation
+              <span class="badge-neutre">Facultatif</span>
+            </label>
+            <app-dictation-field
+              [id]="'batiment-travaux-' + i"
+              [multiline]="true"
+              [(ngModel)]="b.TravauxDerniereRenovation"
+              (fieldBlur)="enregistrer()"
+              placeholder="Toiture, menuiseries, plomberie…"
+            />
+
+            <label [attr.for]="'batiment-remarques-' + i">
+              Remarques
+              <span class="badge-neutre">Facultatif</span>
+            </label>
+            <app-dictation-field
+              [id]="'batiment-remarques-' + i"
+              [multiline]="true"
+              [(ngModel)]="b.Remarques"
+              (fieldBlur)="enregistrer()"
+              placeholder="Accès, usage du bâtiment…"
+            />
+          </div>
+        }
+      </li>
+    }
+  </ul>
+
+  @if (piecesSansBatiment) {
+    <p class="muted alerte-orphelines" role="status">
+      {{ piecesSansBatiment }} pièce(s) ne sont rattachées à aucun bâtiment.
+      Rattachez-les depuis la liste des pièces — leurs points d'eau restent
+      accessibles en attendant.
+      <button type="button" class="lien" (click)="voirPieces()">Voir les pièces</button>
+    </p>
+  }
+}

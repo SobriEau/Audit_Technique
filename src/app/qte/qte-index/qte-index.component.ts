@@ -45,6 +45,21 @@ interface SectionGroup {
 export class QteIndexComponent {
   private readonly groups: SectionGroup[] = buildGroups();
 
+  /**
+   * Champs du contexte **déplacés au niveau du bâtiment** dès qu'un
+   * établissement en déclare plusieurs : les redemander ici reviendrait à
+   * poser deux fois la même question, avec deux réponses possibles.
+   *
+   * Les valeurs déjà saisies ne sont **jamais effacées** et restent
+   * consultables dans le volet dépliable : une saisie ne doit pas devenir
+   * inatteignable (même règle que le niveau de remplissage, CLAUDE.md §8).
+   */
+  private static readonly CHAMPS_DU_BATIMENT = [
+    'AnneeConstruction',
+    'AnneeDerniereRenovation',
+    'TravauxDerniereRenovation',
+  ];
+
   readonly champsContexte = CHAMPS_CONTEXTE;
 
   /** Copie de travail du contexte, écrite à chaque champ quitté. */
@@ -52,6 +67,29 @@ export class QteIndexComponent {
 
   constructor(private router: Router, private dataService: DataService) {
     this.contexte = { ...this.dataService.getSingle('TableauDeBord') };
+  }
+
+  /** L'établissement déclare plusieurs bâtiments : le contexte se saisit par bâtiment. */
+  get parBatiment(): boolean {
+    return this.dataService.getBatiments().length > 1;
+  }
+
+  /** Champs du contexte à saisir ici. */
+  get champsIci(): FieldDef[] {
+    if (!this.parBatiment) return this.champsContexte;
+    return this.champsContexte.filter((f) => !QteIndexComponent.CHAMPS_DU_BATIMENT.includes(f.key));
+  }
+
+  /** Champs déplacés au bâtiment **et déjà remplis** : conservés, consultables. */
+  get champsDeplacesRemplis(): FieldDef[] {
+    if (!this.parBatiment) return [];
+    return this.champsContexte.filter(
+      (f) =>
+        QteIndexComponent.CHAMPS_DU_BATIMENT.includes(f.key) &&
+        this.contexte[f.key] !== null &&
+        this.contexte[f.key] !== undefined &&
+        this.contexte[f.key] !== ''
+    );
   }
 
   valeurContexte(f: FieldDef): unknown {

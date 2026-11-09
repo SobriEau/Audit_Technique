@@ -17,6 +17,7 @@
     "check:zip": "node tools/check-zip.js",
     "check:archive": "node --experimental-websocket tools/check-archive.js",
     "csv": "node tools/json-to-csv.js",
+    "retours": "node tools/releve-retours.js",
     "gen": "node tools/xlsx-extract.js && node tools/gen-schema.js && node tools/gen-pages.js && node tools/gen-illustrations.js && node tools/gen-docs.js && node tools/gen-referentiel.js"
   },
   "dependencies": {

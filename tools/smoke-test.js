@@ -118,7 +118,15 @@ const AUDIT_AMORCE = (() => {
     NomSite: 'École de la fumée',
     Adresse: '1 rue du Test',
     UtilisationsEau: { robinet: true },
-    Pieces: [{ Id: 'piece-smoke', Nom: 'Sanitaires du test', Niveau: 'R+0', Localisation: null }],
+    // Deux bâtiments : c'est à partir de deux que le filtre des pièces et la
+    // colonne « Bâtiment » apparaissent, et que le contexte passe par bâtiment.
+    Batiments: [
+      { Id: 'bat-smoke', Nom: 'Bâtiment du test', AnneeConstruction: '1998' },
+      { Id: 'bat-second', Nom: 'Annexe du test', AnneeConstruction: '2012' },
+    ],
+    Pieces: [
+      { Id: 'piece-smoke', Nom: 'Sanitaires du test', Niveau: 'R+0', Batiment: 'bat-smoke', Localisation: null },
+    ],
     Qte: {
       robinets: [{ Id: 'rob-smoke', Numero: '1', Piece: 'piece-smoke', Emplacement: 'Près de la porte', Photos: [] }],
     },
@@ -189,7 +197,7 @@ const AUDIT_ANCIEN = (() => {
  */
 const ECRANS = [
   { route: '#/accueil', attendu: ['Nouvel audit', 'France 2030', 'Ponts et Chaussées', 'Tout emporter', 'Exporter tout en ZIP'], titre: 'Accueil général' },
-  { route: '#/home', attendu: ['Nom du site audité', 'Effectif', "Nom et fonction de l'accompagnant", "Utilisations de l'eau", 'Voir la liste des documents collectés', 'Niveau de remplissage des fiches', 'Pièces du bâtiment', 'Travailler à deux', 'Ajouter une pièce'], absent: ['Surpresseurs'], titre: 'Accueil du projet' },
+  { route: '#/home', attendu: ['Nom du site audité', 'Effectif', "Nom et fonction de l'accompagnant", "Utilisations de l'eau", 'Voir la liste des documents collectés', 'Niveau de remplissage des fiches', "Bâtiments de l'établissement", 'Ajouter un bâtiment', 'Pièces du bâtiment', 'Travailler à deux', 'Ajouter une pièce'], absent: ['Surpresseurs'], titre: 'Accueil du projet' },
   { route: '#/documents', attendu: ['Documents collectés', 'Dossier Technique Amiante', 'priority--obligatoire'], titre: 'Documents à collecter' },
   { route: '#/glossaire', attendu: ['Glossaire', 'Eau Chaude Sanitaire', 'Plénum'], titre: 'Glossaire' },
   // Audit neuf, rien de coché : seules les sept sections permanentes
@@ -229,12 +237,32 @@ const ECRANS = [
     titre: 'Page d’une pièce',
   },
   {
-    // La liste par type gagne une colonne « Pièce » dès qu'un audit en définit :
-    // c'est le seul endroit où les deux entrées se recoupent.
+    // La liste par type gagne une colonne « Pièce » dès qu'un audit en définit,
+    // et une colonne « Bâtiment » à partir de deux bâtiments : c'est le seul
+    // endroit où les trois niveaux se recoupent.
     route: '#/qte/robinets',
     graine: AUDIT_AMORCE,
-    attendu: ['Pièce', 'Sanitaires du test', 'Près de la porte'],
-    titre: 'Robinets, colonne pièce',
+    // La colonne « État » dit d'un coup d'œil ce qui reste à remplir et si la
+    // fiche est photographiée ; les flèches réordonnent la liste.
+    attendu: ['État', 'Pièce', 'Bâtiment', 'Sanitaires du test', 'Bâtiment du test', 'Près de la porte', 'Monter dans la liste'],
+    titre: 'Robinets : état et rangs',
+  },
+  {
+    // Les pièces se filtrent par bâtiment dès qu'il y en a plusieurs : trente
+    // pièces à plat sont inutilisables sur un téléphone.
+    route: '#/pieces',
+    graine: AUDIT_AMORCE,
+    attendu: ['Tous les bâtiments', 'Bâtiment du test', 'Annexe du test', 'Sanitaires du test'],
+    titre: 'Pièces filtrées par bâtiment',
+  },
+  {
+    // Le contexte du bâtiment passe au niveau du bâtiment dès qu'il y en a
+    // plusieurs : le redemander ici poserait deux fois la même question.
+    route: '#/qte',
+    graine: AUDIT_AMORCE,
+    attendu: ["établissement compte plusieurs bâtiments", 'Mesure de pression au point le plus proche du compteur'],
+    absent: ['Date de construction du bâtiment'],
+    titre: 'Contexte par bâtiment',
   },
 
   // ── Un audit de l'ancien format doit rester lisible ──────────────────────
